@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCQ Assessment Screen - Mock</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background-color: #fafafa;
+            color: #1a1a1a;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+        
+        .card-content {
+            padding: 24px;
+        }
+        
+        .header-card {
+            border-left: 4px solid #1976d2;
+        }
+        
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .header-description {
+            color: #666666;
+            margin-bottom: 16px;
+        }
+        
+        .chips-container {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .chip-primary {
+            background: #e3f2fd;
+            color: #1976d2;
+            border: 1px solid #1976d2;
+        }
+        
+        .chip-secondary {
+            background: #fce4ec;
+            color: #c51162;
+            border: 1px solid #c51162;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 24px;
+        }
+        
+        .timer-section {
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+        
+        .timer-card {
+            border-left: 4px solid #1976d2;
+            text-align: center;
+        }
+        
+        .timer-display {
+            font-size: 2.5rem;
+            font-family: monospace;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #1976d2;
+            margin: 16px 0;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #1976d2;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .question-header {
+            background: white;
+            border-left: 4px solid #1976d2;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .question-number {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 16px;
+        }
+        
+        .question-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .question-text {
+            color: #666666;
+            margin-bottom: 16px;
+        }
+        
+        .question-card {
+            background: white;
+            padding: 24px;
+        }
+        
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .option-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .option-card:hover {
+            background: #f5f5f5;
+            transform: translateX(4px);
+        }
+        
+        .option-card.selected {
+            border-color: #1976d2;
+            background: #e3f2fd;
+        }
+        
+        .radio-icon {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ccc;
+            border-radius: 50%;
+            position: relative;
+        }
+        
+        .radio-icon.selected {
+            border-color: #1976d2;
+        }
+        
+        .radio-icon.selected::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            background: #1976d2;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .navigation-section {
+            position: sticky;
+            top: 20px;
+            height: fit-content;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: #1976d2;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #1565c0;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #1976d2;
+            border: 2px solid #1976d2;
+        }
+        
+        .btn-outline:hover {
+            background: #e3f2fd;
+        }
+        
+        .btn-secondary {
+            background: #dc004e;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #c51162;
+        }
+        
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+        
+        .question-overview-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .question-overview-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .question-overview-card.current {
+            border-color: #1976d2;
+            background: #e3f2fd;
+        }
+        
+        .question-overview-card.answered {
+            border-color: #4caf50;
+            background: #e8f5e8;
+        }
+        
+        .status-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+        }
+        
+        .status-answered {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .status-unanswered {
+            border: 2px solid #ccc;
+        }
+        
+        .footer-instructions {
+            background: #e3f2fd;
+            border-radius: 8px;
+            padding: 24px;
+            margin-top: 32px;
+        }
+        
+        .instructions-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 16px;
+        }
+        
+        .instructions-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .instructions-list li {
+            color: #1976d2;
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 24px;
+        }
+        
+        .instructions-list li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+        
+        .material-icons {
+            font-size: 20px;
+        }
+        
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .timer-section {
+                order: 1;
+            }
+            
+            .navigation-section {
+                order: 2;
+            }
+            
+            .question-section {
+                order: 3;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+            
+            .chips-container {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .nav-buttons {
+                flex-direction: row;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="card header-card">
+            <div class="card-content">
+                <div class="header-title">
+                    <span class="material-icons">quiz</span>
+                    Frontend Development Assessment
+                </div>
+                <div class="header-description">
+                    Test your knowledge of React, JavaScript, and web development fundamentals
+                </div>
+                <div class="chips-container">
+                    <div class="chip chip-primary">
+                        <span class="material-icons">schedule</span>
+                        30 min
+                    </div>
+                    <div class="chip chip-secondary">
+                        <span class="material-icons">check_circle</span>
+                        70% to pass
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <!-- Timer Section -->
+            <div class="timer-section">
+                <div class="card timer-card">
+                    <div class="card-content">
+                        <div class="chip chip-primary">
+                            <span class="material-icons">timer</span>
+                            Time Remaining
+                        </div>
+                        <div class="timer-display">27:03</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 10%;"></div>
+                        </div>
+                        <div style="font-size: 0.875rem; color: #666;">
+                            Assessment: Frontend Development Assessment
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Question Section -->
+            <div class="question-section">
+                <!-- Question Header -->
+                <div class="question-header">
+                    <div class="question-number">Question 1 of 8</div>
+                    <div class="chips-container" style="margin-bottom: 16px;">
+                        <div class="chip" style="background: #e8f5e8; color: #4caf50;">Easy</div>
+                        <div class="chip chip-outline">React</div>
+                        <div class="chip chip-outline">
+                            <span class="material-icons">quiz</span>
+                            single choice
+                        </div>
+                        <div class="chip chip-primary">10 pts</div>
+                    </div>
+                    <div class="question-title">React Hooks</div>
+                    <div class="question-text">
+                        Which React Hook is used to manage state in functional components?
+                    </div>
+                </div>
+
+                <!-- Question Card -->
+                <div class="card question-card">
+                    <div style="font-weight: 500; margin-bottom: 16px;">Select one answer:</div>
+                    <div class="options-container">
+                        <div class="option-card">
+                            <div class="radio-icon"></div>
+                            <div>useEffect</div>
+                        </div>
+                        <div class="option-card selected">
+                            <div class="radio-icon selected"></div>
+                            <div>useState</div>
+                        </div>
+                        <div class="option-card">
+                            <div class="radio-icon"></div>
+                            <div>useContext</div>
+                        </div>
+                        <div class="option-card">
+                            <div class="radio-icon"></div>
+                            <div>useReducer</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Section -->
+            <div class="navigation-section">
+                <div class="card">
+                    <div class="card-content">
+                        <button class="btn btn-outline" style="margin-bottom: 16px; width: 100%;">
+                            <span class="material-icons">visibility</span>
+                            Question Overview (0/8)
+                        </button>
+                        
+                        <hr style="margin: 16px 0; border: none; border-top: 1px solid #e0e0e0;">
+                        
+                        <div class="nav-buttons">
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-outline" style="flex: 1;" disabled>
+                                    <span class="material-icons">navigate_before</span>
+                                    Previous
+                                </button>
+                                <button class="btn btn-primary" style="flex: 1;">
+                                    Next
+                                    <span class="material-icons">navigate_next</span>
+                                </button>
+                            </div>
+                            
+                            <button class="btn btn-secondary" style="width: 100%; padding: 16px; font-size: 1.1rem; font-weight: bold;">
+                                <span class="material-icons">send</span>
+                                Submit Assessment
+                            </button>
+                        </div>
+                        
+                        <div style="text-align: center; margin-top: 16px;">
+                            <div class="chip" style="background: #e8f5e8; color: #4caf50;">
+                                <span class="material-icons">check_circle</span>
+                                Answered
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Instructions -->
+        <div class="footer-instructions">
+            <div class="instructions-title">Instructions:</div>
+            <ul class="instructions-list">
+                <li>Read each question carefully before selecting your answer</li>
+                <li>For multiple choice questions, select all correct answers</li>
+                <li>You can navigate between questions and change your answers</li>
+                <li>Click Submit when you are ready to finish the assessment</li>
+                <li>Make sure to review your answers before submitting</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

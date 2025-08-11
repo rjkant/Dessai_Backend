@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Controls Component - Mock</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background-color: #fafafa;
+            color: #1a1a1a;
+            line-height: 1.6;
+            padding: 24px;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .navigation-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 24px;
+            position: sticky;
+            top: 20px;
+        }
+        
+        .overview-button {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #1976d2;
+            background: transparent;
+            color: #1976d2;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: flex-start;
+            margin-bottom: 24px;
+        }
+        
+        .overview-button:hover {
+            background: #e3f2fd;
+        }
+        
+        .divider {
+            height: 1px;
+            background: #e0e0e0;
+            margin: 24px 0;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .nav-row {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex: 1;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #1976d2;
+            border: 2px solid #1976d2;
+        }
+        
+        .btn-outline:hover:not(:disabled) {
+            background: #e3f2fd;
+        }
+        
+        .btn-primary {
+            background: #1976d2;
+            color: white;
+            border: 2px solid #1976d2;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background: #1565c0;
+        }
+        
+        .btn-secondary {
+            background: #dc004e;
+            color: white;
+            border: 2px solid #dc004e;
+            width: 100%;
+            padding: 16px;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        
+        .btn-secondary:hover {
+            background: #c51162;
+        }
+        
+        .status-section {
+            text-align: center;
+            margin-top: 16px;
+        }
+        
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .chip-success {
+            background: #e8f5e8;
+            color: #4caf50;
+            border: 1px solid #4caf50;
+        }
+        
+        .chip-default {
+            background: #f5f5f5;
+            color: #666666;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .material-icons {
+            font-size: 20px;
+        }
+        
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal {
+            background: white;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            padding: 24px 24px 0;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .modal-subtitle {
+            color: #666666;
+            font-size: 1rem;
+        }
+        
+        .modal-content {
+            padding: 24px;
+        }
+        
+        .modal-footer {
+            padding: 0 24px 24px;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        
+        .question-overview-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .question-overview-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .question-overview-card.current {
+            border-color: #1976d2;
+            background: #e3f2fd;
+            box-shadow: 0 4px 8px rgba(25, 118, 210, 0.2);
+        }
+        
+        .question-overview-card.answered {
+            border-color: #4caf50;
+            background: #e8f5e8;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .question-number {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .status-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+        }
+        
+        .status-answered {
+            background: #4caf50;
+            color: white;
+        }
+        
+        .status-unanswered {
+            border: 2px solid #ccc;
+        }
+        
+        .question-title {
+            color: #666666;
+            font-size: 0.875rem;
+            margin-bottom: 8px;
+        }
+        
+        .question-chips {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .chip-small {
+            padding: 2px 6px;
+            font-size: 0.75rem;
+        }
+        
+        .summary-box {
+            background: #f5f5f5;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+        
+        .summary-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .summary-item {
+            margin-bottom: 4px;
+            font-size: 0.875rem;
+        }
+        
+        .warning-text {
+            color: #ff9800;
+            font-size: 0.875rem;
+            margin-top: 16px;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 16px;
+            margin-top: 32px;
+        }
+        
+        .section-title:first-child {
+            margin-top: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-row {
+                flex-direction: column;
+            }
+            
+            .overview-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="margin-bottom: 24px; color: #1976d2;">Navigation Controls Component</h1>
+        
+        <!-- Main Navigation Controls -->
+        <div class="navigation-card">
+            <button class="overview-button">
+                <span class="material-icons">visibility</span>
+                Question Overview (3/8)
+            </button>
+            
+            <div class="divider"></div>
+            
+            <div class="nav-buttons">
+                <div class="nav-row">
+                    <button class="btn btn-outline">
+                        <span class="material-icons">navigate_before</span>
+                        Previous
+                    </button>
+                    <button class="btn btn-primary">
+                        Next
+                        <span class="material-icons">navigate_next</span>
+                    </button>
+                </div>
+                
+                <button class="btn btn-secondary">
+                    <span class="material-icons">send</span>
+                    Submit Assessment
+                </button>
+            </div>
+            
+            <div class="status-section">
+                <div class="chip chip-success">
+                    <span class="material-icons">check_circle</span>
+                    Answered
+                </div>
+            </div>
+        </div>
+
+        <!-- Different States -->
+        <div class="section-title">Different States</div>
+        
+        <!-- First Question -->
+        <div class="navigation-card" style="margin-bottom: 16px;">
+            <button class="overview-button">
+                <span class="material-icons">visibility</span>
+                Question Overview (0/8)
+            </button>
+            
+            <div class="divider"></div>
+            
+            <div class="nav-buttons">
+                <div class="nav-row">
+                    <button class="btn btn-outline" disabled>
+                        <span class="material-icons">navigate_before</span>
+                        Previous
+                    </button>
+                    <button class="btn btn-primary">
+                        Next
+                        <span class="material-icons">navigate_next</span>
+                    </button>
+                </div>
+                
+                <button class="btn btn-secondary">
+                    <span class="material-icons">send</span>
+                    Submit Assessment
+                </button>
+            </div>
+            
+            <div class="status-section">
+                <div class="chip chip-default">
+                    <span class="material-icons">radio_button_unchecked</span>
+                    Not Answered
+                </div>
+            </div>
+        </div>
+        
+        <!-- Last Question -->
+        <div class="navigation-card">
+            <button class="overview-button">
+                <span class="material-icons">visibility</span>
+                Question Overview (7/8)
+            </button>
+            
+            <div class="divider"></div>
+            
+            <div class="nav-buttons">
+                <div class="nav-row">
+                    <button class="btn btn-outline">
+                        <span class="material-icons">navigate_before</span>
+                        Previous
+                    </button>
+                    <button class="btn btn-outline" disabled>
+                        Next
+                        <span class="material-icons">navigate_next</span>
+                    </button>
+                </div>
+                
+                <button class="btn btn-secondary">
+                    <span class="material-icons">send</span>
+                    Submit Assessment
+                </button>
+            </div>
+            
+            <div class="status-section">
+                <div class="chip chip-success">
+                    <span class="material-icons">check_circle</span>
+                    Answered
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question Overview Modal -->
+    <div class="modal-overlay" style="display: none;" id="overviewModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Assessment Overview</div>
+                <div class="modal-subtitle">62% Complete (5/8 answered)</div>
+            </div>
+            <div class="modal-content">
+                <div class="overview-grid">
+                    <div class="question-overview-card answered">
+                        <div class="card-header">
+                            <div class="question-number">Q1</div>
+                            <div class="status-icon status-answered">
+                                <span class="material-icons" style="font-size: 16px;">check_circle</span>
+                            </div>
+                        </div>
+                        <div class="question-title">React Hooks</div>
+                        <div class="question-chips">
+                            <div class="chip chip-small" style="background: #e8f5e8; color: #4caf50;">Easy</div>
+                            <div class="chip chip-small chip-default">10pts</div>
+                        </div>
+                    </div>
+                    
+                    <div class="question-overview-card answered">
+                        <div class="card-header">
+                            <div class="question-number">Q2</div>
+                            <div class="status-icon status-answered">
+                                <span class="material-icons" style="font-size: 16px;">check_circle</span>
+                            </div>
+                        </div>
+                        <div class="question-title">JavaScript ES6</div>
+                        <div class="question-chips">
+                            <div class="chip chip-small" style="background: #fff3e0; color: #ff9800;">Medium</div>
+                            <div class="chip chip-small chip-default">15pts</div>
+                        </div>
+                    </div>
+                    
+                    <div class="question-overview-card current">
+                        <div class="card-header">
+                            <div class="question-number">Q3</div>
+                            <div class="status-icon status-answered">
+                                <span class="material-icons" style="font-size: 16px;">check_circle</span>
+                            </div>
+                        </div>
+                        <div class="question-title">CSS Flexbox</div>
+                        <div class="question-chips">
+                            <div class="chip chip-small" style="background: #e8f5e8; color: #4caf50;">Easy</div>
+                            <div class="chip chip-small chip-default">5pts</div>
+                        </div>
+                    </div>
+                    
+                    <div class="question-overview-card answered">
+                        <div class="card-header">
+                            <div class="question-number">Q4</div>
+                            <div class="status-icon status-answered">
+                                <span class="material-icons" style="font-size: 16px;">check_circle</span>
+                            </div>
+                        </div>
+                        <div class="question-title">React Lifecycle</div>
+                        <div class="question-chips">
+                            <div class="chip chip-small" style="background: #fff3e0; color: #ff9800;">Medium</div>
+                            <div class="chip chip-small chip-default">12pts</div>
+                        </div>
+                    </div>
+                    
+                    <div class="question-overview-card answered">
+                        <div class="card-header">
+                            <div class="question-number">Q5</div>
+                            <div class="status-icon status-answered">
+                                <span class="material-icons" style="font-size: 16px;">check_circle</span>
+                            </div>
+                        </div>
+                        <div class="question-title">HTTP Methods</div>
+                        <div class="question-chips">
+                            <div class="chip chip-small" style="background: #fff3e0; color: #ff9800;">Medium</div>
+                            <div class="chip chip-small chip-default">10pts</div>
+                        </div>
+                    </div>
+                    
+                    <div class="question-overview-card">
+                        <div class="card-header">
+                            <div class="question-number">Q6</div>
+                            <div class="status-icon status-unanswered"></div>
+                        </div>
+                        <div class="question-title">Node.js Basics</div>
+                        <div class="question-chips">
+                            <div class="chip chip-small" style="background: #e8f5e8; color: #4caf50;">Easy</div>
+                            <div class="chip chip-small chip-default">8pts</div>
+                        </div>
+                    </div>
+                    
+                    <div class="question-overview-card">
+                        <div class="card-header">
+                            <div class="question-number">Q7</div>
+                            <div class="status-icon status-unanswered"></div>
+                        </div>
+                        <div class="question-title">Database Queries</div>
+                        <div class="question-chips">
+                            <div class="chip chip-small" style="background: #ffebee; color: #f44336;">Hard</div>
+                            <div class="chip chip-small chip-default">18pts</div>
+                        </div>
+                    </div>
+                    
+                    <div class="question-overview-card">
+                        <div class="card-header">
+                            <div class="question-number">Q8</div>
+                            <div class="status-icon status-unanswered"></div>
+                        </div>
+                        <div class="question-title">Performance Optimization</div>
+                        <div class="question-chips">
+                            <div class="chip chip-small" style="background: #ffebee; color: #f44336;">Hard</div>
+                            <div class="chip chip-small chip-default">20pts</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit Confirmation Modal -->
+    <div class="modal-overlay" style="display: none;" id="submitModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Submit Assessment</div>
+            </div>
+            <div class="modal-content">
+                <p style="margin-bottom: 16px;">
+                    Are you sure you want to submit your assessment?
+                </p>
+                
+                <div class="summary-box">
+                    <div class="summary-title">Summary:</div>
+                    <div class="summary-item">• Total Questions: 8</div>
+                    <div class="summary-item">• Answered: 5</div>
+                    <div class="summary-item">• Unanswered: 3</div>
+                    <div class="summary-item">• Time Remaining: 18 minutes</div>
+                </div>
+                
+                <div class="warning-text">
+                    Warning: You have 3 unanswered questions. These will be marked as incorrect.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline">Cancel</button>
+                <button class="btn btn-secondary">
+                    <span class="material-icons">send</span>
+                    Submit
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simple demo functionality
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+        
+        function hideModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        // Add event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const overviewButtons = document.querySelectorAll('.overview-button');
+            overviewButtons.forEach(btn => {
+                btn.addEventListener('click', () => showModal('overviewModal'));
+            });
+            
+            const submitButtons = document.querySelectorAll('.btn-secondary');
+            submitButtons.forEach(btn => {
+                btn.addEventListener('click', () => showModal('submitModal'));
+            });
+            
+            // Close modals when clicking overlay
+            document.querySelectorAll('.modal-overlay').forEach(overlay => {
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === overlay) {
+                        overlay.style.display = 'none';
+                    }
+                });
+            });
+            
+            // Close buttons
+            document.querySelectorAll('.btn-outline').forEach(btn => {
+                if (btn.textContent.includes('Close') || btn.textContent.includes('Cancel')) {
+                    btn.addEventListener('click', function() {
+                        document.querySelectorAll('.modal-overlay').forEach(modal => {
+                            modal.style.display = 'none';
+                        });
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>

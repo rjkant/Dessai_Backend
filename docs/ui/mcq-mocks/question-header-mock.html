@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Question Header Component - Mock</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background-color: #fafafa;
+            color: #1a1a1a;
+            line-height: 1.6;
+            padding: 24px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .question-header {
+            background: white;
+            border-left: 4px solid #1976d2;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 24px;
+        }
+        
+        .progress-section {
+            margin-bottom: 24px;
+        }
+        
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .question-number {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1976d2;
+        }
+        
+        .status-chips {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+        
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border: 1px solid transparent;
+        }
+        
+        .chip-primary {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-color: #1976d2;
+        }
+        
+        .chip-secondary {
+            background: #fce4ec;
+            color: #c51162;
+            border-color: #c51162;
+        }
+        
+        .chip-warning {
+            background: #fff3e0;
+            color: #f57c00;
+            border-color: #f57c00;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #1976d2;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .question-info {
+            margin-top: 16px;
+        }
+        
+        .question-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        
+        .chip-difficulty-easy {
+            background: #e8f5e8;
+            color: #4caf50;
+            border-color: #4caf50;
+        }
+        
+        .chip-difficulty-medium {
+            background: #fff3e0;
+            color: #ff9800;
+            border-color: #ff9800;
+        }
+        
+        .chip-difficulty-hard {
+            background: #ffebee;
+            color: #f44336;
+            border-color: #f44336;
+        }
+        
+        .chip-outline {
+            background: transparent;
+            color: #666666;
+            border-color: #e0e0e0;
+        }
+        
+        .question-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
+        
+        .question-text {
+            color: #666666;
+            line-height: 1.6;
+        }
+        
+        .material-icons {
+            font-size: 16px;
+        }
+        
+        @media (max-width: 768px) {
+            .progress-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .status-chips {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .question-chips {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="question-header">
+            <!-- Progress Section -->
+            <div class="progress-section">
+                <div class="progress-header">
+                    <div class="question-number">Question 1 of 8</div>
+                    <div class="status-chips">
+                        <div class="chip chip-warning">
+                            <span class="material-icons">timer</span>
+                            27 min left
+                        </div>
+                        <div class="chip chip-secondary">
+                            <span class="material-icons">assignment</span>
+                            1/8 answered
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <!-- Question Info -->
+            <div class="question-info">
+                <div class="question-chips">
+                    <div class="chip chip-difficulty-easy">Easy</div>
+                    <div class="chip chip-outline">React</div>
+                    <div class="chip chip-outline">
+                        <span class="material-icons">quiz</span>
+                        single choice
+                    </div>
+                    <div class="chip chip-primary">10 pts</div>
+                </div>
+                
+                <div class="question-title">React Hooks</div>
+                
+                <div class="question-text">
+                    Which React Hook is used to manage state in functional components?
+                </div>
+            </div>
+        </div>
+        
+        <!-- Demo with different states -->
+        <div style="margin-top: 32px;">
+            <h3 style="margin-bottom: 16px; color: #1976d2;">Different Question Types & Difficulties</h3>
+            
+            <!-- Medium Difficulty -->
+            <div class="question-header" style="margin-bottom: 16px;">
+                <div class="progress-section">
+                    <div class="progress-header">
+                        <div class="question-number">Question 2 of 8</div>
+                        <div class="status-chips">
+                            <div class="chip chip-primary">
+                                <span class="material-icons">timer</span>
+                                25 min left
+                            </div>
+                            <div class="chip chip-secondary">
+                                <span class="material-icons">assignment</span>
+                                2/8 answered
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 12.5%;"></div>
+                    </div>
+                </div>
+                <div class="question-info">
+                    <div class="question-chips">
+                        <div class="chip chip-difficulty-medium">Medium</div>
+                        <div class="chip chip-outline">JavaScript</div>
+                        <div class="chip chip-outline">
+                            <span class="material-icons">quiz</span>
+                            multiple choice
+                        </div>
+                        <div class="chip chip-primary">15 pts</div>
+                    </div>
+                    <div class="question-title">JavaScript ES6</div>
+                    <div class="question-text">
+                        Which of the following are ES6 features? (Select all that apply)
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Hard Difficulty -->
+            <div class="question-header">
+                <div class="progress-section">
+                    <div class="progress-header">
+                        <div class="question-number">Question 8 of 8</div>
+                        <div class="status-chips">
+                            <div class="chip" style="background: #ffebee; color: #f44336; border-color: #f44336;">
+                                <span class="material-icons">timer</span>
+                                3 min left
+                            </div>
+                            <div class="chip chip-secondary">
+                                <span class="material-icons">assignment</span>
+                                7/8 answered
+                            </div>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 87.5%;"></div>
+                    </div>
+                </div>
+                <div class="question-info">
+                    <div class="question-chips">
+                        <div class="chip chip-difficulty-hard">Hard</div>
+                        <div class="chip chip-outline">Advanced React</div>
+                        <div class="chip chip-outline">
+                            <span class="material-icons">quiz</span>
+                            true false
+                        </div>
+                        <div class="chip chip-primary">20 pts</div>
+                    </div>
+                    <div class="question-title">React Performance Optimization</div>
+                    <div class="question-text">
+                        React.memo() automatically prevents re-renders even when props have changed but their reference remains the same.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

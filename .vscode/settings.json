@@ -1,0 +1,28 @@
+{
+  "github.copilot.chat.welcomeMessage": "always",
+  "github.copilot.advanced": {},
+  "github.copilot.chat.localeOverride": "auto",
+  "github.copilot.enable": {
+    "*": true,
+    "plaintext": false,
+    "markdown": true,
+    "scminput": false,
+    "yaml": true,
+    "javascript": true,
+    "typescript": true,
+    "json": true
+  },
+  "github.copilot.editor.enableAutoCompletions": true,
+  "github.copilot.editor.enableCodeActions": true,
+  "workbench.commandPalette.experimental.suggestCommands": true,
+  "ai.dessai.globalInstructions": [
+    "ALWAYS identify the persona being used at the start of every response",
+    "ALWAYS check existing documentation before creating new documentation", 
+    "ALWAYS update existing documentation when creating comprehensive new content",
+    "NEVER create isolated documentation without considering the broader context",
+    "ALWAYS include a suggested git commit message in the summary when completing any request - make it concise and follow conventional commit format"
+  ],
+  "ai.dessai.configPath": ".ai/config.yaml",
+  "ai.dessai.personasPath": ".ai/personas/",
+  "ai.dessai.enforceInstructions": true
+}

@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dessai Coding Platform - Mock Interface</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #fafafa;
+            color: #1a1a1a;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Navigation Bar */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+            z-index: 1000;
+        }
+        
+        .navbar-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+        }
+        
+        .brand-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1976d2;
+        }
+        
+        .beta-chip {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid #bbdefb;
+        }
+        
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 73px);
+            overflow: hidden;
+        }
+        
+        /* Problem Sidebar */
+        .problem-sidebar {
+            width: 300px;
+            background: #f5f5f5;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .sidebar-header {
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid #e0e0e0;
+            background: white;
+        }
+        
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1976d2;
+        }
+        
+        .search-container {
+            padding: 16px;
+            background: white;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%23666" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="21 21l-4.35-4.35"></path></svg>');
+            background-repeat: no-repeat;
+            background-position: 16px center;
+        }
+        
+        .problem-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 16px;
+        }
+        
+        .problem-item {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .problem-item:hover {
+            background: #f5f5f5;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+        }
+        
+        .problem-item.active {
+            background: #1976d2;
+            color: white;
+            border-color: #1565c0;
+            box-shadow: 0 4px 12px rgba(25,118,210,0.25);
+        }
+        
+        .problem-title {
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .difficulty-chip {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .difficulty-easy { background: #e8f5e8; color: #2e7d32; }
+        .difficulty-medium { background: #fff3e0; color: #f57c00; }
+        .difficulty-hard { background: #ffebee; color: #d32f2f; }
+        
+        /* Problem Detail Panel */
+        .problem-detail {
+            width: 350px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            overflow-y: auto;
+            padding: 24px;
+        }
+        
+        .problem-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .problem-detail-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        
+        .problem-description {
+            line-height: 1.6;
+            color: #666;
+            margin-bottom: 24px;
+            white-space: pre-line;
+        }
+        
+        .test-cases-section {
+            border-top: 1px solid #e0e0e0;
+            padding-top: 16px;
+        }
+        
+        .test-cases-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 12px;
+        }
+        
+        .test-case {
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s ease;
+        }
+        
+        .test-case:hover {
+            background: #f0f0f0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .test-case-content {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+        
+        .input-chip, .output-chip {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .input-chip {
+            background: #e3f2fd;
+            color: #1976d2;
+            border: 1px solid #bbdefb;
+        }
+        
+        .output-chip {
+            background: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+        
+        /* Code Editor Section */
+        .code-editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            overflow: hidden;
+        }
+        
+        .editor-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            background: white;
+        }
+        
+        .editor-title-section {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        
+        .editor-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1976d2;
+        }
+        
+        .language-selector {
+            padding: 8px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            font-size: 14px;
+            min-width: 160px;
+        }
+        
+        .editor-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .icon-button {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .icon-button:hover {
+            background: #e0e0e0;
+        }
+        
+        .action-button {
+            padding: 10px 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .action-button.primary {
+            background: #1976d2;
+            color: white;
+            border-color: #1976d2;
+        }
+        
+        .action-button:hover {
+            background: #f5f5f5;
+        }
+        
+        .action-button.primary:hover {
+            background: #1565c0;
+        }
+        
+        /* Code Editor */
+        .code-editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .editor-content {
+            flex: 1;
+            padding: 24px;
+            overflow: hidden;
+        }
+        
+        .code-textarea {
+            width: 100%;
+            height: 100%;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            background: #fafafa;
+            resize: none;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        
+        .code-textarea:focus {
+            border-color: #1976d2;
+            box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.2);
+        }
+        
+        /* Test Results */
+        .test-results {
+            border-top: 1px solid #e0e0e0;
+            background: white;
+            max-height: 40vh;
+            overflow-y: auto;
+        }
+        
+        .test-results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            background: white;
+        }
+        
+        .test-results-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+        
+        .results-chip {
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .test-results-content {
+            padding: 16px 24px;
+        }
+        
+        .test-result-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+        
+        .test-result-card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transform: translateY(-1px);
+        }
+        
+        .test-result-card.passed {
+            border-color: #4caf50;
+            background: #f1f8e9;
+        }
+        
+        .test-result-card.failed {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+        
+        .test-result-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px;
+            background: white;
+        }
+        
+        .test-case-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a1a1a;
+        }
+        
+        .status-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+        }
+        
+        .status-icon.passed { background: #4caf50; }
+        .status-icon.failed { background: #f44336; }
+        .status-icon.pending { background: #9e9e9e; }
+        
+        .test-result-details {
+            padding: 16px;
+        }
+        
+        .test-detail-section {
+            margin-bottom: 12px;
+        }
+        
+        .test-detail-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        
+        .test-detail-value {
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: #1a1a1a;
+        }
+        
+        .test-detail-value.error {
+            background: #ffebee;
+            border-color: #f44336;
+            color: #c62828;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .problem-sidebar {
+                width: 280px;
+            }
+            .problem-detail {
+                width: 320px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            .problem-sidebar,
+            .problem-detail {
+                width: 100%;
+                height: auto;
+                max-height: 200px;
+            }
+        }
+        
+        /* Accessibility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        
+        /* Focus indicators */
+        .problem-item:focus,
+        .icon-button:focus,
+        .action-button:focus,
+        .language-selector:focus,
+        .search-input:focus {
+            outline: 2px solid #1976d2;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Application -->
+    <div class="app">
+        <!-- Navigation Bar -->
+        <nav class="navbar" role="banner">
+            <div class="navbar-left">
+                <div class="logo" aria-label="Dessai Logo">D</div>
+                <h1 class="brand-name">Dessai Coding Platform</h1>
+            </div>
+            <div class="navbar-right">
+                <span class="beta-chip" role="status" aria-label="Beta version">Beta</span>
+            </div>
+        </nav>
+
+        <!-- Main Content Container -->
+        <main class="main-container" role="main">
+            <!-- Problem Sidebar -->
+            <aside class="problem-sidebar" role="complementary" aria-label="Problem list">
+                <div class="sidebar-header">
+                    <span class="material-icons" style="color: #1976d2;">code</span>
+                    <h2 class="sidebar-title">Problems</h2>
+                </div>
+                
+                <div class="search-container">
+                    <input 
+                        type="text" 
+                        class="search-input" 
+                        placeholder="Search problems..." 
+                        aria-label="Search problems"
+                    />
+                </div>
+                
+                <ul class="problem-list" role="list">
+                    <li role="listitem">
+                        <button class="problem-item active" role="button" aria-current="page">
+                            <div class="problem-title">
+                                <span>Two Sum</span>
+                                <span class="difficulty-chip difficulty-easy">Easy</span>
+                            </div>
+                        </button>
+                    </li>
+                    <li role="listitem">
+                        <button class="problem-item" role="button">
+                            <div class="problem-title">
+                                <span>Add Two Numbers</span>
+                                <span class="difficulty-chip difficulty-medium">Medium</span>
+                            </div>
+                        </button>
+                    </li>
+                    <li role="listitem">
+                        <button class="problem-item" role="button">
+                            <div class="problem-title">
+                                <span>Longest Substring</span>
+                                <span class="difficulty-chip difficulty-medium">Medium</span>
+                            </div>
+                        </button>
+                    </li>
+                    <li role="listitem">
+                        <button class="problem-item" role="button">
+                            <div class="problem-title">
+                                <span>Median of Arrays</span>
+                                <span class="difficulty-chip difficulty-hard">Hard</span>
+                            </div>
+                        </button>
+                    </li>
+                </ul>
+            </aside>
+
+            <!-- Problem Detail Panel -->
+            <section class="problem-detail" role="region" aria-label="Problem details">
+                <div class="problem-header">
+                    <h2 class="problem-detail-title">Two Sum</h2>
+                    <span class="difficulty-chip difficulty-easy">Easy</span>
+                </div>
+                
+                <div class="problem-description">
+Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.
+
+You may assume that each input would have exactly one solution, and you may not use the same element twice.
+
+You can return the answer in any order.
+                </div>
+                
+                <div class="test-cases-section">
+                    <h3 class="test-cases-title">Test Cases</h3>
+                    
+                    <div class="test-case">
+                        <div class="test-case-content">
+                            <span class="input-chip">Input: [2,7,11,15], 9</span>
+                            <span style="color: #666;">→</span>
+                            <span class="output-chip">Output: [0,1]</span>
+                        </div>
+                    </div>
+                    
+                    <div class="test-case">
+                        <div class="test-case-content">
+                            <span class="input-chip">Input: [3,2,4], 6</span>
+                            <span style="color: #666;">→</span>
+                            <span class="output-chip">Output: [1,2]</span>
+                        </div>
+                    </div>
+                    
+                    <div class="test-case">
+                        <div class="test-case-content">
+                            <span class="input-chip">Input: [3,3], 6</span>
+                            <span style="color: #666;">→</span>
+                            <span class="output-chip">Output: [0,1]</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Code Editor Section -->
+            <section class="code-editor-container" role="region" aria-label="Code editor">
+                <!-- Editor Header -->
+                <div class="editor-header">
+                    <div class="editor-title-section">
+                        <h2 class="editor-title">Code Editor</h2>
+                        
+                        <select class="language-selector" aria-label="Select programming language">
+                            <option value="javascript">🟨 JavaScript</option>
+                            <option value="python">🐍 Python</option>
+                            <option value="typescript">🔷 TypeScript</option>
+                            <option value="java">☕ Java</option>
+                        </select>
+                    </div>
+                    
+                    <div class="editor-actions">
+                        <button class="icon-button" aria-label="Toggle dark/light theme" title="Toggle theme">
+                            <span class="material-icons">light_mode</span>
+                        </button>
+                        
+                        <button class="icon-button" aria-label="Copy code to clipboard" title="Copy code">
+                            <span class="material-icons">content_copy</span>
+                        </button>
+                        
+                        <button class="action-button" aria-label="Run code">
+                            <span class="material-icons">play_arrow</span>
+                            Run Code
+                        </button>
+                        
+                        <button class="action-button primary" aria-label="Submit solution">
+                            <span class="material-icons">send</span>
+                            Submit
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Code Editor Content -->
+                <div class="code-editor">
+                    <div class="editor-content">
+                        <textarea 
+                            class="code-textarea" 
+                            aria-label="Code editor"
+                            placeholder="Write your JavaScript solution here..."
+                        >// Write your solution here
+function twoSum(nums, target) {
+    // TODO: Implement your solution
+    const map = new Map();
+    
+    for (let i = 0; i < nums.length; i++) {
+        const complement = target - nums[i];
+        
+        if (map.has(complement)) {
+            return [map.get(complement), i];
+        }
+        
+        map.set(nums[i], i);
+    }
+    
+    return [];
+}</textarea>
+                    </div>
+                </div>
+
+                <!-- Test Results Section -->
+                <div class="test-results">
+                    <div class="test-results-header">
+                        <h2 class="test-results-title">Test Results</h2>
+                        <span class="results-chip" role="status" aria-label="Test results summary">3/3 passed</span>
+                    </div>
+                    
+                    <div class="test-results-content">
+                        <!-- Test Case 1 - Passed -->
+                        <div class="test-result-card passed">
+                            <div class="test-result-header">
+                                <h3 class="test-case-title">Test Case 1</h3>
+                                <div class="status-icon passed" aria-label="Passed">✓</div>
+                            </div>
+                            <div class="test-result-details">
+                                <div class="test-detail-section">
+                                    <h4 class="test-detail-label">Input:</h4>
+                                    <div class="test-detail-value">[2,7,11,15], 9</div>
+                                </div>
+                                <div class="test-detail-section">
+                                    <h4 class="test-detail-label">Expected:</h4>
+                                    <div class="test-detail-value">[0,1]</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Test Case 2 - Passed -->
+                        <div class="test-result-card passed">
+                            <div class="test-result-header">
+                                <h3 class="test-case-title">Test Case 2</h3>
+                                <div class="status-icon passed" aria-label="Passed">✓</div>
+                            </div>
+                            <div class="test-result-details">
+                                <div class="test-detail-section">
+                                    <h4 class="test-detail-label">Input:</h4>
+                                    <div class="test-detail-value">[3,2,4], 6</div>
+                                </div>
+                                <div class="test-detail-section">
+                                    <h4 class="test-detail-label">Expected:</h4>
+                                    <div class="test-detail-value">[1,2]</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Test Case 3 - Passed -->
+                        <div class="test-result-card passed">
+                            <div class="test-result-header">
+                                <h3 class="test-case-title">Test Case 3</h3>
+                                <div class="status-icon passed" aria-label="Passed">✓</div>
+                            </div>
+                            <div class="test-result-details">
+                                <div class="test-detail-section">
+                                    <h4 class="test-detail-label">Input:</h4>
+                                    <div class="test-detail-value">[3,3], 6</div>
+                                </div>
+                                <div class="test-detail-section">
+                                    <h4 class="test-detail-label">Expected:</h4>
+                                    <div class="test-detail-value">[0,1]</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Screen Reader Announcements -->
+    <div id="announcements" aria-live="polite" aria-atomic="true" class="sr-only"></div>
+
+    <script>
+        // Basic interactivity for demo purposes
+        document.addEventListener('DOMContentLoaded', function() {
+            // Problem selection
+            const problemItems = document.querySelectorAll('.problem-item');
+            problemItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    problemItems.forEach(p => p.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Announce to screen readers
+                    const announcement = document.getElementById('announcements');
+                    announcement.textContent = `Selected problem: ${this.querySelector('.problem-title span').textContent}`;
+                });
+            });
+
+            // Language selector
+            const languageSelector = document.querySelector('.language-selector');
+            const codeTextarea = document.querySelector('.code-textarea');
+            
+            const templates = {
+                javascript: `// Write your solution here
+function twoSum(nums, target) {
+    // TODO: Implement your solution
+    return [];
+}`,
+                python: `# Write your solution here
+def twoSum(nums, target):
+    # TODO: Implement your solution
+    pass`,
+                typescript: `// Write your solution here
+function twoSum(nums: number[], target: number): number[] {
+    // TODO: Implement your solution
+    return [];
+}`,
+                java: `// Write your solution here
+public class Solution {
+    public int[] twoSum(int[] nums, int target) {
+        // TODO: Implement your solution
+        return new int[]{};
+    }
+}`
+            };
+
+            languageSelector.addEventListener('change', function() {
+                const selectedLang = this.value;
+                codeTextarea.value = templates[selectedLang] || templates.javascript;
+                codeTextarea.placeholder = `Write your ${this.options[this.selectedIndex].text} solution here...`;
+            });
+
+            // Copy to clipboard
+            const copyButton = document.querySelector('[aria-label="Copy code to clipboard"]');
+            copyButton.addEventListener('click', function() {
+                navigator.clipboard.writeText(codeTextarea.value).then(() => {
+                    const announcement = document.getElementById('announcements');
+                    announcement.textContent = 'Code copied to clipboard';
+                });
+            });
+
+            // Theme toggle
+            const themeButton = document.querySelector('[aria-label="Toggle dark/light theme"]');
+            themeButton.addEventListener('click', function() {
+                document.body.classList.toggle('dark-theme');
+                const icon = this.querySelector('.material-icons');
+                icon.textContent = icon.textContent === 'light_mode' ? 'dark_mode' : 'light_mode';
+            });
+
+            // Search functionality
+            const searchInput = document.querySelector('.search-input');
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase();
+                problemItems.forEach(item => {
+                    const title = item.querySelector('.problem-title span').textContent.toLowerCase();
+                    const listItem = item.closest('li');
+                    listItem.style.display = title.includes(query) ? 'block' : 'none';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

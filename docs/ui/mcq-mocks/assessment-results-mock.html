@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment Results Screen - Mock</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background-color: #fafafa;
+            color: #1a1a1a;
+            line-height: 1.6;
+            padding: 24px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .results-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 48px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        
+        .trophy-icon {
+            font-size: 80px !important;
+            margin-bottom: 16px;
+        }
+        
+        .trophy-icon.success {
+            color: #4caf50;
+        }
+        
+        .trophy-icon.warning {
+            color: #ff9800;
+        }
+        
+        .score-display {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .score-display.success {
+            color: #4caf50;
+        }
+        
+        .score-display.warning {
+            color: #ff9800;
+        }
+        
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .result-title.success {
+            color: #4caf50;
+        }
+        
+        .result-title.warning {
+            color: #ff9800;
+        }
+        
+        .result-message {
+            color: #666666;
+            margin-bottom: 32px;
+            font-size: 1rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .stat-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 24px;
+            background: white;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .stat-value.primary {
+            color: #1976d2;
+        }
+        
+        .stat-value.secondary {
+            color: #c51162;
+        }
+        
+        .stat-value.info {
+            color: #2196f3;
+        }
+        
+        .stat-value.success {
+            color: #4caf50;
+        }
+        
+        .stat-value.error {
+            color: #f44336;
+        }
+        
+        .stat-label {
+            color: #666666;
+            font-size: 0.875rem;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #1976d2;
+            border: 2px solid #1976d2;
+        }
+        
+        .btn-outline:hover {
+            background: #e3f2fd;
+        }
+        
+        .btn-primary {
+            background: #1976d2;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #1565c0;
+        }
+        
+        .material-icons {
+            font-size: 20px;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 16px;
+            margin-top: 32px;
+        }
+        
+        .section-title:first-child {
+            margin-top: 0;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .results-card {
+                padding: 32px 24px;
+            }
+            
+            .trophy-icon {
+                font-size: 60px !important;
+            }
+            
+            .score-display {
+                font-size: 2.5rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="margin-bottom: 24px; color: #1976d2;">Assessment Results Examples</h1>
+        
+        <!-- Passed Assessment -->
+        <div class="section-title">Passed Assessment (85%)</div>
+        <div class="results-card fade-in">
+            <div class="trophy-icon success material-icons">emoji_events</div>
+            <div class="score-display success">85%</div>
+            <div class="result-title success">Assessment Passed</div>
+            <div class="result-message">
+                Congratulations! You have successfully completed the assessment.
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value primary">85%</div>
+                    <div class="stat-label">Final Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value secondary">7/8</div>
+                    <div class="stat-label">Questions Answered</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value info">18m</div>
+                    <div class="stat-label">Time Taken</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value success">PASS</div>
+                    <div class="stat-label">Result</div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-outline">
+                    <span class="material-icons">quiz</span>
+                    Review Answers
+                </button>
+                <button class="btn btn-primary">
+                    <span class="material-icons">restart_alt</span>
+                    Retake Assessment
+                </button>
+            </div>
+        </div>
+
+        <!-- Failed Assessment -->
+        <div class="section-title">Failed Assessment (55%)</div>
+        <div class="results-card fade-in">
+            <div class="trophy-icon warning material-icons">emoji_events</div>
+            <div class="score-display warning">55%</div>
+            <div class="result-title warning">Assessment Not Passed</div>
+            <div class="result-message">
+                You need 70% to pass. Keep practicing!
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value primary">55%</div>
+                    <div class="stat-label">Final Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value secondary">6/8</div>
+                    <div class="stat-label">Questions Answered</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value info">25m</div>
+                    <div class="stat-label">Time Taken</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value error">FAIL</div>
+                    <div class="stat-label">Result</div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-outline">
+                    <span class="material-icons">quiz</span>
+                    Review Answers
+                </button>
+                <button class="btn btn-primary">
+                    <span class="material-icons">restart_alt</span>
+                    Retake Assessment
+                </button>
+            </div>
+        </div>
+
+        <!-- Perfect Score -->
+        <div class="section-title">Perfect Score (100%)</div>
+        <div class="results-card fade-in">
+            <div class="trophy-icon success material-icons">emoji_events</div>
+            <div class="score-display success">100%</div>
+            <div class="result-title success">Perfect Score!</div>
+            <div class="result-message">
+                Outstanding! You have achieved a perfect score on this assessment.
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value primary">100%</div>
+                    <div class="stat-label">Final Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value secondary">8/8</div>
+                    <div class="stat-label">Questions Answered</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value info">22m</div>
+                    <div class="stat-label">Time Taken</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value success">PERFECT</div>
+                    <div class="stat-label">Result</div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-outline">
+                    <span class="material-icons">quiz</span>
+                    Review Answers
+                </button>
+                <button class="btn btn-primary">
+                    <span class="material-icons">home</span>
+                    Back to Dashboard
+                </button>
+            </div>
+        </div>
+
+        <!-- Time's Up Scenario -->
+        <div class="section-title">Time's Up Scenario (62%)</div>
+        <div class="results-card fade-in">
+            <div class="trophy-icon warning material-icons">emoji_events</div>
+            <div class="score-display warning">62%</div>
+            <div class="result-title warning">Assessment Not Passed</div>
+            <div class="result-message">
+                Time ran out! You need 70% to pass. Consider managing your time better on the next attempt.
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value primary">62%</div>
+                    <div class="stat-label">Final Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value secondary">5/8</div>
+                    <div class="stat-label">Questions Answered</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value info">30m</div>
+                    <div class="stat-label">Time Taken</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value error">TIMEOUT</div>
+                    <div class="stat-label">Result</div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-outline">
+                    <span class="material-icons">quiz</span>
+                    Review Answers
+                </button>
+                <button class="btn btn-primary">
+                    <span class="material-icons">restart_alt</span>
+                    Retake Assessment
+                </button>
+            </div>
+        </div>
+
+        <!-- Minimal Fail -->
+        <div class="section-title">Close Call (68%)</div>
+        <div class="results-card fade-in">
+            <div class="trophy-icon warning material-icons">emoji_events</div>
+            <div class="score-display warning">68%</div>
+            <div class="result-title warning">Assessment Not Passed</div>
+            <div class="result-message">
+                So close! You need 70% to pass. Just a little more practice and you'll get there.
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value primary">68%</div>
+                    <div class="stat-label">Final Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value secondary">8/8</div>
+                    <div class="stat-label">Questions Answered</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value info">27m</div>
+                    <div class="stat-label">Time Taken</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value error">FAIL</div>
+                    <div class="stat-label">Result</div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-outline">
+                    <span class="material-icons">quiz</span>
+                    Review Answers
+                </button>
+                <button class="btn btn-primary">
+                    <span class="material-icons">restart_alt</span>
+                    Retake Assessment
+                </button>
+            </div>
+        </div>
+
+        <!-- Interactive Demo -->
+        <div class="section-title">Interactive Demo</div>
+        <div style="text-align: center; margin-bottom: 16px;">
+            <label for="scoreInput" style="margin-right: 8px;">Enter Score (0-100):</label>
+            <input type="number" id="scoreInput" min="0" max="100" value="75" style="padding: 8px; border: 1px solid #ccc; border-radius: 4px; margin-right: 8px;">
+            <button onclick="generateResult()" style="padding: 8px 16px; background: #1976d2; color: white; border: none; border-radius: 4px; cursor: pointer;">Generate Result</button>
+        </div>
+
+        <div id="dynamicResult" class="results-card fade-in" style="display: none;">
+            <div id="dynamicTrophy" class="trophy-icon material-icons">emoji_events</div>
+            <div id="dynamicScore" class="score-display">75%</div>
+            <div id="dynamicTitle" class="result-title">Assessment Passed</div>
+            <div id="dynamicMessage" class="result-message">
+                Congratulations! You have successfully completed the assessment.
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div id="dynamicStatScore" class="stat-value primary">75%</div>
+                    <div class="stat-label">Final Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value secondary">8/8</div>
+                    <div class="stat-label">Questions Answered</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value info">24m</div>
+                    <div class="stat-label">Time Taken</div>
+                </div>
+                <div class="stat-card">
+                    <div id="dynamicResult" class="stat-value success">PASS</div>
+                    <div class="stat-label">Result</div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-outline">
+                    <span class="material-icons">quiz</span>
+                    Review Answers
+                </button>
+                <button class="btn btn-primary">
+                    <span class="material-icons">restart_alt</span>
+                    Retake Assessment
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function generateResult() {
+            const score = parseInt(document.getElementById('scoreInput').value);
+            const passingScore = 70;
+            const passed = score >= passingScore;
+            
+            const resultCard = document.getElementById('dynamicResult');
+            const trophy = document.getElementById('dynamicTrophy');
+            const scoreDisplay = document.getElementById('dynamicScore');
+            const title = document.getElementById('dynamicTitle');
+            const message = document.getElementById('dynamicMessage');
+            const statScore = document.getElementById('dynamicStatScore');
+            const resultStatus = document.getElementById('dynamicResult');
+            
+            // Update score
+            scoreDisplay.textContent = score + '%';
+            statScore.textContent = score + '%';
+            
+            // Update based on pass/fail
+            if (passed) {
+                trophy.className = 'trophy-icon success material-icons';
+                scoreDisplay.className = 'score-display success';
+                title.className = 'result-title success';
+                title.textContent = score === 100 ? 'Perfect Score!' : 'Assessment Passed';
+                message.textContent = score === 100 ? 
+                    'Outstanding! You have achieved a perfect score on this assessment.' :
+                    'Congratulations! You have successfully completed the assessment.';
+                resultStatus.className = 'stat-value success';
+                resultStatus.textContent = score === 100 ? 'PERFECT' : 'PASS';
+            } else {
+                trophy.className = 'trophy-icon warning material-icons';
+                scoreDisplay.className = 'score-display warning';
+                title.className = 'result-title warning';
+                title.textContent = 'Assessment Not Passed';
+                
+                if (score >= 65) {
+                    message.textContent = `So close! You need ${passingScore}% to pass. Just a little more practice and you'll get there.`;
+                } else {
+                    message.textContent = `You need ${passingScore}% to pass. Keep practicing!`;
+                }
+                
+                resultStatus.className = 'stat-value error';
+                resultStatus.textContent = 'FAIL';
+            }
+            
+            // Show the result
+            resultCard.style.display = 'block';
+            resultCard.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

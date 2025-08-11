@@ -1,0 +1,122 @@
+# AI-Native Development Configuration
+version: "1.0.0"
+last_updated: "2025-08-08"
+
+# Global AI Settings
+ai:
+  max_tokens_per_request: 4000
+  context_window_size: 32000
+  temperature: 0.1
+  top_p: 0.95
+  
+  # Core behavioral requirements
+  global_instructions:
+    - "ALWAYS identify the persona being used at the start of every response"
+    - "ALWAYS check existing documentation before creating new documentation"
+    - "ALWAYS update existing documentation when creating comprehensive new content"
+    - "NEVER create isolated documentation without considering the broader context"
+    - "ALWAYS include a suggested git commit message in the summary when completing any request - make it concise and follow conventional commit format"
+  
+  # Token optimization settings
+  optimization:
+    enable_context_caching: true
+    compress_prompts: true
+    reuse_snippets: true
+    max_context_age_hours: 24
+
+# Persona Configuration
+personas:
+  code_generator:
+    name: "Senior Software Engineer"
+    specialty: "Code generation, implementation, debugging"
+    temperature: 0.1
+    max_tokens: 4000
+    
+  documentation:
+    name: "Technical Writer"
+    specialty: "Documentation, comments, explanations"
+    temperature: 0.2
+    max_tokens: 3000
+    
+  testing:
+    name: "Quality Assurance Engineer"
+    specialty: "Test generation, validation, coverage"
+    temperature: 0.1
+    max_tokens: 3500
+    
+  refactoring:
+    name: "Code Architect"
+    specialty: "Refactoring, optimization, patterns"
+    temperature: 0.1
+    max_tokens: 4000
+    
+  security:
+    name: "Security Specialist"
+    specialty: "Security analysis, vulnerability detection"
+    temperature: 0.05
+    max_tokens: 3500
+    
+  cto_advisor:
+    name: "Technical Strategy Advisor"
+    specialty: "Technical decisions, architecture, team guidance"
+    temperature: 0.3
+    max_tokens: 2500
+    
+  ceo_advisor:
+    name: "Business Strategy Advisor"
+    specialty: "Business impact, resource allocation, strategic planning"
+    temperature: 0.3
+    max_tokens: 2500
+
+# Code Quality Standards
+quality:
+  linting:
+    enabled: true
+    strict_mode: true
+    fail_on_warnings: true
+    
+  formatting:
+    auto_format: true
+    check_before_commit: true
+    
+  type_checking:
+    strict: true
+    no_implicit_any: true
+    
+  testing:
+    minimum_coverage: 80
+    require_tests_for_ai_code: true
+
+# Security Settings
+security:
+  sensitive_patterns:
+    - "password"
+    - "api_key"
+    - "secret"
+    - "token"
+    - "private_key"
+    - "connection_string"
+  
+  audit_trail: true
+  require_human_review: true
+  sandbox_execution: true
+
+# Prompt Engineering Settings
+prompting:
+  techniques:
+    - "chain_of_thought"
+    - "tree_of_thoughts"
+    - "react"
+    - "few_shot"
+    
+  optimization:
+    use_templates: true
+    compress_context: true
+    cache_responses: true
+
+# Feedback and Learning
+feedback:
+  collect_ratings: true
+  track_effectiveness: true
+  continuous_improvement: true
+  metrics_retention_days: 90

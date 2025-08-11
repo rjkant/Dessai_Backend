@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCQ Question Mock</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <style>
+    body {
+      font-family: 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+      background: #fafafa;
+      color: #1a1a1a;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 700px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      padding: 32px 24px;
+      margin: 24px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 16px;
+    }
+    .header-icon {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      border-radius: 8px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+    .header-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    .header-desc {
+      color: #555;
+      font-size: 1rem;
+    }
+    .meta {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .chip {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      border-radius: 12px;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      background: #e8f5e8;
+      color: #2e7d32;
+    }
+    .chip.primary { background: #e3f2fd; color: #1976d2; }
+    .chip.secondary { background: #fff3e0; color: #f57c00; }
+    .chip.default { background: #f5f5f5; color: #333; }
+    .question-header {
+      margin-bottom: 8px;
+      font-size: 1.1rem;
+      color: #333;
+      font-weight: 500;
+    }
+    .question-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .question-text {
+      font-size: 1rem;
+      margin-bottom: 24px;
+      color: #222;
+    }
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .option {
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      border-radius: 10px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .option.selected {
+      border-color: #667eea;
+      background: #eef2ff;
+      color: #667eea;
+    }
+    .option input[type="radio"] {
+      accent-color: #667eea;
+      margin-right: 0.75rem;
+    }
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 16px;
+    }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all 0.2s ease;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn.outlined {
+      background: #f8f9fa;
+      color: #333;
+      border: 1px solid #e9ecef;
+    }
+    .instructions {
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 24px;
+    }
+    .instructions-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .instructions-list {
+      margin: 0;
+      padding-left: 20px;
+      color: #555;
+      font-size: 0.95rem;
+    }
+    @media (max-width: 600px) {
+      .container {
+        padding: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-icon">
+        <span class="material-icons">quiz</span>
+      </div>
+      <div>
+        <div class="header-title">Frontend Development Assessment</div>
+        <div class="header-desc">Test your knowledge of React, JavaScript, and web development fundamentals</div>
+      </div>
+    </div>
+    <div class="meta">
+      <span class="chip primary"><span class="material-icons" style="font-size:16px;vertical-align:middle;">schedule</span>30 min</span>
+      <span class="chip secondary"><span class="material-icons" style="font-size:16px;vertical-align:middle;">check_circle</span>70% to pass</span>
+      <span class="chip default">Easy</span>
+      <span class="chip default">React</span>
+      <span class="chip default"><span class="material-icons" style="font-size:16px;vertical-align:middle;">quiz</span>single choice</span>
+      <span class="chip primary">10 pts</span>
+    </div>
+    <div class="question-header">Question 1 of 8</div>
+    <div class="question-title">React Hooks</div>
+    <div class="question-text">Which React Hook is used to manage state in functional components?</div>
+    <form class="options">
+      <label class="option">
+        <input type="radio" name="answer" value="a1">
+        useEffect
+      </label>
+      <label class="option selected">
+        <input type="radio" name="answer" value="a2" checked>
+        useState
+      </label>
+      <label class="option">
+        <input type="radio" name="answer" value="a3">
+        useContext
+      </label>
+      <label class="option">
+        <input type="radio" name="answer" value="a4">
+        useReducer
+      </label>
+    </form>
+    <div class="nav">
+      <button class="btn outlined" type="button">
+        <span class="material-icons" style="vertical-align: middle;">chevron_left</span>
+        Previous
+      </button>
+      <button class="btn" type="button">
+        Next
+        <span class="material-icons" style="vertical-align: middle;">chevron_right</span>
+      </button>
+    </div>
+    <div class="instructions">
+      <div class="instructions-title">Instructions:</div>
+      <ul class="instructions-list">
+        <li>Read each question carefully before selecting your answer</li>
+        <li>For multiple choice questions, select all correct answers</li>
+        <li>You can navigate between questions and change your answers</li>
+        <li>Click Submit when you are ready to finish the assessment</li>
+        <li>Make sure to review your answers before submitting</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

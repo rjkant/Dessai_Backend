@@ -1,0 +1,274 @@
+name: 🐛 AI-Assisted Bug Report
+description: Report a bug to be investigated and fixed with AI assistance
+title: "[AI Bug] "
+labels: ["bug", "ai-assisted", "needs-investigation"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## AI-Assisted Bug Report
+        This template helps structure bug reports for AI-assisted investigation and resolution.
+        
+        **Guidelines:**
+        - Provide detailed reproduction steps
+        - Include relevant error messages and logs
+        - Specify environment and configuration details
+        - Consider security implications of the bug
+
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Bug Description
+      description: Clearly describe the bug and its impact
+      placeholder: |
+        Example: User authentication fails when JWT token contains special characters in the payload, causing users to be logged out unexpectedly during coding sessions.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What should happen?
+      placeholder: |
+        Example: JWT tokens should be properly encoded/decoded regardless of special characters in the payload, and users should remain authenticated throughout their session.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual-behavior
+    attributes:
+      label: Actual Behavior
+      description: What actually happens?
+      placeholder: |
+        Example: Authentication fails with "Invalid token" error, user is redirected to login page, and their coding progress is lost.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction-steps
+    attributes:
+      label: Steps to Reproduce
+      description: Provide detailed steps to reproduce the issue
+      placeholder: |
+        Example:
+        1. Log in as a user with special characters in their name (e.g., "João Silva")
+        2. Start a coding assessment session
+        3. Work on the assessment for 10+ minutes
+        4. Attempt to submit code or navigate to next question
+        5. Observe authentication failure and redirect to login
+      value: |
+        1. 
+        2. 
+        3. 
+    validations:
+      required: true
+
+  - type: textarea
+    id: error-messages
+    attributes:
+      label: Error Messages and Logs
+      description: Include any error messages, stack traces, or log output
+      placeholder: |
+        Example:
+        ```
+        Error: Invalid token signature
+            at jwt.verify (/app/middleware/auth.js:25:15)
+            at AuthMiddleware.validateToken (/app/middleware/auth.js:45:8)
+        
+        Browser Console:
+        - 401 Unauthorized: GET /api/user/profile
+        - Network error: Failed to fetch user data
+        
+        Server Logs:
+        [2025-01-01 10:30:15] ERROR: JWT verification failed for user ID 12345
+        [2025-01-01 10:30:15] WARN: Multiple failed authentication attempts detected
+        ```
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Information
+      description: Specify the environment where the bug occurs
+      placeholder: |
+        Example:
+        - OS: Windows 11, macOS Monterey
+        - Browser: Chrome 119, Firefox 118, Safari 16
+        - Node.js version: 18.17.0
+        - Application version: 1.2.3
+        - Environment: Production, Staging, Local Development
+        - Database: PostgreSQL 15.2
+        - Dependencies: jwt@9.0.0, express@4.18.2
+      value: |
+        - OS: 
+        - Browser: 
+        - Node.js version: 
+        - Application version: 
+        - Environment: 
+        - Database: 
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      description: How severe is this bug?
+      options:
+        - Critical (System down, data loss, security breach)
+        - High (Major functionality broken, many users affected)
+        - Medium (Some functionality impaired, workaround available)
+        - Low (Minor issue, cosmetic, edge case)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: frequency
+    attributes:
+      label: Frequency
+      description: How often does this bug occur?
+      options:
+        - Always (100% reproduction rate)
+        - Often (>75% of the time)
+        - Sometimes (25-75% of the time)
+        - Rarely (<25% of the time)
+        - Once (Unable to reproduce)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: ai-persona
+    attributes:
+      label: Recommended AI Persona for Investigation
+      description: Which AI persona should investigate this bug?
+      options:
+        - Code Generator (Implementation fixes)
+        - Security Specialist (Security-related bugs)
+        - QA Engineer (Testing and validation)
+        - Refactoring Architect (Architecture issues)
+        - Multiple personas required
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected-components
+    attributes:
+      label: Affected Components
+      description: List the components, services, or modules affected by this bug
+      placeholder: |
+        Example:
+        - Authentication middleware (/src/middleware/auth.js)
+        - JWT token service (/src/services/jwt-service.js)
+        - User session management (/src/services/session-service.js)
+        - Frontend authentication store (/src/store/auth-store.ts)
+        - API route protection (/src/routes/protected-routes.js)
+    validations:
+      required: true
+
+  - type: textarea
+    id: security-implications
+    attributes:
+      label: Security Implications
+      description: Does this bug have security implications?
+      placeholder: |
+        Example:
+        - Potential for session hijacking if tokens are not properly validated
+        - User data might be accessible without proper authentication
+        - Risk of privilege escalation if authentication bypass is possible
+        - Audit trail might be incomplete due to authentication failures
+    validations:
+      required: false
+
+  - type: textarea
+    id: business-impact
+    attributes:
+      label: Business Impact
+      description: How does this bug affect users and business operations?
+      placeholder: |
+        Example:
+        - Users lose their assessment progress when authentication fails
+        - Increased support requests and user frustration
+        - Potential revenue loss from incomplete assessments
+        - Damage to platform reliability and user trust
+        - Increased server load from repeated authentication attempts
+    validations:
+      required: true
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: Workaround (if any)
+      description: Is there a temporary workaround for this issue?
+      placeholder: |
+        Example:
+        - Users can avoid the issue by using names without special characters
+        - Administrators can manually reset user sessions in the database
+        - Temporary fix: increase JWT token expiration time to reduce frequency
+    validations:
+      required: false
+
+  - type: textarea
+    id: investigation-hints
+    attributes:
+      label: Investigation Hints
+      description: Any clues or hints that might help with investigation?
+      placeholder: |
+        Example:
+        - Issue started appearing after JWT library upgrade from v8 to v9
+        - Similar issues reported with Unicode characters in JWT payloads
+        - Problem might be related to base64 encoding/decoding
+        - Issue only occurs with certain character encodings (UTF-8)
+        - Related GitHub issues: #123, #456
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other information that might be helpful
+      placeholder: |
+        Example:
+        - Screenshots or screen recordings of the issue
+        - Network request/response details
+        - Database query logs
+        - Performance metrics during the incident
+        - User feedback or support ticket references
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: investigation-checklist
+    attributes:
+      label: Investigation Checklist
+      description: Confirm these investigation steps will be followed
+      options:
+        - label: I will provide AI with complete code context for the affected components
+          required: true
+        - label: I will ensure security review is included in the bug fix process
+          required: true
+        - label: I will validate the fix with comprehensive testing before production
+          required: true
+        - label: I will ensure proper logging and monitoring are in place to prevent recurrence
+          required: true
+        - label: I will document the root cause and solution for future reference
+          required: true
+
+  - type: checkboxes
+    id: ai-guidelines
+    attributes:
+      label: AI Development Guidelines
+      description: Confirm understanding of AI-assisted bug resolution requirements
+      options:
+        - label: I understand this bug will be investigated and fixed with AI assistance
+          required: true
+        - label: I will ensure all AI-generated fixes receive human review before production
+          required: true
+        - label: I will validate that the fix doesn't introduce new security vulnerabilities
+          required: true
+        - label: I will ensure comprehensive regression testing is performed
+          required: true

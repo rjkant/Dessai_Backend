@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Question Card Component - Mock</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background-color: #fafafa;
+            color: #1a1a1a;
+            line-height: 1.6;
+            padding: 24px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .question-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .form-label {
+            font-weight: 500;
+            margin-bottom: 16px;
+            display: block;
+            color: #1a1a1a;
+        }
+        
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .option-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+        }
+        
+        .option-card:hover {
+            background: #f5f5f5;
+            transform: translateX(4px);
+        }
+        
+        .option-card.selected {
+            border-color: #1976d2;
+            background: #e3f2fd;
+        }
+        
+        .option-card.correct-selected {
+            border-color: #4caf50;
+            background: #e8f5e8;
+        }
+        
+        .option-card.correct-missed {
+            border-color: #ff9800;
+            background: #fff3e0;
+        }
+        
+        .option-card.incorrect-selected {
+            border-color: #f44336;
+            background: #ffebee;
+        }
+        
+        .option-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .radio-icon, .checkbox-icon {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ccc;
+            border-radius: 50%;
+            position: relative;
+            flex-shrink: 0;
+        }
+        
+        .checkbox-icon {
+            border-radius: 4px;
+        }
+        
+        .radio-icon.selected, .checkbox-icon.selected {
+            border-color: #1976d2;
+        }
+        
+        .radio-icon.selected::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            background: #1976d2;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .checkbox-icon.selected::after {
+            content: '✓';
+            color: #1976d2;
+            font-size: 14px;
+            font-weight: bold;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .option-text {
+            flex: 1;
+        }
+        
+        .correct-chip {
+            background: #e8f5e8;
+            color: #4caf50;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-left: auto;
+            margin-top: 8px;
+        }
+        
+        .explanation-box {
+            margin-top: 24px;
+            padding: 16px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            border-left: 4px solid #1976d2;
+        }
+        
+        .explanation-title {
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 8px;
+        }
+        
+        .explanation-text {
+            color: #1976d2;
+            font-size: 0.875rem;
+        }
+        
+        .material-icons {
+            font-size: 20px;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 16px;
+            margin-top: 32px;
+        }
+        
+        .section-title:first-child {
+            margin-top: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .option-card {
+                padding: 12px;
+            }
+            
+            .option-content {
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="margin-bottom: 24px; color: #1976d2;">Question Card Component Examples</h1>
+        
+        <!-- Single Choice Question -->
+        <div class="section-title">Single Choice Question</div>
+        <div class="question-card">
+            <div class="form-label">Select one answer:</div>
+            <div class="options-container">
+                <div class="option-card">
+                    <div class="option-content">
+                        <div class="radio-icon"></div>
+                        <div class="option-text">useEffect</div>
+                    </div>
+                </div>
+                <div class="option-card selected">
+                    <div class="option-content">
+                        <div class="radio-icon selected"></div>
+                        <div class="option-text">useState</div>
+                    </div>
+                </div>
+                <div class="option-card">
+                    <div class="option-content">
+                        <div class="radio-icon"></div>
+                        <div class="option-text">useContext</div>
+                    </div>
+                </div>
+                <div class="option-card">
+                    <div class="option-content">
+                        <div class="radio-icon"></div>
+                        <div class="option-text">useReducer</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Question -->
+        <div class="section-title">Multiple Choice Question</div>
+        <div class="question-card">
+            <div class="form-label">Select all correct answers:</div>
+            <div class="options-container">
+                <div class="option-card selected">
+                    <div class="option-content">
+                        <div class="checkbox-icon selected"></div>
+                        <div class="option-text">Arrow functions</div>
+                    </div>
+                </div>
+                <div class="option-card selected">
+                    <div class="option-content">
+                        <div class="checkbox-icon selected"></div>
+                        <div class="option-text">Template literals</div>
+                    </div>
+                </div>
+                <div class="option-card">
+                    <div class="option-content">
+                        <div class="checkbox-icon"></div>
+                        <div class="option-text">var keyword</div>
+                    </div>
+                </div>
+                <div class="option-card selected">
+                    <div class="option-content">
+                        <div class="checkbox-icon selected"></div>
+                        <div class="option-text">Destructuring</div>
+                    </div>
+                </div>
+                <div class="option-card">
+                    <div class="option-content">
+                        <div class="checkbox-icon"></div>
+                        <div class="option-text">Promises</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- True/False Question -->
+        <div class="section-title">True/False Question</div>
+        <div class="question-card">
+            <div class="form-label">Select True or False:</div>
+            <div class="options-container">
+                <div class="option-card selected">
+                    <div class="option-content">
+                        <div class="radio-icon selected"></div>
+                        <div class="option-text" style="font-weight: 500;">True</div>
+                    </div>
+                </div>
+                <div class="option-card">
+                    <div class="option-content">
+                        <div class="radio-icon"></div>
+                        <div class="option-text" style="font-weight: 500;">False</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Review Mode Examples -->
+        <div class="section-title">Review Mode - Correct Answer Selected</div>
+        <div class="question-card">
+            <div class="form-label">Select one answer:</div>
+            <div class="options-container">
+                <div class="option-card">
+                    <div class="option-content">
+                        <div class="radio-icon"></div>
+                        <div class="option-text">useEffect</div>
+                    </div>
+                </div>
+                <div class="option-card correct-selected">
+                    <div class="option-content">
+                        <div class="radio-icon selected"></div>
+                        <div class="option-text">useState</div>
+                    </div>
+                    <div class="correct-chip">Correct Answer</div>
+                </div>
+                <div class="option-card">
+                    <div class="option-content">
+                        <div class="radio-icon"></div>
+                        <div class="option-text">useContext</div>
+                    </div>
+                </div>
+                <div class="option-card">
+                    <div class="option-content">
+                        <div class="radio-icon"></div>
+                        <div class="option-text">useReducer</div>
+                    </div>
+                </div>
+            </div>
+            <div class="explanation-box">
+                <div class="explanation-title">Explanation:</div>
+                <div class="explanation-text">
+                    useState is the React Hook specifically designed for managing state in functional components.
+                </div>
+            </div>
+        </div>
+
+        <!-- Review Mode - Incorrect Answer Selected -->
+        <div class="section-title">Review Mode - Incorrect Answer Selected</div>
+        <div class="question-card">
+            <div class="form-label">Select one answer:</div>
+            <div class="options-container">
+                <div class="option-card incorrect-selected">
+                    <div class="option-content">
+                        <div class="radio-icon selected"></div>
+                        <div class="option-text">useEffect</div>
+                    </div>
+                </div>
+                <div class="option-card correct-missed">
+                    <div class="option-content">
+                        <div class="radio-icon"></div>
+                        <div class="option-text">useState</div>
+                    </div>
+                    <div class="correct-chip">Correct Answer</div>
+                </div>
+                <div class="option-card">
+                    <div class="option-content">
+                        <div class="radio-icon"></div>
+                        <div class="option-text">useContext</div>
+                    </div>
+                </div>
+                <div class="option-card">
+                    <div class="option-content">
+                        <div class="radio-icon"></div>
+                        <div class="option-text">useReducer</div>
+                    </div>
+                </div>
+            </div>
+            <div class="explanation-box">
+                <div class="explanation-title">Explanation:</div>
+                <div class="explanation-text">
+                    useState is the React Hook specifically designed for managing state in functional components. useEffect is used for side effects, not state management.
+                </div>
+            </div>
+        </div>
+
+        <!-- Multiple Choice Review Mode -->
+        <div class="section-title">Review Mode - Multiple Choice (Mixed Results)</div>
+        <div class="question-card">
+            <div class="form-label">Select all correct answers:</div>
+            <div class="options-container">
+                <div class="option-card correct-selected">
+                    <div class="option-content">
+                        <div class="checkbox-icon selected"></div>
+                        <div class="option-text">Arrow functions</div>
+                    </div>
+                    <div class="correct-chip">Correct Answer</div>
+                </div>
+                <div class="option-card correct-missed">
+                    <div class="option-content">
+                        <div class="checkbox-icon"></div>
+                        <div class="option-text">Template literals</div>
+                    </div>
+                    <div class="correct-chip">Correct Answer</div>
+                </div>
+                <div class="option-card incorrect-selected">
+                    <div class="option-content">
+                        <div class="checkbox-icon selected"></div>
+                        <div class="option-text">var keyword</div>
+                    </div>
+                </div>
+                <div class="option-card correct-selected">
+                    <div class="option-content">
+                        <div class="checkbox-icon selected"></div>
+                        <div class="option-text">Destructuring</div>
+                    </div>
+                    <div class="correct-chip">Correct Answer</div>
+                </div>
+                <div class="option-card correct-missed">
+                    <div class="option-content">
+                        <div class="checkbox-icon"></div>
+                        <div class="option-text">Promises</div>
+                    </div>
+                    <div class="correct-chip">Correct Answer</div>
+                </div>
+            </div>
+            <div class="explanation-box">
+                <div class="explanation-title">Explanation:</div>
+                <div class="explanation-text">
+                    Arrow functions, template literals, destructuring, and Promises were all introduced in ES6. The var keyword existed before ES6 and is not an ES6 feature.
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

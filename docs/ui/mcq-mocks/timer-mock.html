@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timer Component - Mock</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background-color: #fafafa;
+            color: #1a1a1a;
+            line-height: 1.6;
+            padding: 24px;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .timer-container {
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+        }
+        
+        .warning-alert {
+            background: #fff3e0;
+            border: 1px solid #ff9800;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .warning-alert .material-icons {
+            color: #f57c00;
+        }
+        
+        .warning-text {
+            color: #f57c00;
+            font-size: 0.875rem;
+        }
+        
+        .critical-alert {
+            background: #ffebee;
+            border: 1px solid #f44336;
+        }
+        
+        .critical-alert .material-icons {
+            color: #f44336;
+        }
+        
+        .critical-alert .warning-text {
+            color: #f44336;
+        }
+        
+        .timer-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #1976d2;
+            padding: 24px;
+            text-align: center;
+        }
+        
+        .timer-card.warning {
+            border-left-color: #ff9800;
+            background: #fff9e6;
+        }
+        
+        .timer-card.critical {
+            border-left-color: #f44336;
+            background: #ffebee;
+        }
+        
+        .timer-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 16px;
+            border: 1px solid transparent;
+        }
+        
+        .timer-chip.primary {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-color: #1976d2;
+        }
+        
+        .timer-chip.warning {
+            background: #fff3e0;
+            color: #f57c00;
+            border-color: #f57c00;
+        }
+        
+        .timer-chip.critical {
+            background: #ffebee;
+            color: #f44336;
+            border-color: #f44336;
+        }
+        
+        .timer-display {
+            font-size: 3rem;
+            font-family: monospace;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin: 16px 0;
+        }
+        
+        .timer-display.primary {
+            color: #1976d2;
+        }
+        
+        .timer-display.warning {
+            color: #f57c00;
+        }
+        
+        .timer-display.critical {
+            color: #f44336;
+        }
+        
+        .progress-section {
+            margin: 16px 0;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-fill.primary {
+            background: #1976d2;
+        }
+        
+        .progress-fill.warning {
+            background: #ff9800;
+        }
+        
+        .progress-fill.critical {
+            background: #f44336;
+        }
+        
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 0.75rem;
+            color: #666666;
+        }
+        
+        .timer-info {
+            margin-top: 16px;
+        }
+        
+        .assessment-title {
+            color: #666666;
+            font-size: 0.875rem;
+            margin-bottom: 4px;
+        }
+        
+        .status-message {
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .status-message.warning {
+            color: #f57c00;
+        }
+        
+        .status-message.critical {
+            color: #f44336;
+        }
+        
+        .material-icons {
+            font-size: 16px;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 16px;
+            margin-top: 32px;
+        }
+        
+        .section-title:first-child {
+            margin-top: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .timer-display {
+                font-size: 2.5rem;
+            }
+            
+            .progress-info {
+                flex-direction: column;
+                gap: 4px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="margin-bottom: 24px; color: #1976d2;">Timer Component Examples</h1>
+        
+        <!-- Normal State (Plenty of Time) -->
+        <div class="section-title">Normal State (27 minutes remaining)</div>
+        <div class="timer-container">
+            <div class="timer-card">
+                <div class="timer-chip primary">
+                    <span class="material-icons">timer</span>
+                    Time Remaining
+                </div>
+                
+                <div class="timer-display primary">27:03</div>
+                
+                <div class="progress-section">
+                    <div class="progress-bar">
+                        <div class="progress-fill primary" style="width: 10%;"></div>
+                    </div>
+                    <div class="progress-info">
+                        <span>Started</span>
+                        <span>10% elapsed</span>
+                        <span>Total: 30:00</span>
+                    </div>
+                </div>
+                
+                <div class="timer-info">
+                    <div class="assessment-title">Assessment: Frontend Development Assessment</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Warning State (7 minutes remaining) -->
+        <div class="section-title">Warning State (7 minutes remaining)</div>
+        <div class="timer-container">
+            <div class="warning-alert">
+                <span class="material-icons">warning</span>
+                <span class="warning-text">Only 7 minutes remaining!</span>
+            </div>
+            
+            <div class="timer-card warning">
+                <div class="timer-chip warning">
+                    <span class="material-icons">timer</span>
+                    Time Remaining
+                </div>
+                
+                <div class="timer-display warning">7:45</div>
+                
+                <div class="progress-section">
+                    <div class="progress-bar">
+                        <div class="progress-fill warning" style="width: 74%;"></div>
+                    </div>
+                    <div class="progress-info">
+                        <span>Started</span>
+                        <span>74% elapsed</span>
+                        <span>Total: 30:00</span>
+                    </div>
+                </div>
+                
+                <div class="timer-info">
+                    <div class="assessment-title">Assessment: Frontend Development Assessment</div>
+                    <div class="status-message warning">Time running low</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Critical State (3 minutes remaining) -->
+        <div class="section-title">Critical State (3 minutes remaining)</div>
+        <div class="timer-container">
+            <div class="warning-alert critical-alert">
+                <span class="material-icons">warning</span>
+                <span class="warning-text">Only 3 minutes remaining!</span>
+            </div>
+            
+            <div class="timer-card critical">
+                <div class="timer-chip critical">
+                    <span class="material-icons">timer</span>
+                    Time Remaining
+                </div>
+                
+                <div class="timer-display critical">3:27</div>
+                
+                <div class="progress-section">
+                    <div class="progress-bar">
+                        <div class="progress-fill critical" style="width: 88%;"></div>
+                    </div>
+                    <div class="progress-info">
+                        <span>Started</span>
+                        <span>88% elapsed</span>
+                        <span>Total: 30:00</span>
+                    </div>
+                </div>
+                
+                <div class="timer-info">
+                    <div class="assessment-title">Assessment: Frontend Development Assessment</div>
+                    <div class="status-message critical">Submit soon!</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Different Time Formats -->
+        <div class="section-title">Different Time Formats</div>
+        
+        <!-- Hours Format -->
+        <div class="timer-container" style="margin-bottom: 16px;">
+            <div class="timer-card">
+                <div class="timer-chip primary">
+                    <span class="material-icons">timer</span>
+                    Time Remaining
+                </div>
+                
+                <div class="timer-display primary">1:15:30</div>
+                
+                <div class="progress-section">
+                    <div class="progress-bar">
+                        <div class="progress-fill primary" style="width: 5%;"></div>
+                    </div>
+                    <div class="progress-info">
+                        <span>Started</span>
+                        <span>5% elapsed</span>
+                        <span>Total: 1:20:00</span>
+                    </div>
+                </div>
+                
+                <div class="timer-info">
+                    <div class="assessment-title">Assessment: Advanced Development Assessment</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Seconds Only -->
+        <div class="timer-container">
+            <div class="timer-card critical">
+                <div class="timer-chip critical">
+                    <span class="material-icons">timer</span>
+                    Time Remaining
+                </div>
+                
+                <div class="timer-display critical">0:47</div>
+                
+                <div class="progress-section">
+                    <div class="progress-bar">
+                        <div class="progress-fill critical" style="width: 97%;"></div>
+                    </div>
+                    <div class="progress-info">
+                        <span>Started</span>
+                        <span>97% elapsed</span>
+                        <span>Total: 30:00</span>
+                    </div>
+                </div>
+                
+                <div class="timer-info">
+                    <div class="assessment-title">Assessment: Frontend Development Assessment</div>
+                    <div class="status-message critical">Submit now!</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Demo -->
+        <div class="section-title">Interactive Demo</div>
+        <div style="text-align: center; margin-top: 16px;">
+            <button onclick="startDemo()" style="padding: 12px 24px; background: #1976d2; color: white; border: none; border-radius: 8px; cursor: pointer; margin-right: 8px;">Start Countdown Demo</button>
+            <button onclick="stopDemo()" style="padding: 12px 24px; background: #f44336; color: white; border: none; border-radius: 8px; cursor: pointer;">Stop Demo</button>
+        </div>
+        
+        <div class="timer-container" style="margin-top: 16px;">
+            <div id="demoAlert" class="warning-alert" style="display: none;">
+                <span class="material-icons">warning</span>
+                <span class="warning-text" id="demoAlertText">Demo running...</span>
+            </div>
+            
+            <div id="demoTimer" class="timer-card">
+                <div class="timer-chip primary" id="demoChip">
+                    <span class="material-icons">timer</span>
+                    Time Remaining
+                </div>
+                
+                <div class="timer-display primary" id="demoDisplay">10:00</div>
+                
+                <div class="progress-section">
+                    <div class="progress-bar">
+                        <div class="progress-fill primary" id="demoProgress" style="width: 0%;"></div>
+                    </div>
+                    <div class="progress-info">
+                        <span>Started</span>
+                        <span id="demoPercent">0% elapsed</span>
+                        <span>Total: 10:00</span>
+                    </div>
+                </div>
+                
+                <div class="timer-info">
+                    <div class="assessment-title">Demo Assessment</div>
+                    <div id="demoStatus" class="status-message" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let demoInterval;
+        let timeRemaining = 600; // 10 minutes in seconds
+        const totalTime = 600;
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function updateTimer() {
+            const display = document.getElementById('demoDisplay');
+            const progress = document.getElementById('demoProgress');
+            const percent = document.getElementById('demoPercent');
+            const timer = document.getElementById('demoTimer');
+            const chip = document.getElementById('demoChip');
+            const alert = document.getElementById('demoAlert');
+            const alertText = document.getElementById('demoAlertText');
+            const status = document.getElementById('demoStatus');
+
+            display.textContent = formatTime(timeRemaining);
+            
+            const elapsed = totalTime - timeRemaining;
+            const progressPercent = (elapsed / totalTime) * 100;
+            progress.style.width = progressPercent + '%';
+            percent.textContent = Math.round(progressPercent) + '% elapsed';
+
+            // Update colors and states based on time remaining
+            if (timeRemaining <= 60) { // Critical - 1 minute
+                timer.className = 'timer-card critical';
+                chip.className = 'timer-chip critical';
+                display.className = 'timer-display critical';
+                progress.className = 'progress-fill critical';
+                alert.style.display = 'flex';
+                alert.className = 'warning-alert critical-alert';
+                alertText.textContent = 'Only 1 minute remaining!';
+                status.style.display = 'block';
+                status.className = 'status-message critical';
+                status.textContent = 'Submit now!';
+            } else if (timeRemaining <= 300) { // Warning - 5 minutes
+                timer.className = 'timer-card warning';
+                chip.className = 'timer-chip warning';
+                display.className = 'timer-display warning';
+                progress.className = 'progress-fill warning';
+                alert.style.display = 'flex';
+                alert.className = 'warning-alert';
+                alertText.textContent = `Only ${Math.floor(timeRemaining / 60)} minutes remaining!`;
+                status.style.display = 'block';
+                status.className = 'status-message warning';
+                status.textContent = 'Time running low';
+            } else { // Normal
+                timer.className = 'timer-card';
+                chip.className = 'timer-chip primary';
+                display.className = 'timer-display primary';
+                progress.className = 'progress-fill primary';
+                alert.style.display = 'none';
+                status.style.display = 'none';
+            }
+
+            timeRemaining--;
+
+            if (timeRemaining < 0) {
+                clearInterval(demoInterval);
+                display.textContent = '0:00';
+                alert.style.display = 'flex';
+                alert.className = 'warning-alert critical-alert';
+                alertText.textContent = 'Time is up!';
+                status.style.display = 'block';
+                status.className = 'status-message critical';
+                status.textContent = 'Assessment auto-submitted';
+            }
+        }
+
+        function startDemo() {
+            timeRemaining = 600; // Reset to 10 minutes
+            clearInterval(demoInterval);
+            demoInterval = setInterval(updateTimer, 100); // Update every 100ms for demo speed
+        }
+
+        function stopDemo() {
+            clearInterval(demoInterval);
+            timeRemaining = 600;
+            
+            // Reset to initial state
+            const display = document.getElementById('demoDisplay');
+            const progress = document.getElementById('demoProgress');
+            const percent = document.getElementById('demoPercent');
+            const timer = document.getElementById('demoTimer');
+            const chip = document.getElementById('demoChip');
+            const alert = document.getElementById('demoAlert');
+            const status = document.getElementById('demoStatus');
+
+            display.textContent = '10:00';
+            display.className = 'timer-display primary';
+            progress.style.width = '0%';
+            progress.className = 'progress-fill primary';
+            percent.textContent = '0% elapsed';
+            timer.className = 'timer-card';
+            chip.className = 'timer-chip primary';
+            alert.style.display = 'none';
+            status.style.display = 'none';
+        }
+    </script>
+</body>
+</html>

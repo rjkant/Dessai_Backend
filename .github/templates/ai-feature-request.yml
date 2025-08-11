@@ -1,0 +1,234 @@
+name: 🤖 AI-Assisted Feature Request
+description: Request a new feature to be implemented with AI assistance
+title: "[AI Feature] "
+labels: ["enhancement", "ai-assisted", "needs-review"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## AI-Assisted Feature Request
+        This template helps structure feature requests for AI-assisted implementation.
+        
+        **Guidelines:**
+        - Provide clear, specific requirements
+        - Include business context and user needs
+        - Specify technical constraints and preferences
+        - Consider security and performance implications
+
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Feature Description
+      description: Describe the feature you want to implement
+      placeholder: |
+        Example: Implement a real-time code collaboration feature that allows multiple users to edit code simultaneously with conflict resolution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: business-context
+    attributes:
+      label: Business Context
+      description: Explain why this feature is needed and its business value
+      placeholder: |
+        Example: This feature will enable live coding interviews where interviewer and candidate can collaborate in real-time, improving the interview experience and allowing for better assessment of collaboration skills.
+    validations:
+      required: true
+
+  - type: textarea
+    id: user-stories
+    attributes:
+      label: User Stories
+      description: Define user stories for this feature
+      placeholder: |
+        Example:
+        - As an interviewer, I want to see candidate's code changes in real-time so I can provide immediate feedback
+        - As a candidate, I want to collaborate with the interviewer on code so I can demonstrate my problem-solving approach
+        - As a system admin, I want to monitor collaboration sessions so I can ensure system performance
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Define what constitutes a complete implementation
+      placeholder: |
+        Example:
+        - [ ] Multiple users can edit the same code file simultaneously
+        - [ ] Changes are synchronized in real-time (< 100ms latency)
+        - [ ] Conflict resolution handles simultaneous edits gracefully
+        - [ ] User cursors and selections are visible to all participants
+        - [ ] Chat functionality for communication during collaboration
+        - [ ] Session recording for later review
+    validations:
+      required: true
+
+  - type: dropdown
+    id: ai-persona
+    attributes:
+      label: Recommended AI Persona
+      description: Which AI persona should handle this implementation?
+      options:
+        - Code Generator (Feature implementation)
+        - Refactoring Architect (Code improvement)
+        - Security Specialist (Security features)
+        - QA Engineer (Testing focus)
+        - Technical Writer (Documentation)
+        - CTO Advisor (Architecture decisions)
+        - CEO Advisor (Business strategy)
+        - Multiple personas required
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical-requirements
+    attributes:
+      label: Technical Requirements
+      description: Specify technical constraints and preferences
+      placeholder: |
+        Example:
+        - Use WebSocket for real-time communication
+        - Integrate with Monaco Editor
+        - Support for TypeScript, JavaScript, Python, Java
+        - Redis for session state management
+        - JWT authentication for session security
+        - Docker containerized deployment
+    validations:
+      required: true
+
+  - type: textarea
+    id: security-considerations
+    attributes:
+      label: Security Considerations
+      description: Identify security requirements and potential risks
+      placeholder: |
+        Example:
+        - Authenticate all collaboration session participants
+        - Encrypt all real-time communications
+        - Implement rate limiting for message frequency
+        - Audit logging for all collaboration activities
+        - Session isolation to prevent data leakage
+        - Sanitize all user inputs to prevent XSS
+    validations:
+      required: true
+
+  - type: textarea
+    id: performance-requirements
+    attributes:
+      label: Performance Requirements
+      description: Define performance expectations
+      placeholder: |
+        Example:
+        - Real-time synchronization with < 100ms latency
+        - Support up to 10 concurrent users per session
+        - Handle 1000+ simultaneous collaboration sessions
+        - Graceful degradation under high load
+        - Offline support with sync when reconnected
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: What is the priority of this feature?
+      options:
+        - Critical (Blocks other work)
+        - High (Important for next release)
+        - Medium (Nice to have)
+        - Low (Future consideration)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: complexity
+    attributes:
+      label: Estimated Complexity
+      description: How complex do you think this feature is?
+      options:
+        - Simple (1-2 days)
+        - Moderate (3-5 days)
+        - Complex (1-2 weeks)
+        - Very Complex (2+ weeks)
+    validations:
+      required: true
+
+  - type: textarea
+    id: testing-requirements
+    attributes:
+      label: Testing Requirements
+      description: Define testing strategy and requirements
+      placeholder: |
+        Example:
+        - Unit tests for all collaboration logic
+        - Integration tests for WebSocket connections
+        - End-to-end tests for complete user workflows
+        - Performance tests for concurrent users
+        - Security tests for authentication and authorization
+        - Accessibility tests for screen readers
+    validations:
+      required: true
+
+  - type: textarea
+    id: documentation-needs
+    attributes:
+      label: Documentation Requirements
+      description: What documentation is needed for this feature?
+      placeholder: |
+        Example:
+        - API documentation for collaboration endpoints
+        - User guide for collaboration features
+        - Architecture documentation for real-time system
+        - Troubleshooting guide for common issues
+        - Integration guide for third-party services
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies and Constraints
+      description: List any dependencies or constraints
+      placeholder: |
+        Example:
+        - Depends on user authentication system completion
+        - Must integrate with existing code editor component
+        - Budget constraint: minimize infrastructure costs
+        - Timeline constraint: needed for Q2 release
+        - Technology constraint: must use existing tech stack
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any other information that might be helpful
+      placeholder: |
+        Example:
+        - Reference implementations from other platforms
+        - User feedback or research supporting this feature
+        - Competitive analysis or market requirements
+        - Technical research or proof-of-concept work done
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: ai-guidelines
+    attributes:
+      label: AI Development Guidelines
+      description: Confirm understanding of AI-assisted development requirements
+      options:
+        - label: I understand this feature will be implemented with AI assistance
+          required: true
+        - label: I will ensure all AI-generated code receives human review before production
+          required: true
+        - label: I will validate that security requirements are met in the implementation
+          required: true
+        - label: I will ensure comprehensive testing is included with the implementation
+          required: true
+        - label: I will review and approve all documentation generated by AI
+          required: true
