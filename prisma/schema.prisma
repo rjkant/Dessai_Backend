@@ -1,0 +1,466 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// USER MANAGEMENT MODELS (Sprint 1)
+// ============================================================================
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  domain      String?
+  settings    Json     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users       User[]
+  assessments Assessment[]
+
+  @@map("organizations")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  firstName      String
+  lastName       String
+  profileImage   String?
+  timezone       String    @default("UTC")
+  preferences    Json      @default("{}")
+  isActive       Boolean   @default(true)
+  emailVerified  Boolean   @default(false)
+  lastLoginAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Authentication
+  passwordHash   String
+  mfaEnabled     Boolean   @default(false)
+  mfaSecret      String?
+  refreshTokens  String[]  @default([])
+
+  // Organization relationship
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Role relationship
+  roleId         String
+  role           Role      @relation(fields: [roleId], references: [id])
+
+  // Relations
+  auditLogs      AuditLog[]
+  assessmentParticipations AssessmentParticipation[]
+  proctoringSessions ProctorSession[]
+
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique // SuperAdmin, OrgAdmin, Interviewer, Candidate
+  description String?
+  permissions Json     @default("[]") // Array of permission strings
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users       User[]
+
+  @@map("roles")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String   // CREATE, UPDATE, DELETE, LOGIN, LOGOUT, etc.
+  resource   String   // users, assessments, etc.
+  resourceId String?
+  details    Json     @default("{}")
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  // Relations
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
+
+// ============================================================================
+// ASSESSMENT MODELS (Sprint 2)
+// ============================================================================
+
+model Assessment {
+  id                String    @id @default(cuid())
+  title             String
+  description       String?
+  type              AssessmentType
+  status            AssessmentStatus @default(DRAFT)
+  timeLimit         Int?      // in minutes
+  settings          Json      @default("{}")
+  scheduledAt       DateTime?
+  startsAt          DateTime?
+  endsAt            DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Organization relationship
+  organizationId    String
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Relations
+  questions         AssessmentQuestion[]
+  participations    AssessmentParticipation[]
+  proctoringSessions ProctorSession[]
+
+  @@map("assessments")
+}
+
+model Question {
+  id            String        @id @default(cuid())
+  title         String
+  description   String
+  type          QuestionType
+  difficulty    Difficulty
+  tags          String[]      @default([])
+  content       Json          // Question-specific content
+  metadata      Json          @default("{}")
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  // Relations
+  assessments   AssessmentQuestion[]
+  submissions   Submission[]
+
+  @@map("questions")
+}
+
+model AssessmentQuestion {
+  id           String     @id @default(cuid())
+  order        Int
+  points       Int        @default(100)
+  isRequired   Boolean    @default(true)
+  settings     Json       @default("{}")
+
+  // Relationships
+  assessmentId String
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  questionId   String
+  question     Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([assessmentId, questionId])
+  @@map("assessment_questions")
+}
+
+model AssessmentParticipation {
+  id              String                    @id @default(cuid())
+  status          ParticipationStatus       @default(INVITED)
+  invitedAt       DateTime                  @default(now())
+  startedAt       DateTime?
+  completedAt     DateTime?
+  score           Float?
+  feedback        String?
+  metadata        Json                      @default("{}")
+
+  // Relationships
+  assessmentId    String
+  assessment      Assessment                @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Relations
+  submissions     Submission[]
+  collaborationSessions CollaborationSession[]
+
+  @@unique([assessmentId, userId])
+  @@map("assessment_participations")
+}
+
+model Submission {
+  id              String    @id @default(cuid())
+  content         Json      // Submission content (code, answers, etc.)
+  isCorrect       Boolean?
+  score           Float?
+  executionTime   Int?      // in milliseconds
+  feedback        String?
+  metadata        Json      @default("{}")
+  submittedAt     DateTime  @default(now())
+
+  // Relationships
+  participationId String
+  participation   AssessmentParticipation @relation(fields: [participationId], references: [id], onDelete: Cascade)
+  questionId      String
+  question        Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("submissions")
+}
+
+// ============================================================================
+// COLLABORATION MODELS (Sprint 2)
+// ============================================================================
+
+model CollaborationSession {
+  id              String    @id @default(cuid())
+  sessionToken    String    @unique
+  isActive        Boolean   @default(true)
+  settings        Json      @default("{}")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relationships
+  participationId String
+  participation   AssessmentParticipation @relation(fields: [participationId], references: [id], onDelete: Cascade)
+
+  // Relations
+  events          CollaborationEvent[]
+
+  @@map("collaboration_sessions")
+}
+
+model CollaborationEvent {
+  id          String    @id @default(cuid())
+  type        String    // cursor_move, code_change, selection_change, etc.
+  data        Json
+  timestamp   DateTime  @default(now())
+
+  // Relationships
+  sessionId   String
+  session     CollaborationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("collaboration_events")
+}
+
+// ============================================================================
+// PROCTORING MODELS (Sprint 4)
+// ============================================================================
+
+model ProctorSession {
+  id              String    @id @default(cuid())
+  status          ProctorStatus @default(ACTIVE)
+  settings        Json      @default("{}")
+  anomaliesCount  Int       @default(0)
+  startedAt       DateTime  @default(now())
+  endedAt         DateTime?
+
+  // Relationships
+  assessmentId    String
+  assessment      Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Relations
+  events          ProctorEvent[]
+  anomalies       ProctorAnomaly[]
+
+  @@unique([assessmentId, userId])
+  @@map("proctor_sessions")
+}
+
+model ProctorEvent {
+  id          String    @id @default(cuid())
+  type        String    // video_frame, audio_sample, screen_capture, etc.
+  data        Json
+  timestamp   DateTime  @default(now())
+
+  // Relationships
+  sessionId   String
+  session     ProctorSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("proctor_events")
+}
+
+model ProctorAnomaly {
+  id          String    @id @default(cuid())
+  type        String    // multiple_faces, looking_away, tab_switch, etc.
+  severity    AnomalySeverity
+  confidence  Float
+  description String?
+  data        Json      @default("{}")
+  detectedAt  DateTime  @default(now())
+
+  // Relationships
+  sessionId   String
+  session     ProctorSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("proctor_anomalies")
+}
+
+// ============================================================================
+// CODE EXECUTION MODELS (Sprint 3)
+// ============================================================================
+
+model ExecutionJob {
+  id              String         @id @default(cuid())
+  language        String
+  code            String
+  input           String?
+  status          ExecutionStatus @default(QUEUED)
+  output          String?
+  error           String?
+  executionTime   Int?           // in milliseconds
+  memoryUsage     Int?           // in bytes
+  exitCode        Int?
+  metadata        Json           @default("{}")
+  createdAt       DateTime       @default(now())
+  startedAt       DateTime?
+  completedAt     DateTime?
+
+  @@map("execution_jobs")
+}
+
+// ============================================================================
+// ANALYTICS MODELS (Sprint 5)
+// ============================================================================
+
+model AnalyticsEvent {
+  id          String    @id @default(cuid())
+  type        String    // assessment_start, question_view, code_execute, etc.
+  userId      String?
+  sessionId   String?
+  properties  Json      @default("{}")
+  timestamp   DateTime  @default(now())
+
+  @@map("analytics_events")
+}
+
+// ============================================================================
+// NOTIFICATION MODELS (Sprint 6)
+// ============================================================================
+
+model NotificationTemplate {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  type        NotificationType
+  subject     String?
+  content     String
+  variables   Json      @default("[]") // Array of variable names
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  notifications Notification[]
+
+  @@map("notification_templates")
+}
+
+model Notification {
+  id          String            @id @default(cuid())
+  type        NotificationType
+  channel     NotificationChannel
+  recipient   String            // email, phone, user_id, etc.
+  subject     String?
+  content     String
+  status      NotificationStatus @default(PENDING)
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  metadata    Json              @default("{}")
+  createdAt   DateTime          @default(now())
+
+  // Relationships
+  templateId  String?
+  template    NotificationTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  @@map("notifications")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum AssessmentType {
+  CODING
+  MCQ
+  SYSTEM_DESIGN
+  MIXED
+}
+
+enum AssessmentStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum QuestionType {
+  CODING
+  MULTIPLE_CHOICE
+  SYSTEM_DESIGN
+  DATABASE
+  ALGORITHM
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+  EXPERT
+}
+
+enum ParticipationStatus {
+  INVITED
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+  EXPIRED
+}
+
+enum ProctorStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+  FAILED
+}
+
+enum AnomalySeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ExecutionStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  TIMEOUT
+  CANCELLED
+}
+
+enum NotificationType {
+  EMAIL
+  SMS
+  PUSH
+  IN_APP
+  WEBHOOK
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+  PUSH
+  IN_APP
+  WEBHOOK
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  DELIVERED
+  FAILED
+  CANCELLED
+}

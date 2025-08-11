@@ -1,0 +1,293 @@
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output/
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# next.js build output
+.next
+
+# nuxt.js build output
+.nuxt
+
+# vuepress build output
+.vuepress/dist
+
+# Serverless directories
+.serverless/
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Database files
+*.sqlite
+*.sqlite3
+*.db
+
+# Upload directories
+uploads/
+temp/
+
+# Test artifacts
+test-results/
+test-output/
+
+# Prisma
+prisma/migrations/
+prisma/dev.db
+prisma/test.db
+*.db-journal
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+.docker/
+
+# Kubernetes secrets
+k8s/secrets/
+*.kubeconfig
+
+# Monitoring and metrics
+prometheus_data/
+grafana_data/
+
+# Security and secrets
+.env.vault
+.env.*.local
+.secrets/
+secrets/
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+keys/
+
+# Build and compilation artifacts
+lib/
+out/
+.next/
+.nuxt/
+.output/
+.vercel/
+.netlify/
+
+# Testing
+.nyc_output/
+junit.xml
+test-report.xml
+coverage-final.json
+.jest-cache/
+
+# Development tools
+.history/
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.vscode/.ropeproject
+
+# Linting and formatting
+.eslintcache
+.stylelintcache
+.prettierignore
+
+# Package managers
+package-lock.json.bak
+yarn.lock.bak
+pnpm-lock.yaml.bak
+.pnpm-store/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+.temp/
+*.swp
+*.swo
+
+# AI and documentation generation
+.ai/cache/
+.ai/temp/
+
+# Redis dump files
+dump.rdb
+appendonly.aof
+
+# PostgreSQL
+*.dump
+*.sql.backup
+
+# Application specific
+uploads/
+downloads/
+public/uploads/
+storage/
+cache/
+
+# Analytics and tracking
+.amplitude/
+.mixpanel/
+.segment/
+
+# Performance monitoring
+.newrelic/
+.datadog/
+
+# CDN and assets
+assets/generated/
+public/dist/
+
+# Backup files
+*.backup
+*.bak
+*.orig
+
+# Windows specific
+desktop.ini
+$RECYCLE.BIN/
+
+# macOS specific
+.AppleDouble
+.LSOverride
+Icon?
+.DocumentRevisions-V100
+.fseventsd
+.TemporaryItems
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Linux specific
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Development environment specific
+.env.development
+.env.staging
+.env.production
+.env.test
+
+# JWT and session keys
+jwt-*.key
+session-*.key
+
+# SSL certificates and keys (if stored locally)
+ssl/
+certificates/
+
+# Node.js heap dumps
+*.heapsnapshot
+
+# Profiling data
+*.cpuprofile
+*.heapprofile
+
+# Storybook build outputs
+storybook-static/
+
+# Webpack
+.webpack/
+
+# Vite
+.vite/
+
+# Rollup
+.rollup.cache/
+
+# SWC
+.swc/
+
+# Turborepo
+.turbo/
+
+# Nx
+.nx/
+
+# Rush
+common/temp/

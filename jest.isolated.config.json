@@ -1,0 +1,12 @@
+{
+  "displayName": "Isolated Auth Tests",
+  "testEnvironment": "node",
+  "preset": "ts-jest",
+  "testMatch": ["**/auth.isolated.test.ts"],
+  "transform": {
+    "^.+\\.ts$": "ts-jest"
+  },
+  "moduleFileExtensions": ["ts", "js", "json"],
+  "verbose": true,
+  "testTimeout": 10000
+}
