@@ -1,0 +1,476 @@
+# Dessai Platform - ELK Stack Configuration for Log Management
+
+# Elasticsearch Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elasticsearch-config
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: elasticsearch
+    app.kubernetes.io/component: config
+data:
+  elasticsearch.yml: |
+    cluster.name: "dessai-logs"
+    network.host: 0.0.0.0
+    discovery.type: single-node
+    
+    # Performance tuning
+    bootstrap.memory_lock: false
+    indices.memory.index_buffer_size: 30%
+    
+    # Index lifecycle management
+    xpack.ilm.enabled: true
+    
+    # Security (disabled for simplicity, enable in production)
+    xpack.security.enabled: false
+    xpack.monitoring.collection.enabled: true
+    
+    # Log settings
+    logger.level: INFO
+    logger.org.elasticsearch.discovery: WARN
+
+  log4j2.properties: |
+    status = error
+    
+    appender.console.type = Console
+    appender.console.name = console
+    appender.console.layout.type = PatternLayout
+    appender.console.layout.pattern = [%d{ISO8601}][%-5p][%-25c{1.}] [%node_name]%marker %m%n
+    
+    rootLogger.level = info
+    rootLogger.appenderRef.console.ref = console
+
+---
+# Logstash Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash-config
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: logstash
+    app.kubernetes.io/component: config
+data:
+  logstash.yml: |
+    http.host: "0.0.0.0"
+    path.config: /usr/share/logstash/pipeline
+    xpack.monitoring.elasticsearch.hosts: ["http://elasticsearch-service:9200"]
+
+  pipelines.yml: |
+    - pipeline.id: dessai-logs
+      path.config: "/usr/share/logstash/pipeline/dessai-logs.conf"
+
+  dessai-logs.conf: |
+    input {
+      beats {
+        port => 5044
+      }
+      
+      # Direct log input from applications
+      http {
+        port => 8080
+        codec => json
+      }
+      
+      # Kubernetes logs via Filebeat
+      tcp {
+        port => 5000
+        codec => json_lines
+      }
+    }
+    
+    filter {
+      # Parse application logs
+      if [fields][log_type] == "application" {
+        json {
+          source => "message"
+        }
+        
+        # Add timestamp
+        date {
+          match => [ "timestamp", "ISO8601" ]
+        }
+        
+        # Parse log levels
+        mutate {
+          uppercase => [ "level" ]
+        }
+        
+        # Extract user information
+        if [context][userId] {
+          mutate {
+            add_field => { "user_id" => "%{[context][userId]}" }
+          }
+        }
+        
+        # Extract request information
+        if [context][requestId] {
+          mutate {
+            add_field => { "request_id" => "%{[context][requestId]}" }
+          }
+        }
+        
+        # Categorize logs
+        if [context][category] {
+          mutate {
+            add_field => { "log_category" => "%{[context][category]}" }
+          }
+        }
+        
+        # Extract error information
+        if [error] {
+          mutate {
+            add_field => { "error_name" => "%{[error][name]}" }
+            add_field => { "error_message" => "%{[error][message]}" }
+          }
+        }
+      }
+      
+      # Parse Kubernetes logs
+      if [kubernetes] {
+        mutate {
+          add_field => { "k8s_namespace" => "%{[kubernetes][namespace]}" }
+          add_field => { "k8s_pod" => "%{[kubernetes][pod][name]}" }
+          add_field => { "k8s_container" => "%{[kubernetes][container][name]}" }
+        }
+      }
+      
+      # Parse access logs
+      if [fields][log_type] == "access" {
+        grok {
+          match => { "message" => "%{COMBINEDAPACHELOG}" }
+        }
+        
+        date {
+          match => [ "timestamp", "dd/MMM/yyyy:HH:mm:ss Z" ]
+        }
+        
+        # Parse response time
+        if [response_time] {
+          mutate {
+            convert => { "response_time" => "integer" }
+          }
+        }
+        
+        # Classify HTTP status codes
+        if [response] {
+          if [response] >= 200 and [response] < 300 {
+            mutate { add_field => { "status_category" => "success" } }
+          } else if [response] >= 300 and [response] < 400 {
+            mutate { add_field => { "status_category" => "redirect" } }
+          } else if [response] >= 400 and [response] < 500 {
+            mutate { add_field => { "status_category" => "client_error" } }
+          } else if [response] >= 500 {
+            mutate { add_field => { "status_category" => "server_error" } }
+          }
+        }
+      }
+      
+      # Security log parsing
+      if [context][category] == "security" {
+        mutate {
+          add_field => { "security_event" => "true" }
+        }
+        
+        # Extract IP address for geolocation
+        if [context][ipAddress] {
+          geoip {
+            source => "[context][ipAddress]"
+            target => "geoip"
+          }
+        }
+      }
+      
+      # Performance log parsing
+      if [context][category] == "performance" or [context][duration] {
+        if [context][duration] {
+          mutate {
+            convert => { "[context][duration]" => "integer" }
+            add_field => { "has_duration" => "true" }
+          }
+        }
+      }
+      
+      # Business metrics parsing
+      if [context][category] == "business" {
+        mutate {
+          add_field => { "business_event" => "true" }
+        }
+      }
+      
+      # Clean up fields
+      mutate {
+        remove_field => [ "agent", "ecs", "input", "log" ]
+      }
+    }
+    
+    output {
+      elasticsearch {
+        hosts => ["http://elasticsearch-service:9200"]
+        index => "dessai-logs-%{+YYYY.MM.dd}"
+        
+        # Use different indices for different log types
+        if [fields][log_type] == "application" {
+          index => "dessai-app-logs-%{+YYYY.MM.dd}"
+        } else if [fields][log_type] == "access" {
+          index => "dessai-access-logs-%{+YYYY.MM.dd}"
+        } else if [context][category] == "security" {
+          index => "dessai-security-logs-%{+YYYY.MM.dd}"
+        } else if [context][category] == "business" {
+          index => "dessai-business-logs-%{+YYYY.MM.dd}"
+        }
+        
+        template_name => "dessai-logs"
+        template_pattern => "dessai-*"
+        template => "/usr/share/logstash/templates/dessai-template.json"
+        template_overwrite => true
+      }
+      
+      # Debug output (remove in production)
+      if [level] == "DEBUG" {
+        stdout { codec => rubydebug }
+      }
+    }
+
+  dessai-template.json: |
+    {
+      "index_patterns": ["dessai-*"],
+      "settings": {
+        "number_of_shards": 1,
+        "number_of_replicas": 0,
+        "index.refresh_interval": "30s",
+        "index.codec": "best_compression"
+      },
+      "mappings": {
+        "properties": {
+          "@timestamp": {
+            "type": "date"
+          },
+          "level": {
+            "type": "keyword"
+          },
+          "message": {
+            "type": "text",
+            "analyzer": "standard"
+          },
+          "service": {
+            "type": "keyword"
+          },
+          "user_id": {
+            "type": "keyword"
+          },
+          "request_id": {
+            "type": "keyword"
+          },
+          "log_category": {
+            "type": "keyword"
+          },
+          "context": {
+            "properties": {
+              "duration": {
+                "type": "integer"
+              },
+              "ipAddress": {
+                "type": "ip"
+              },
+              "userId": {
+                "type": "keyword"
+              },
+              "action": {
+                "type": "keyword"
+              },
+              "resource": {
+                "type": "keyword"
+              }
+            }
+          },
+          "error": {
+            "properties": {
+              "name": {
+                "type": "keyword"
+              },
+              "message": {
+                "type": "text"
+              },
+              "stack": {
+                "type": "text",
+                "index": false
+              }
+            }
+          },
+          "kubernetes": {
+            "properties": {
+              "namespace": {
+                "type": "keyword"
+              },
+              "pod": {
+                "properties": {
+                  "name": {
+                    "type": "keyword"
+                  }
+                }
+              },
+              "container": {
+                "properties": {
+                  "name": {
+                    "type": "keyword"
+                  }
+                }
+              }
+            }
+          },
+          "geoip": {
+            "properties": {
+              "location": {
+                "type": "geo_point"
+              },
+              "country_name": {
+                "type": "keyword"
+              },
+              "city_name": {
+                "type": "keyword"
+              }
+            }
+          }
+        }
+      }
+    }
+
+---
+# Kibana Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kibana-config
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: kibana
+    app.kubernetes.io/component: config
+data:
+  kibana.yml: |
+    server.name: kibana
+    server.host: "0.0.0.0"
+    server.port: 5601
+    elasticsearch.hosts: ["http://elasticsearch-service:9200"]
+    
+    # Security
+    xpack.security.enabled: false
+    xpack.monitoring.ui.container.elasticsearch.enabled: true
+    
+    # Index patterns
+    kibana.defaultAppId: "discover"
+    
+    # Logging
+    logging.dest: stdout
+    logging.silent: false
+    logging.quiet: false
+    logging.verbose: false
+
+---
+# Filebeat Configuration for Kubernetes logs
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: filebeat-config
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: filebeat
+    app.kubernetes.io/component: config
+data:
+  filebeat.yml: |
+    filebeat.autodiscover:
+      providers:
+        - type: kubernetes
+          node: ${NODE_NAME}
+          hints.enabled: true
+          templates:
+            - condition:
+                contains:
+                  kubernetes.namespace: dessai
+              config:
+                - type: container
+                  paths:
+                    - /var/log/containers/*${data.kubernetes.container.id}.log
+                  fields:
+                    log_type: application
+                  fields_under_root: true
+                  multiline.pattern: '^\d{4}-\d{2}-\d{2}'
+                  multiline.negate: true
+                  multiline.match: after
+
+    processors:
+      - add_kubernetes_metadata:
+          host: ${NODE_NAME}
+          matchers:
+          - logs_path:
+              logs_path: "/var/log/containers/"
+      - decode_json_fields:
+          fields: ["message"]
+          target: "json"
+          overwrite_keys: true
+
+    output.logstash:
+      hosts: ["logstash-service:5044"]
+
+    logging.level: info
+    logging.to_files: false
+    logging.to_syslog: false
+
+---
+# Index Lifecycle Management Policy
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: elasticsearch-ilm-policy
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: elasticsearch
+    app.kubernetes.io/component: ilm
+data:
+  dessai-logs-policy.json: |
+    {
+      "policy": {
+        "phases": {
+          "hot": {
+            "actions": {
+              "rollover": {
+                "max_size": "1GB",
+                "max_age": "1d"
+              },
+              "set_priority": {
+                "priority": 100
+              }
+            }
+          },
+          "warm": {
+            "min_age": "7d",
+            "actions": {
+              "allocate": {
+                "number_of_replicas": 0
+              },
+              "forcemerge": {
+                "max_num_segments": 1
+              },
+              "set_priority": {
+                "priority": 50
+              }
+            }
+          },
+          "cold": {
+            "min_age": "30d",
+            "actions": {
+              "allocate": {
+                "number_of_replicas": 0
+              },
+              "set_priority": {
+                "priority": 0
+              }
+            }
+          },
+          "delete": {
+            "min_age": "90d"
+          }
+        }
+      }
+    }

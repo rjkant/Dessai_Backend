@@ -2,7 +2,22 @@
  * Isolated Authentication Tests
  * Dessai Backend - Tests without database dependency
  * @testing persona validation
- */
+ */    test('should generate and verify refresh tokens', () => {
+      const { JWTUtil } = require('../../../src/utils/jwt.util');
+      
+      const userId = 'test-user-id';
+      const sessionId = 'test-session-id';
+      
+      const refreshToken = JWTUtil.generateRefreshToken(userId, sessionId);
+      expect(refreshToken).toBeDefined();
+      expect(typeof refreshToken).toBe('string');
+      expect(refreshToken.split('.').length).toBe(3);
+      
+      const decoded = JWTUtil.verifyRefreshToken(refreshToken);
+      expect(decoded).toBeDefined();
+      expect(decoded.userId).toBe(userId);
+      expect(decoded.sessionId).toBe(sessionId);
+    });
 
 // Mock Prisma client before importing anything else
 const mockPrismaClient = {
@@ -116,16 +131,18 @@ describe('Authentication Utilities - Isolated Tests', () => {
     test('should generate and verify refresh tokens', () => {
       const { JWTUtil } = require('../../../src/utils/jwt.util');
       
-      const payload = { userId: 'test-user-id' };
+      const userId = 'test-user-id';
+      const sessionId = 'test-session-id';
       
-      const refreshToken = JWTUtil.generateRefreshToken(payload);
+      const refreshToken = JWTUtil.generateRefreshToken(userId, sessionId);
       expect(refreshToken).toBeDefined();
       expect(typeof refreshToken).toBe('string');
       expect(refreshToken.split('.').length).toBe(3);
       
       const decoded = JWTUtil.verifyRefreshToken(refreshToken);
       expect(decoded).toBeDefined();
-      expect(decoded.payload.userId).toBe(payload.userId);
+      expect(decoded.userId).toBe(userId);
+      expect(decoded.sessionId).toBe(sessionId);
     });
 
     test('should reject invalid tokens', () => {
@@ -161,17 +178,18 @@ describe('Authentication Utilities - Isolated Tests', () => {
   });
 
   describe('TOTP Utility Tests', () => {
-    test('should generate secret and QR code', () => {
+    test('should generate secret and QR code', async () => {
       const { TOTPUtil } = require('../../../src/utils/totp.util');
       
-      const secretResult = TOTPUtil.generateSecret();
+      const secretResult = TOTPUtil.generateSecret('test@example.com');
       expect(secretResult).toBeDefined();
       expect(typeof secretResult).toBe('object');
       expect(secretResult.secret).toBeDefined();
       expect(typeof secretResult.secret).toBe('string');
       expect(secretResult.secret.length).toBeGreaterThan(10);
+      expect(secretResult.otpauthUrl).toBeDefined();
       
-      const qrCode = TOTPUtil.generateQRCode(secretResult.secret, 'test@example.com', 'Dessai');
+      const qrCode = await TOTPUtil.generateQRCode(secretResult.otpauthUrl);
       expect(qrCode).toBeDefined();
       expect(typeof qrCode).toBe('string');
       expect(qrCode).toMatch(/^data:image\/png;base64,/);
@@ -230,11 +248,11 @@ describe('Authentication Utilities - Isolated Tests', () => {
 
   describe('Error Handling', () => {
     test('should handle invalid JWT secrets gracefully', () => {
-      // Clear JWT secret to test error handling
+      // Set invalid short JWT secret to test error handling
       const originalSecret = process.env['JWT_SECRET'];
-      delete process.env['JWT_SECRET'];
+      process.env['JWT_SECRET'] = 'short'; // Too short secret
       
-      // Re-import to get new instance without secret
+      // Re-import to get new instance with invalid secret
       jest.resetModules();
       
       try {

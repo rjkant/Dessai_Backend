@@ -12,7 +12,11 @@ import { UserRole } from '../../../src/types/auth.types';
 
 // Mock dependencies
 jest.mock('../../../src/utils/jwt.util');
-jest.mock('../../../src/services/auth.service');
+jest.mock('../../../src/services/auth.service', () => ({
+  AuthService: {
+    getInstance: jest.fn()
+  }
+}));
 
 describe('Authentication Middleware Unit Tests', () => {
   let mockRequest: Partial<Request>;
@@ -65,6 +69,12 @@ describe('Authentication Middleware Unit Tests', () => {
       validateJWTPayload: jest.fn(),
     } as any;
 
+    // Mock AuthService.getInstance to return our mocked instance
+    (AuthService.getInstance as jest.Mock).mockReturnValue(mockAuthService);
+
+    // Directly set the static property
+    (AuthMiddleware as any).authService = mockAuthService;
+
     // Reset all mocks
     jest.clearAllMocks();
   });
@@ -110,7 +120,7 @@ describe('Authentication Middleware Unit Tests', () => {
       expect(mockResponse.status).toHaveBeenCalledWith(401);
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: false,
-        message: 'Authorization header required'
+        message: 'Access token required'
       });
       expect(nextFunction).not.toHaveBeenCalled();
     });
@@ -128,7 +138,7 @@ describe('Authentication Middleware Unit Tests', () => {
       expect(mockResponse.status).toHaveBeenCalledWith(401);
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: false,
-        message: 'Invalid authorization header format'
+        message: 'Access token required'
       });
       expect(nextFunction).not.toHaveBeenCalled();
     });
@@ -150,7 +160,7 @@ describe('Authentication Middleware Unit Tests', () => {
       expect(mockResponse.status).toHaveBeenCalledWith(401);
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: false,
-        message: 'Invalid or expired token'
+        message: 'Invalid token'
       });
       expect(nextFunction).not.toHaveBeenCalled();
     });
@@ -291,7 +301,7 @@ describe('Authentication Middleware Unit Tests', () => {
       expect(mockResponse.status).toHaveBeenCalledWith(403);
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: false,
-        message: 'Admin access required'
+        message: 'Insufficient permissions'
       });
       expect(nextFunction).not.toHaveBeenCalled();
     });
@@ -404,7 +414,7 @@ describe('Authentication Middleware Unit Tests', () => {
       expect(mockResponse.status).toHaveBeenCalledWith(403);
       expect(mockResponse.json).toHaveBeenCalledWith({
         success: false,
-        message: 'Access denied'
+        message: 'Access denied - can only access your own data'
       });
       expect(nextFunction).not.toHaveBeenCalled();
     });

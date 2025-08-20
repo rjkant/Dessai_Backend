@@ -1,0 +1,86 @@
+# Dessai Platform - Container Structure Tests
+# Configuration file for testing Docker image security and structure
+
+schemaVersion: "2.0.0"
+
+# Test command execution
+commandTests:
+  - name: "Node.js version check"
+    command: "node"
+    args: ["--version"]
+    expectedOutput: ["v18\\..*"]
+
+  - name: "NPM version check"
+    command: "npm"
+    args: ["--version"]
+    expectedOutput: [".*"]
+
+  - name: "Application files exist"
+    command: "ls"
+    args: ["-la", "/app"]
+    expectedOutput: ["package\\.json", "dist"]
+
+  - name: "Prisma client generation check"
+    command: "ls"
+    args: ["/app/node_modules/.prisma/client"]
+    expectedOutput: ["index\\.js"]
+
+# Test file existence
+fileExistenceTests:
+  - name: "Application entry point"
+    path: "/app/dist/server.js"
+    shouldExist: true
+
+  - name: "Package.json exists"
+    path: "/app/package.json"
+    shouldExist: true
+
+  - name: "Node modules installed"
+    path: "/app/node_modules"
+    shouldExist: true
+
+  - name: "Prisma schema"
+    path: "/app/prisma/schema.prisma"
+    shouldExist: true
+
+  - name: "Health check script"
+    path: "/app/scripts/health-check.sh"
+    shouldExist: false  # Should not be in production image
+
+# Test file content
+fileContentTests:
+  - name: "Package.json has correct main entry"
+    path: "/app/package.json"
+    expectedContents: ["\"main\":\\s*\"dist/server\\.js\""]
+
+  - name: "Package.json production dependencies only"
+    path: "/app/package.json"
+    excludedContents: ["devDependencies"]
+
+# Test metadata
+metadataTest:
+  exposedPorts: ["3000"]
+  workdir: "/app"
+  user: "node"
+  env:
+    - key: "NODE_ENV"
+      value: "production"
+
+# Test license files (should not be in production)
+licenseTests:
+  - debian: true
+    files: ["/usr/share/doc/.*/copyright"]
+
+# Security tests
+securityTests:
+  - name: "No sensitive files"
+    path: "/app/.env"
+    shouldExist: false
+
+  - name: "No test files in production"
+    path: "/app/tests"
+    shouldExist: false
+
+  - name: "No development scripts"
+    path: "/app/.github"
+    shouldExist: false

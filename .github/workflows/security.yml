@@ -1,0 +1,426 @@
+name: 'Security Scanning'
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '18'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: dessai-backend
+
+jobs:
+  # Static Application Security Testing (SAST)
+  sast-analysis:
+    name: 'Static Security Analysis'
+    runs-on: ubuntu-latest
+    
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 'Setup Node.js'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 'Install Dependencies'
+        run: npm ci
+
+      - name: 'CodeQL Analysis'
+        uses: github/codeql-action/init@v2
+        with:
+          languages: typescript, javascript
+          config-file: ./.github/codeql-config.yml
+
+      - name: 'Autobuild'
+        uses: github/codeql-action/autobuild@v2
+
+      - name: 'Perform CodeQL Analysis'
+        uses: github/codeql-action/analyze@v2
+        with:
+          category: '/language:typescript'
+
+      - name: 'Semgrep Security Scan'
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/security-audit
+            p/secrets
+            p/typescript
+            p/nodejs
+            p/docker
+          generateSarif: "1"
+
+      - name: 'Upload Semgrep SARIF'
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+
+  # Dependency Security Scanning
+  dependency-scan:
+    name: 'Dependency Security Scan'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      - name: 'Setup Node.js'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 'Install Dependencies'
+        run: npm ci
+
+      - name: 'NPM Audit'
+        run: |
+          npm audit --audit-level moderate --json > npm-audit.json || true
+          npm audit --audit-level moderate
+
+      - name: 'Snyk Security Scan'
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: >-
+            --severity-threshold=medium
+            --json-file-output=snyk-report.json
+            --sarif-file-output=snyk.sarif
+
+      - name: 'Upload Snyk SARIF'
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: snyk.sarif
+
+      - name: 'OWASP Dependency Check'
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'dessai-backend'
+          path: '.'
+          format: 'ALL'
+          args: >-
+            --enableRetired
+            --enableExperimental
+            --nodeAuditSkipDevDependencies
+
+      - name: 'Upload Dependency Check Reports'
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-check-report
+          path: reports/
+
+  # Container Security Scanning
+  container-scan:
+    name: 'Container Security Scan'
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      - name: 'Set up Docker Buildx'
+        uses: docker/setup-buildx-action@v3
+
+      - name: 'Build Docker Image'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.production
+          load: true
+          tags: dessai-backend:security-scan
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 'Trivy Container Scan'
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'dessai-backend:security-scan'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+
+      - name: 'Upload Trivy SARIF'
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      - name: 'Grype Container Scan'
+        uses: anchore/scan-action@v3
+        with:
+          image: 'dessai-backend:security-scan'
+          fail-build: false
+          severity-cutoff: high
+
+      - name: 'Container Structure Test'
+        run: |
+          # Install container-structure-test
+          curl -LO https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-amd64 && \
+          chmod +x container-structure-test-linux-amd64 && \
+          sudo mv container-structure-test-linux-amd64 /usr/local/bin/container-structure-test
+          
+          # Run structure tests
+          container-structure-test test --image dessai-backend:security-scan --config .github/container-tests.yaml || true
+
+  # Infrastructure Security Scanning
+  infrastructure-scan:
+    name: 'Infrastructure Security Scan'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      - name: 'Kubernetes Security Scan'
+        uses: zegl/kube-score@v1.14.0
+        with:
+          config: k8s/
+          output-format: sarif
+          output-file: kube-score.sarif
+
+      - name: 'Checkov Infrastructure Scan'
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: .
+          framework: kubernetes,dockerfile,github_actions,secrets
+          output_format: sarif
+          output_file_path: checkov.sarif
+
+      - name: 'Upload Checkov SARIF'
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: checkov.sarif
+
+      - name: 'Terrascan IaC Scan'
+        uses: accurics/terrascan-action@main
+        with:
+          iac_type: 'k8s'
+          iac_version: 'v1'
+          policy_type: 'k8s'
+          only_warn: true
+          sarif_upload: true
+
+  # Secrets Detection
+  secrets-scan:
+    name: 'Secrets Detection'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 'TruffleHog Secrets Scan'
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --only-verified
+
+      - name: 'GitLeaks Secrets Scan'
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+      - name: 'Detect Hardcoded Secrets'
+        run: |
+          echo "🔍 Scanning for hardcoded secrets..."
+          
+          # Custom patterns for common secrets
+          grep -r -n -i \
+            -E "(password|secret|key|token|api_key)\s*[:=]\s*['\"][^'\"]{8,}" \
+            --exclude-dir=node_modules \
+            --exclude-dir=.git \
+            --exclude="*.md" \
+            . || echo "No hardcoded secrets detected"
+
+  # Security Configuration Assessment
+  security-config:
+    name: 'Security Configuration Assessment'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      - name: 'Security Headers Check'
+        run: |
+          echo "🔒 Checking security configuration..."
+          
+          # Check for security middleware configuration
+          if grep -r "helmet\|cors\|rate.*limit" src/; then
+            echo "✅ Security middleware found"
+          else
+            echo "⚠️ Security middleware missing"
+          fi
+          
+          # Check for environment variable usage
+          if grep -r "process\.env" src/ | grep -v "\.test\." | grep -v "NODE_ENV"; then
+            echo "⚠️ Direct environment variable access found"
+          fi
+
+      - name: 'Authentication Security Check'
+        run: |
+          echo "🔐 Checking authentication security..."
+          
+          # Check for JWT configuration
+          if grep -r "jwt\|token" src/ --include="*.ts" | grep -i "secret"; then
+            echo "✅ JWT security configuration found"
+          fi
+          
+          # Check for password hashing
+          if grep -r "bcrypt\|argon2\|scrypt" src/; then
+            echo "✅ Password hashing found"
+          else
+            echo "⚠️ Password hashing not detected"
+          fi
+
+      - name: 'Database Security Check'
+        run: |
+          echo "🗄️ Checking database security..."
+          
+          # Check for SQL injection prevention (Prisma ORM)
+          if grep -r "prisma" src/; then
+            echo "✅ ORM usage detected (Prisma)"
+          fi
+          
+          # Check for direct SQL queries
+          if grep -r -i "select\|insert\|update\|delete.*from" src/ --include="*.ts" | grep -v "test"; then
+            echo "⚠️ Raw SQL queries detected - review for SQL injection"
+          fi
+
+  # Compliance Check
+  compliance-check:
+    name: 'Compliance Assessment'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      - name: 'GDPR Compliance Check'
+        run: |
+          echo "🏛️ Checking GDPR compliance..."
+          
+          # Check for data protection measures
+          if grep -r -i "encrypt\|hash\|anonymize\|pseudonym" src/; then
+            echo "✅ Data protection measures found"
+          fi
+          
+          # Check for consent management
+          if grep -r -i "consent\|opt.*in\|privacy" src/; then
+            echo "✅ Consent management found"
+          fi
+
+      - name: 'SOC 2 Compliance Check'
+        run: |
+          echo "📋 Checking SOC 2 compliance..."
+          
+          # Check for audit logging
+          if grep -r -i "audit\|log.*activity" src/; then
+            echo "✅ Audit logging found"
+          fi
+          
+          # Check for access controls
+          if grep -r -i "role\|permission\|authorize" src/; then
+            echo "✅ Access controls found"
+          fi
+
+      - name: 'ISO 27001 Compliance Check'
+        run: |
+          echo "🛡️ Checking ISO 27001 compliance..."
+          
+          # Check for security monitoring
+          if grep -r -i "monitor\|alert\|incident" src/; then
+            echo "✅ Security monitoring found"
+          fi
+
+  # Security Report Generation
+  security-report:
+    name: 'Generate Security Report'
+    runs-on: ubuntu-latest
+    needs: [sast-analysis, dependency-scan, container-scan, infrastructure-scan, secrets-scan, security-config, compliance-check]
+    if: always()
+    
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      - name: 'Compile Security Report'
+        run: |
+          echo "📊 Generating comprehensive security report..."
+          
+          mkdir -p security-reports
+          
+          cat > security-reports/security-summary.md << EOF
+          # Security Scan Summary
+          
+          ## 🔍 Scan Results
+          
+          - **SAST Analysis**: ${{ needs.sast-analysis.result }}
+          - **Dependency Scan**: ${{ needs.dependency-scan.result }}
+          - **Container Scan**: ${{ needs.container-scan.result }}
+          - **Infrastructure Scan**: ${{ needs.infrastructure-scan.result }}
+          - **Secrets Detection**: ${{ needs.secrets-scan.result }}
+          - **Security Config**: ${{ needs.security-config.result }}
+          - **Compliance Check**: ${{ needs.compliance-check.result }}
+          
+          ## 📅 Scan Date
+          $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          
+          ## 🏷️ Repository
+          ${{ github.repository }}
+          
+          ## 📝 Branch/Commit
+          - Branch: ${{ github.ref_name }}
+          - Commit: ${{ github.sha }}
+          
+          ## 🎯 Recommendations
+          
+          1. Review all HIGH and CRITICAL vulnerabilities
+          2. Update dependencies with known vulnerabilities
+          3. Validate security configurations
+          4. Ensure compliance requirements are met
+          
+          EOF
+
+      - name: 'Upload Security Report'
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-report-${{ github.sha }}
+          path: security-reports/
+          retention-days: 90
+
+      - name: 'Security Status Summary'
+        run: |
+          echo "## 🛡️ Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **SAST Analysis**: ${{ needs.sast-analysis.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dependency Scan**: ${{ needs.dependency-scan.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Container Scan**: ${{ needs.container-scan.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Infrastructure Scan**: ${{ needs.infrastructure-scan.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Secrets Detection**: ${{ needs.secrets-scan.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Security Config**: ${{ needs.security-config.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Compliance Check**: ${{ needs.compliance-check.result }}" >> $GITHUB_STEP_SUMMARY

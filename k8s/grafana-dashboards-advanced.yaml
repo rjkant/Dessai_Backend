@@ -1,0 +1,517 @@
+# Dessai Platform - Advanced Grafana Dashboards Configuration
+
+# Main Dashboard - Dessai Platform Overview
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards-advanced
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/component: dashboards
+data:
+  dessai-overview-advanced.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Dessai Platform - Advanced Overview",
+        "tags": ["dessai", "overview", "platform"],
+        "style": "dark",
+        "timezone": "browser",
+        "refresh": "30s",
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "panels": [
+          {
+            "id": 1,
+            "title": "Platform Health Score",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "avg((1 - rate(dessai_http_requests_total{status_code=~\"5..\"}[5m]) / rate(dessai_http_requests_total[5m])) * 100)",
+                "legendFormat": "Health Score"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "thresholds": {
+                  "steps": [
+                    {"color": "red", "value": 0},
+                    {"color": "yellow", "value": 90},
+                    {"color": "green", "value": 95}
+                  ]
+                },
+                "unit": "percent"
+              }
+            },
+            "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Active Users (24h)",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "dessai_active_users{time_window=\"24h\"}",
+                "legendFormat": "Active Users"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "color": {"mode": "palette-classic"},
+                "unit": "short"
+              }
+            },
+            "gridPos": {"h": 4, "w": 3, "x": 6, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Concurrent Sessions",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "dessai_concurrent_sessions",
+                "legendFormat": "Sessions"
+              }
+            ],
+            "gridPos": {"h": 4, "w": 3, "x": 9, "y": 0}
+          },
+          {
+            "id": 4,
+            "title": "Assessment Success Rate",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "rate(dessai_assessments_completed_total{result=\"pass\"}[1h]) / rate(dessai_assessments_completed_total[1h]) * 100",
+                "legendFormat": "Success Rate"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "color": {"mode": "thresholds"},
+                "thresholds": {
+                  "steps": [
+                    {"color": "red", "value": 0},
+                    {"color": "yellow", "value": 60},
+                    {"color": "green", "value": 80}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 4, "w": 3, "x": 12, "y": 0}
+          },
+          {
+            "id": 5,
+            "title": "Error Rate",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "rate(dessai_errors_total[5m]) * 100",
+                "legendFormat": "Error Rate"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "color": {"mode": "thresholds"},
+                "thresholds": {
+                  "steps": [
+                    {"color": "green", "value": 0},
+                    {"color": "yellow", "value": 1},
+                    {"color": "red", "value": 5}
+                  ]
+                }
+              }
+            },
+            "gridPos": {"h": 4, "w": 3, "x": 15, "y": 0}
+          },
+          {
+            "id": 6,
+            "title": "API Request Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(dessai_http_requests_total[5m])",
+                "legendFormat": "{{method}} {{route}}"
+              }
+            ],
+            "yAxes": [{"label": "requests/sec"}],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+          },
+          {
+            "id": 7,
+            "title": "API Response Time (95th percentile)",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(dessai_http_request_duration_seconds_bucket[5m]))",
+                "legendFormat": "95th percentile"
+              },
+              {
+                "expr": "histogram_quantile(0.50, rate(dessai_http_request_duration_seconds_bucket[5m]))",
+                "legendFormat": "50th percentile"
+              }
+            ],
+            "yAxes": [{"label": "seconds"}],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+          },
+          {
+            "id": 8,
+            "title": "Assessment Activity",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(dessai_assessments_created_total[5m])",
+                "legendFormat": "Created - {{type}}"
+              },
+              {
+                "expr": "rate(dessai_assessments_completed_total[5m])",
+                "legendFormat": "Completed - {{result}}"
+              }
+            ],
+            "yAxes": [{"label": "assessments/sec"}],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+          },
+          {
+            "id": 9,
+            "title": "Code Execution Metrics",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(dessai_code_executions_total[5m])",
+                "legendFormat": "{{language}} - {{result}}"
+              }
+            ],
+            "yAxes": [{"label": "executions/sec"}],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+          },
+          {
+            "id": 10,
+            "title": "Database Performance",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(dessai_db_operation_duration_seconds_bucket[5m]))",
+                "legendFormat": "95th percentile - {{operation}}"
+              }
+            ],
+            "yAxes": [{"label": "seconds"}],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24}
+          },
+          {
+            "id": 11,
+            "title": "Cache Hit Rate",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "dessai_cache_hit_rate",
+                "legendFormat": "Hit Rate"
+              }
+            ],
+            "yAxes": [{"label": "percentage"}],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24}
+          }
+        ]
+      }
+    }
+
+  dessai-security-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Dessai Platform - Security Dashboard",
+        "tags": ["dessai", "security", "monitoring"],
+        "style": "dark",
+        "timezone": "browser",
+        "refresh": "1m",
+        "time": {
+          "from": "now-24h",
+          "to": "now"
+        },
+        "panels": [
+          {
+            "id": 1,
+            "title": "Authentication Attempts",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(dessai_auth_attempts_total[5m])",
+                "legendFormat": "{{type}} - {{result}}"
+              }
+            ],
+            "yAxes": [{"label": "attempts/sec"}],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Authentication Failures",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(dessai_auth_failures_total[5m])",
+                "legendFormat": "{{type}} - {{reason}}"
+              }
+            ],
+            "yAxes": [{"label": "failures/sec"}],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Proctoring Violations",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(dessai_proctoring_violations_total[5m])",
+                "legendFormat": "{{type}} - {{severity}}"
+              }
+            ],
+            "yAxes": [{"label": "violations/sec"}],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "Security Events Heatmap",
+            "type": "heatmap",
+            "targets": [
+              {
+                "expr": "increase(dessai_auth_failures_total[1h])",
+                "legendFormat": "{{type}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+          },
+          {
+            "id": 5,
+            "title": "Top Failed Login IPs",
+            "type": "table",
+            "targets": [
+              {
+                "expr": "topk(10, sum(increase(dessai_auth_failures_total[24h])) by (ipAddress))",
+                "legendFormat": ""
+              }
+            ],
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16}
+          }
+        ]
+      }
+    }
+
+  dessai-performance-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Dessai Platform - Performance Dashboard",
+        "tags": ["dessai", "performance", "monitoring"],
+        "style": "dark",
+        "timezone": "browser",
+        "refresh": "30s",
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "panels": [
+          {
+            "id": 1,
+            "title": "Pod CPU Usage",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(container_cpu_usage_seconds_total{namespace=\"dessai\",name=~\"dessai-.*\"}[5m])",
+                "legendFormat": "{{name}}"
+              }
+            ],
+            "yAxes": [{"label": "CPU cores"}],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Pod Memory Usage",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "container_memory_usage_bytes{namespace=\"dessai\",name=~\"dessai-.*\"}",
+                "legendFormat": "{{name}}"
+              }
+            ],
+            "yAxes": [{"label": "bytes"}],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "Database Connections",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "pg_stat_database_numbackends{datname=\"dessai\"}",
+                "legendFormat": "Active Connections"
+              },
+              {
+                "expr": "dessai_db_connection_pool_active",
+                "legendFormat": "Pool Active"
+              }
+            ],
+            "yAxes": [{"label": "connections"}],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "Redis Memory Usage",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "redis_memory_used_bytes{job=\"redis\"}",
+                "legendFormat": "Memory Used"
+              },
+              {
+                "expr": "redis_memory_max_bytes{job=\"redis\"}",
+                "legendFormat": "Memory Limit"
+              }
+            ],
+            "yAxes": [{"label": "bytes"}],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+          },
+          {
+            "id": 5,
+            "title": "Code Execution Performance",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(dessai_code_execution_duration_seconds_bucket[5m]))",
+                "legendFormat": "95th percentile - {{language}}"
+              },
+              {
+                "expr": "histogram_quantile(0.50, rate(dessai_code_execution_duration_seconds_bucket[5m]))",
+                "legendFormat": "50th percentile - {{language}}"
+              }
+            ],
+            "yAxes": [{"label": "seconds"}],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+          },
+          {
+            "id": 6,
+            "title": "Integration Latency",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(dessai_integration_latency_seconds_bucket[5m]))",
+                "legendFormat": "95th percentile - {{integration}}"
+              }
+            ],
+            "yAxes": [{"label": "seconds"}],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+          }
+        ]
+      }
+    }
+
+  dessai-business-dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "Dessai Platform - Business Metrics",
+        "tags": ["dessai", "business", "metrics"],
+        "style": "dark",
+        "timezone": "browser",
+        "refresh": "5m",
+        "time": {
+          "from": "now-24h",
+          "to": "now"
+        },
+        "panels": [
+          {
+            "id": 1,
+            "title": "Daily Assessment Volume",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "increase(dessai_assessments_created_total[1h])",
+                "legendFormat": "Created - {{type}}"
+              },
+              {
+                "expr": "increase(dessai_assessments_completed_total[1h])",
+                "legendFormat": "Completed - {{result}}"
+              }
+            ],
+            "yAxes": [{"label": "assessments"}],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}
+          },
+          {
+            "id": 2,
+            "title": "Assessment Score Distribution",
+            "type": "heatmap",
+            "targets": [
+              {
+                "expr": "increase(dessai_assessment_score_bucket[1h])",
+                "legendFormat": "{{difficulty}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}
+          },
+          {
+            "id": 3,
+            "title": "User Engagement Metrics",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "dessai_active_users{time_window=\"1h\"}",
+                "legendFormat": "Hourly Active Users"
+              },
+              {
+                "expr": "dessai_active_users{time_window=\"24h\"}",
+                "legendFormat": "Daily Active Users"
+              }
+            ],
+            "yAxes": [{"label": "users"}],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+          },
+          {
+            "id": 4,
+            "title": "Assessment Duration Analysis",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(dessai_assessment_duration_seconds_bucket[1h]))",
+                "legendFormat": "95th percentile - {{difficulty}}"
+              },
+              {
+                "expr": "histogram_quantile(0.50, rate(dessai_assessment_duration_seconds_bucket[1h]))",
+                "legendFormat": "50th percentile - {{difficulty}}"
+              }
+            ],
+            "yAxes": [{"label": "seconds"}],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+          },
+          {
+            "id": 5,
+            "title": "Programming Language Popularity",
+            "type": "piechart",
+            "targets": [
+              {
+                "expr": "sum(increase(dessai_code_executions_total[24h])) by (language)",
+                "legendFormat": "{{language}}"
+              }
+            ],
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+          },
+          {
+            "id": 6,
+            "title": "Session Duration by Role",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(dessai_session_duration_seconds_bucket[1h]))",
+                "legendFormat": "{{role}} - 95th percentile"
+              }
+            ],
+            "yAxes": [{"label": "seconds"}],
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+          }
+        ]
+      }
+    }

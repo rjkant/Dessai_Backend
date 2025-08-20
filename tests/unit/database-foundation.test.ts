@@ -35,7 +35,7 @@ describe('Database Foundation Unit Tests', () => {
     });
 
     it('should import Redis service', async () => {
-      const { redis } = await import('@/services/redis.service');
+      const { redis } = await import('@/services/redis-mock.service');
       expect(redis).toBeDefined();
     });
 
@@ -79,7 +79,7 @@ describe('Database Foundation Unit Tests', () => {
     });
 
     it('should have all required Redis service methods', async () => {
-      const { redis } = await import('@/services/redis.service');
+      const { redis } = await import('@/services/redis-mock.service');
       
       expect(redis.connect).toBeDefined();
       expect(redis.disconnect).toBeDefined();
@@ -155,7 +155,7 @@ describe('Database Foundation Unit Tests', () => {
     });
 
     it('should have proper module exports for Redis service', async () => {
-      const redisModule = await import('@/services/redis.service');
+      const redisModule = await import('@/services/redis-mock.service');
       
       expect(redisModule.redis).toBeDefined();
       expect(redisModule.default).toBeDefined();

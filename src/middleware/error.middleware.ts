@@ -64,8 +64,7 @@ export function errorHandler(
   else if (error.name === 'JsonWebTokenError') {
     statusCode = 401;
     message = 'Invalid token';
-  }
-  else if (error.name === 'TokenExpiredError') {
+  } else if (error.name === 'TokenExpiredError') {
     statusCode = 401;
     message = 'Token expired';
   }
@@ -78,7 +77,7 @@ export function errorHandler(
       statusCode,
       url: req.url,
       method: req.method,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -87,9 +86,9 @@ export function errorHandler(
     success: false,
     message,
     ...(details && { details }),
-    ...(process.env['NODE_ENV'] === 'development' && { 
-      stack: error.stack 
-    })
+    ...(process.env['NODE_ENV'] === 'development' && {
+      stack: error.stack,
+    }),
   });
 }
 
@@ -112,6 +111,6 @@ export function notFoundHandler(req: Request, res: Response): void {
   res.status(404).json({
     success: false,
     message: 'Endpoint not found',
-    path: req.originalUrl
+    path: req.originalUrl,
   });
 }

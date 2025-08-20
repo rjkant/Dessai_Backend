@@ -20,7 +20,7 @@ export class AppError extends Error {
     isOperational: boolean = true
   ) {
     super(message);
-    
+
     this.name = this.constructor.name;
     this.statusCode = statusCode;
     this.details = details;
@@ -131,10 +131,12 @@ export const createError = {
   notFound: (message?: string, details?: any) => new NotFoundError(message, details),
   conflict: (message?: string, details?: any) => new ConflictError(message, details),
   rateLimit: (message?: string, details?: any) => new RateLimitError(message, details),
-  serviceUnavailable: (message?: string, details?: any) => new ServiceUnavailableError(message, details),
+  serviceUnavailable: (message?: string, details?: any) =>
+    new ServiceUnavailableError(message, details),
   database: (message?: string, details?: any) => new DatabaseError(message, details),
   externalService: (message?: string, details?: any) => new ExternalServiceError(message, details),
-  generic: (message: string, statusCode?: number, details?: any) => new AppError(message, statusCode, details)
+  generic: (message: string, statusCode?: number, details?: any) =>
+    new AppError(message, statusCode, details),
 };
 
 /**
@@ -166,5 +168,5 @@ export const HTTP_STATUS = {
   NOT_IMPLEMENTED: 501,
   BAD_GATEWAY: 502,
   SERVICE_UNAVAILABLE: 503,
-  GATEWAY_TIMEOUT: 504
+  GATEWAY_TIMEOUT: 504,
 } as const;

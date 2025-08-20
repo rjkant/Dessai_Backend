@@ -8,7 +8,7 @@ import { PasswordPolicy } from '@/types/auth.types';
 
 export class PasswordUtil {
   private static readonly SALT_ROUNDS = 12;
-  
+
   /**
    * Default password policy
    */
@@ -19,7 +19,7 @@ export class PasswordUtil {
     requireNumbers: true,
     requireSpecialChars: true,
     maxAge: 90, // 90 days
-    preventReuse: 5 // Last 5 passwords
+    preventReuse: 5, // Last 5 passwords
   };
 
   /**
@@ -29,7 +29,9 @@ export class PasswordUtil {
     try {
       return await bcrypt.hash(password, this.SALT_ROUNDS);
     } catch (error) {
-      throw new Error(`Failed to hash password: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to hash password: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -40,14 +42,19 @@ export class PasswordUtil {
     try {
       return await bcrypt.compare(password, hash);
     } catch (error) {
-      throw new Error(`Failed to verify password: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to verify password: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
   /**
    * Validate password against policy
    */
-  static validatePassword(password: string, policy: PasswordPolicy = this.DEFAULT_POLICY): {
+  static validatePassword(
+    password: string,
+    policy: PasswordPolicy = this.DEFAULT_POLICY
+  ): {
     isValid: boolean;
     errors: string[];
   } {
@@ -80,7 +87,7 @@ export class PasswordUtil {
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -96,7 +103,9 @@ export class PasswordUtil {
       }
       return false;
     } catch (error) {
-      throw new Error(`Failed to check password history: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to check password history: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -111,7 +120,7 @@ export class PasswordUtil {
     const allChars = uppercase + lowercase + numbers + special;
 
     let password = '';
-    
+
     // Ensure at least one character from each required category
     password += uppercase[Math.floor(Math.random() * uppercase.length)];
     password += lowercase[Math.floor(Math.random() * lowercase.length)];
@@ -124,13 +133,19 @@ export class PasswordUtil {
     }
 
     // Shuffle the password
-    return password.split('').sort(() => Math.random() - 0.5).join('');
+    return password
+      .split('')
+      .sort(() => Math.random() - 0.5)
+      .join('');
   }
 
   /**
    * Check if password needs to be changed based on age
    */
-  static isPasswordExpired(passwordChangedAt: Date, policy: PasswordPolicy = this.DEFAULT_POLICY): boolean {
+  static isPasswordExpired(
+    passwordChangedAt: Date,
+    policy: PasswordPolicy = this.DEFAULT_POLICY
+  ): boolean {
     const daysSinceChange = (Date.now() - passwordChangedAt.getTime()) / (1000 * 60 * 60 * 24);
     return daysSinceChange > policy.maxAge;
   }
@@ -138,7 +153,11 @@ export class PasswordUtil {
   /**
    * Update password history
    */
-  static updatePasswordHistory(currentHistory: string[], newPasswordHash: string, policy: PasswordPolicy = this.DEFAULT_POLICY): string[] {
+  static updatePasswordHistory(
+    currentHistory: string[],
+    newPasswordHash: string,
+    policy: PasswordPolicy = this.DEFAULT_POLICY
+  ): string[] {
     const updatedHistory = [newPasswordHash, ...currentHistory];
     return updatedHistory.slice(0, policy.preventReuse);
   }

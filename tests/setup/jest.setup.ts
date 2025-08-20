@@ -4,8 +4,6 @@
  * @testing persona validation
  */
 
-import { setupTestDatabase, closeTestDatabase } from './test-database';
-
 // Global test timeout
 jest.setTimeout(30000);
 
@@ -20,33 +18,87 @@ if (process.env['NODE_ENV'] === 'test') {
   };
 }
 
+// Mock Prisma Client globally
+jest.mock('@prisma/client', () => ({
+  PrismaClient: jest.fn(() => ({
+    $connect: jest.fn().mockResolvedValue(undefined),
+    $disconnect: jest.fn().mockResolvedValue(undefined),
+    user: {
+      create: jest.fn(),
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      upsert: jest.fn(),
+    },
+    role: {
+      create: jest.fn(),
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      upsert: jest.fn(),
+    },
+    session: {
+      create: jest.fn(),
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      deleteMany: jest.fn(),
+    },
+    organization: {
+      create: jest.fn(),
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+      upsert: jest.fn(),
+    },
+    $transaction: jest.fn(),
+  })),
+}));
+
+// Mock Redis globally
+jest.mock('ioredis', () => jest.fn(() => ({
+  get: jest.fn(),
+  set: jest.fn(),
+  del: jest.fn(),
+  exists: jest.fn(),
+  expire: jest.fn(),
+  quit: jest.fn().mockResolvedValue(undefined),
+  on: jest.fn(),
+  once: jest.fn(),
+  off: jest.fn(),
+  emit: jest.fn(),
+  connect: jest.fn().mockResolvedValue(undefined),
+  disconnect: jest.fn().mockResolvedValue(undefined),
+  subscribe: jest.fn(),
+  unsubscribe: jest.fn(),
+  publish: jest.fn(),
+})));
+
 // Global test setup
 beforeAll(async () => {
-  // Setup test database
-  await setupTestDatabase();
-  
   // Set test environment variables
   process.env['NODE_ENV'] = 'test';
   process.env['JWT_SECRET'] = 'test-jwt-secret-key-for-testing-only';
   process.env['JWT_REFRESH_SECRET'] = 'test-jwt-refresh-secret-for-testing';
   process.env['REDIS_URL'] = 'redis://localhost:6379/1'; // Use database 1 for testing
-  process.env['DATABASE_URL'] = process.env['DATABASE_URL']?.replace(
-    /\/([^\/]+)$/, 
-    '/dessai_test'
-  ) || 'postgresql://localhost:5432/dessai_test';
+  process.env['DATABASE_URL'] = 'postgresql://localhost:5432/dessai_test';
 });
 
 // Global test cleanup
 afterAll(async () => {
-  // Close test database connections
-  await closeTestDatabase();
-  
   // Clear all timers
   jest.clearAllTimers();
   
   // Clear all mocks
   jest.clearAllMocks();
 });
+
+// Export empty to make this a module
+export {};
 
 // Setup for each test
 beforeEach(() => {

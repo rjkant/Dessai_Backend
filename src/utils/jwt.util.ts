@@ -8,26 +8,38 @@ import crypto from 'crypto';
 import { JWTPayload } from '@/types/auth.types';
 
 export class JWTUtil {
-  private static readonly ACCESS_TOKEN_SECRET = process.env['JWT_ACCESS_SECRET'] || 'your-access-secret-key';
-  private static readonly REFRESH_TOKEN_SECRET = process.env['JWT_REFRESH_SECRET'] || 'your-refresh-secret-key';
+  private static readonly ACCESS_TOKEN_SECRET =
+    process.env['JWT_SECRET'] || process.env['JWT_ACCESS_SECRET'] || 'your-access-secret-key';
+  private static readonly REFRESH_TOKEN_SECRET =
+    process.env['JWT_REFRESH_SECRET'] || 'your-refresh-secret-key';
   private static readonly ACCESS_TOKEN_EXPIRY: string = process.env['JWT_ACCESS_EXPIRY'] || '15m';
   private static readonly REFRESH_TOKEN_EXPIRY: string = process.env['JWT_REFRESH_EXPIRY'] || '7d';
 
   /**
    * Generate access token
    */
-  static generateAccessToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
+  static generateAccessToken(
+    payload: Omit<JWTPayload, 'iat' | 'exp'>, 
+    customExpiry?: string
+  ): string {
     try {
+      // Validate JWT secret
+      if (!this.ACCESS_TOKEN_SECRET || this.ACCESS_TOKEN_SECRET.length < 10) {
+        throw new Error('JWT secret must be at least 10 characters long');
+      }
+
       const options: SignOptions = {
-        expiresIn: this.ACCESS_TOKEN_EXPIRY as any,
+        expiresIn: customExpiry || this.ACCESS_TOKEN_EXPIRY as any,
         algorithm: 'HS256',
         issuer: 'dessai-backend',
-        audience: 'dessai-frontend'
+        audience: 'dessai-frontend',
       };
 
       return jwt.sign(payload, this.ACCESS_TOKEN_SECRET, options);
     } catch (error) {
-      throw new Error(`Failed to generate access token: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to generate access token: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -41,12 +53,14 @@ export class JWTUtil {
         expiresIn: this.REFRESH_TOKEN_EXPIRY as any,
         algorithm: 'HS256',
         issuer: 'dessai-backend',
-        audience: 'dessai-frontend'
+        audience: 'dessai-frontend',
       };
 
       return jwt.sign(payload, this.REFRESH_TOKEN_SECRET, options);
     } catch (error) {
-      throw new Error(`Failed to generate refresh token: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to generate refresh token: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -58,7 +72,7 @@ export class JWTUtil {
       return jwt.verify(token, this.ACCESS_TOKEN_SECRET, {
         algorithms: ['HS256'],
         issuer: 'dessai-backend',
-        audience: 'dessai-frontend'
+        audience: 'dessai-frontend',
       }) as JWTPayload;
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
@@ -67,7 +81,9 @@ export class JWTUtil {
       if (error instanceof jwt.JsonWebTokenError) {
         throw new Error('Invalid access token');
       }
-      throw new Error(`Token verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Token verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -79,7 +95,7 @@ export class JWTUtil {
       return jwt.verify(token, this.REFRESH_TOKEN_SECRET, {
         algorithms: ['HS256'],
         issuer: 'dessai-backend',
-        audience: 'dessai-frontend'
+        audience: 'dessai-frontend',
       }) as { userId: string; sessionId: string; type: string };
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
@@ -88,7 +104,9 @@ export class JWTUtil {
       if (error instanceof jwt.JsonWebTokenError) {
         throw new Error('Invalid refresh token');
       }
-      throw new Error(`Refresh token verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Refresh token verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 

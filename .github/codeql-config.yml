@@ -1,0 +1,85 @@
+# Dessai Platform - CodeQL Configuration
+# Custom configuration for static analysis
+
+name: "Dessai Backend CodeQL Config"
+
+# Disable default queries and use custom ones
+disable-default-queries: false
+
+# Custom query packs
+packs:
+  - typescript: latest
+  - javascript: latest
+
+# Query filters
+query-filters:
+  - include:
+      kind:
+        - problem
+        - path-problem
+      precision:
+        - high
+        - very-high
+  - exclude:
+      id:
+        - js/unused-local-variable  # Too noisy for development
+        - ts/unused-local-variable
+
+# Path filters
+paths:
+  - "src/**"
+  - "scripts/**"
+  - "prisma/**"
+
+paths-ignore:
+  - "node_modules/**"
+  - "dist/**"
+  - "coverage/**"
+  - "tests/**"
+  - "*.test.ts"
+  - "*.test.js"
+  - "*.spec.ts"
+  - "*.spec.js"
+
+# Custom queries
+queries:
+  - name: "Security queries"
+    uses: security-extended
+  - name: "Quality queries"
+    uses: code-scanning
+  - name: "Custom Dessai queries"
+    uses: ./.github/codeql-queries/
+
+# Language-specific configuration
+javascript:
+  # Include TypeScript files
+  extensions:
+    - .js
+    - .jsx
+    - .ts
+    - .tsx
+    - .mjs
+    - .cjs
+  
+  # Custom extraction
+  index:
+    build_command: "npm run build"
+    include:
+      - "src/**"
+    exclude:
+      - "node_modules/**"
+      - "tests/**"
+
+# Security-focused analysis
+security:
+  enable:
+    - sql-injection
+    - xss
+    - command-injection
+    - path-traversal
+    - weak-cryptography
+    - insecure-randomness
+    - hard-coded-credentials
+    - missing-rate-limiting
+    - insecure-cors
+    - prototype-pollution

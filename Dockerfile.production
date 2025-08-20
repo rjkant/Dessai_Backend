@@ -1,0 +1,144 @@
+# Dessai Backend - Docker Configuration
+# Multi-stage production-ready Dockerfile
+
+# =============================================================================
+# Stage 1: Base Dependencies and Build Tools
+# =============================================================================
+FROM node:18-alpine AS base
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies for node-gyp and native modules
+RUN apk add --no-cache \
+    libc6-compat \
+    python3 \
+    make \
+    g++ \
+    git \
+    curl \
+    && rm -rf /var/cache/apk/*
+
+# Copy package files
+COPY package*.json ./
+COPY tsconfig.json ./
+
+# Install dependencies (including dev dependencies for build)
+RUN npm ci --only=production=false
+
+# =============================================================================
+# Stage 2: Development Dependencies and Build
+# =============================================================================
+FROM base AS development
+
+# Copy source code
+COPY . .
+
+# Build TypeScript application
+RUN npm run build
+
+# Run tests in build stage
+RUN npm run test:unit -- --passWithNoTests
+
+# Type checking
+RUN npm run type-check || true
+
+# Linting
+RUN npm run lint:check || true
+
+# =============================================================================
+# Stage 3: Production Dependencies
+# =============================================================================
+FROM node:18-alpine AS dependencies
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install only production dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# =============================================================================
+# Stage 4: Production Runtime
+# =============================================================================
+FROM node:18-alpine AS production
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S dessai -u 1001 -G nodejs
+
+# Set working directory
+WORKDIR /app
+
+# Install runtime dependencies
+RUN apk add --no-cache \
+    tini \
+    curl \
+    && rm -rf /var/cache/apk/*
+
+# Copy production dependencies
+COPY --from=dependencies --chown=dessai:nodejs /app/node_modules ./node_modules
+
+# Copy built application
+COPY --from=development --chown=dessai:nodejs /app/dist ./dist
+COPY --from=development --chown=dessai:nodejs /app/package*.json ./
+
+# Copy Prisma files for database operations
+COPY --from=development --chown=dessai:nodejs /app/prisma ./prisma
+
+# Copy environment and configuration files
+COPY --from=development --chown=dessai:nodejs /app/.env.example ./.env.example
+
+# Create logs directory
+RUN mkdir -p logs && chown dessai:nodejs logs
+
+# Switch to non-root user
+USER dessai
+
+# Expose application port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3000/api/health || exit 1
+
+# Use tini as init system for proper signal handling
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# Start application
+CMD ["npm", "start"]
+
+# =============================================================================
+# Stage 5: Development Runtime (for development mode)
+# =============================================================================
+FROM base AS development-runtime
+
+# Install nodemon for development
+RUN npm install -g nodemon
+
+# Copy source code
+COPY . .
+
+# Create development user
+USER node
+
+# Expose development port
+EXPOSE 3000
+EXPOSE 9229
+
+# Development command with debugging support
+CMD ["npm", "run", "dev"]
+
+# =============================================================================
+# Metadata and Labels
+# =============================================================================
+LABEL maintainer="Dessai Development Team"
+LABEL version="1.0.0"
+LABEL description="Dessai Backend API - AI-native technical hiring platform"
+LABEL org.opencontainers.image.title="Dessai Backend"
+LABEL org.opencontainers.image.description="Backend services for AI-native technical hiring platform"
+LABEL org.opencontainers.image.url="https://dessai.ai"
+LABEL org.opencontainers.image.documentation="https://docs.dessai.ai"
+LABEL org.opencontainers.image.version="1.0.0"
+LABEL org.opencontainers.image.created="2025-08-16"

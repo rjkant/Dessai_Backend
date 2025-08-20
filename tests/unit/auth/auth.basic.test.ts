@@ -63,14 +63,14 @@ describe('Authentication System - Basic Tests', () => {
     const { PasswordUtil } = require('../../../src/utils/password.util');
     
     // Valid passwords
-    expect(PasswordUtil.validatePassword('StrongPass123!')).toBe(true);
-    expect(PasswordUtil.validatePassword('AnotherGood1@')).toBe(true);
+    expect(PasswordUtil.validatePassword('StrongPass123!').isValid).toBe(true);
+    expect(PasswordUtil.validatePassword('AnotherGood1@').isValid).toBe(true);
     
-    // Invalid passwords
-    expect(PasswordUtil.validatePassword('weak')).toBe(false);
-    expect(PasswordUtil.validatePassword('nodigits!')).toBe(false);
-    expect(PasswordUtil.validatePassword('NoSpecialChars123')).toBe(false);
-    expect(PasswordUtil.validatePassword('nouppercase123!')).toBe(false);
+    // Invalid passwords  
+    expect(PasswordUtil.validatePassword('weak').isValid).toBe(false);
+    expect(PasswordUtil.validatePassword('nodigits!').isValid).toBe(false);
+    expect(PasswordUtil.validatePassword('NoSpecialChars123').isValid).toBe(false);
+    expect(PasswordUtil.validatePassword('nouppercase123!').isValid).toBe(false);
   });
 
   test('should validate JWT token generation', () => {

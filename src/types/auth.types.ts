@@ -36,17 +36,17 @@ export interface Role {
 
 export enum UserRole {
   SUPER_ADMIN = 'SuperAdmin',
-  ADMIN = 'OrgAdmin', 
+  ADMIN = 'OrgAdmin',
   HR_MANAGER = 'HRManager',
   INTERVIEWER = 'Interviewer',
-  CANDIDATE = 'Candidate'
+  CANDIDATE = 'Candidate',
 }
 
 export enum UserStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',
   SUSPENDED = 'suspended',
-  PENDING_VERIFICATION = 'pending_verification'
+  PENDING_VERIFICATION = 'pending_verification',
 }
 
 export interface LoginRequest {

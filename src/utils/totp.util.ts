@@ -22,7 +22,7 @@ export class TOTPUtil {
       const secret = speakeasy.generateSecret({
         name: `${this.APP_NAME} (${userEmail})`,
         issuer: this.ISSUER,
-        length: 32
+        length: 32,
       });
 
       if (!secret.otpauth_url) {
@@ -31,10 +31,12 @@ export class TOTPUtil {
 
       return {
         secret: secret.base32,
-        otpauthUrl: secret.otpauth_url
+        otpauthUrl: secret.otpauth_url,
       };
     } catch (error) {
-      throw new Error(`Failed to generate TOTP secret: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to generate TOTP secret: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -45,7 +47,9 @@ export class TOTPUtil {
     try {
       return await QRCode.toDataURL(otpauthUrl);
     } catch (error) {
-      throw new Error(`Failed to generate QR code: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to generate QR code: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -58,10 +62,12 @@ export class TOTPUtil {
         secret,
         encoding: 'base32',
         token,
-        window // Allow 1 step before and after current time
+        window, // Allow 1 step before and after current time
       });
     } catch (error) {
-      throw new Error(`Failed to verify TOTP token: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to verify TOTP token: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -72,10 +78,12 @@ export class TOTPUtil {
     try {
       return speakeasy.totp({
         secret,
-        encoding: 'base32'
+        encoding: 'base32',
       });
     } catch (error) {
-      throw new Error(`Failed to generate TOTP token: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to generate TOTP token: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -84,13 +92,13 @@ export class TOTPUtil {
    */
   static generateBackupCodes(count: number = 10): string[] {
     const codes: string[] = [];
-    
+
     for (let i = 0; i < count; i++) {
       // Generate 8-character alphanumeric codes
       const code = crypto.randomBytes(4).toString('hex').toUpperCase();
       codes.push(code);
     }
-    
+
     return codes;
   }
 
@@ -100,12 +108,12 @@ export class TOTPUtil {
   static async hashBackupCodes(codes: string[]): Promise<string[]> {
     const bcrypt = await import('bcryptjs');
     const hashedCodes: string[] = [];
-    
+
     for (const code of codes) {
       const hash = await bcrypt.hash(code, 10);
       hashedCodes.push(hash);
     }
-    
+
     return hashedCodes;
   }
 
@@ -114,13 +122,13 @@ export class TOTPUtil {
    */
   static async verifyBackupCode(code: string, hashedCodes: string[]): Promise<boolean> {
     const bcrypt = await import('bcryptjs');
-    
+
     for (const hashedCode of hashedCodes) {
       if (await bcrypt.compare(code, hashedCode)) {
         return true;
       }
     }
-    
+
     return false;
   }
 
@@ -136,22 +144,24 @@ export class TOTPUtil {
     try {
       // Generate TOTP secret
       const { secret, otpauthUrl } = this.generateSecret(userEmail);
-      
+
       // Generate QR code
       const qrCode = await this.generateQRCode(otpauthUrl);
-      
+
       // Generate backup codes
       const backupCodes = this.generateBackupCodes();
       const hashedBackupCodes = await this.hashBackupCodes(backupCodes);
-      
+
       return {
         secret,
         qrCode,
         backupCodes,
-        hashedBackupCodes
+        hashedBackupCodes,
       };
     } catch (error) {
-      throw new Error(`Failed to generate MFA setup: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to generate MFA setup: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -159,12 +169,12 @@ export class TOTPUtil {
    * Validate MFA token (TOTP or backup code)
    */
   static async validateMFAToken(
-    token: string, 
-    secret: string, 
+    token: string,
+    secret: string,
     hashedBackupCodes: string[] = []
-  ): Promise<{ 
-    isValid: boolean; 
-    usedBackupCode: boolean; 
+  ): Promise<{
+    isValid: boolean;
+    usedBackupCode: boolean;
   }> {
     try {
       // First try TOTP verification
@@ -179,7 +189,9 @@ export class TOTPUtil {
 
       return { isValid: false, usedBackupCode: false };
     } catch (error) {
-      throw new Error(`Failed to validate MFA token: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to validate MFA token: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 }

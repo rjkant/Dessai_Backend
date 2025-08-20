@@ -17,9 +17,7 @@ class DatabaseService {
           url: config.database.url,
         },
       },
-      log: config.server.isDevelopment 
-        ? ['query', 'info', 'warn', 'error']
-        : ['warn', 'error'],
+      log: config.server.isDevelopment ? ['query', 'info', 'warn', 'error'] : ['warn', 'error'],
     });
 
     // Setup connection lifecycle handlers
@@ -169,9 +167,7 @@ class DatabaseService {
   /**
    * Transaction wrapper
    */
-  public async transaction<T>(
-    operation: (tx: any) => Promise<T>
-  ): Promise<T> {
+  public async transaction<T>(operation: (tx: any) => Promise<T>): Promise<T> {
     return await this.prisma.$transaction(operation, {
       timeout: config.database.timeout,
     });

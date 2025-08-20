@@ -131,8 +131,15 @@ jest.mock('@/services/redis.service', () => ({
   redis: redisService,
 }));
 
-// Add Prisma mock
-jest.mock('@/lib/database', () => ({
+// Add Prisma mock via database service
+jest.mock('@/services/database.service', () => ({
+  database: {
+    connect: jest.fn().mockResolvedValue(undefined),
+    disconnect: jest.fn().mockResolvedValue(undefined),
+    client: mockPrismaClient,
+    isConnected: jest.fn().mockReturnValue(true),
+    healthCheck: jest.fn().mockResolvedValue({ status: 'healthy', latency: 10 }),
+  },
   prisma: mockPrismaClient,
 }));
 

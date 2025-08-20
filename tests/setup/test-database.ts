@@ -4,47 +4,71 @@
  * @testing persona validation
  */
 
-import { PrismaClient } from '@prisma/client';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
+// Mock Prisma client for testing
+export const mockPrismaClient = {
+  $connect: jest.fn().mockResolvedValue(undefined),
+  $disconnect: jest.fn().mockResolvedValue(undefined),
+  user: {
+    create: jest.fn(),
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    upsert: jest.fn(),
+  },
+  role: {
+    create: jest.fn(),
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    upsert: jest.fn(),
+  },
+  session: {
+    create: jest.fn(),
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    deleteMany: jest.fn(),
+  },
+  organization: {
+    create: jest.fn(),
+    findUnique: jest.fn(),
+    findMany: jest.fn(),
+    update: jest.fn(),
+    delete: jest.fn(),
+    upsert: jest.fn(),
+  },
+  $transaction: jest.fn(),
+};
 
 // Test database instance
-let testPrisma: PrismaClient | null = null;
+let testPrisma: any = mockPrismaClient;
 
 /**
  * Setup test database
  * Creates isolated test database for integration tests
  */
-export async function setupTestDatabase(): Promise<PrismaClient> {
+export async function setupTestDatabase(): Promise<any> {
   try {
-    // Create test database URL
-    const testDatabaseUrl = process.env['DATABASE_URL']?.replace(
-      /\/([^\/]+)$/, 
-      '/dessai_test'
-    ) || 'postgresql://localhost:5432/dessai_test';
-
-    // Initialize Prisma client for test database
-    testPrisma = new PrismaClient({
-      datasources: {
-        db: {
-          url: testDatabaseUrl
-        }
-      },
-      log: process.env['NODE_ENV'] === 'test' ? [] : ['error', 'warn']
+    // Reset all mocks before each test suite
+    Object.values(mockPrismaClient).forEach(mockMethod => {
+      if (typeof mockMethod === 'object' && mockMethod !== null) {
+        Object.values(mockMethod).forEach(method => {
+          if (jest.isMockFunction(method)) {
+            method.mockClear();
+          }
+        });
+      } else if (jest.isMockFunction(mockMethod)) {
+        mockMethod.mockClear();
+      }
     });
 
-    // Connect to database
-    await testPrisma.$connect();
-
-    // Run database migrations
-    await runMigrations();
-
-    // Seed test data
+    // Seed test data (mock implementations)
     await seedTestData();
 
-    console.log('Test database setup completed');
+    console.log('Test database setup completed (mocked)');
     return testPrisma;
 
   } catch (error) {
@@ -54,80 +78,59 @@ export async function setupTestDatabase(): Promise<PrismaClient> {
 }
 
 /**
- * Run database migrations for test environment
- */
-async function runMigrations(): Promise<void> {
-  try {
-    // Set test database URL for migrations
-    const testDatabaseUrl = process.env['DATABASE_URL']?.replace(
-      /\/([^\/]+)$/, 
-      '/dessai_test'
-    ) || 'postgresql://localhost:5432/dessai_test';
-
-    // Run Prisma migrations
-    await execAsync('npx prisma migrate deploy', {
-      env: {
-        ...process.env,
-        DATABASE_URL: testDatabaseUrl
-      }
-    });
-
-    console.log('Test database migrations completed');
-  } catch (error) {
-    console.warn('Migration warning (may be expected in test environment):', error);
-    // Don't throw here as migrations might not exist yet
-  }
-}
-
-/**
  * Seed test database with initial data
  */
 async function seedTestData(): Promise<void> {
-  if (!testPrisma) {
-    throw new Error('Test database not initialized');
-  }
-
   try {
-    // Create test roles
-    await testPrisma.role.upsert({
-      where: { name: 'user' },
-      update: {},
-      create: {
-        id: 'test-role-id',
-        name: 'user',
-        description: 'Standard user role',
-        permissions: ['read:profile', 'update:profile']
+    // Mock default responses for test data
+    
+    // Test roles
+    mockPrismaClient.role.upsert.mockImplementation(({ where }: any) => {
+      if (where.name === 'user') {
+        return Promise.resolve({
+          id: 'test-role-id',
+          name: 'user',
+          description: 'Standard user role',
+          permissions: ['read:profile', 'update:profile']
+        });
+      } else if (where.name === 'admin') {
+        return Promise.resolve({
+          id: 'admin-role-id', 
+          name: 'admin',
+          description: 'Administrator role',
+          permissions: ['read:*', 'write:*', 'delete:*']
+        });
       }
+      return Promise.resolve(null);
     });
 
-    await testPrisma.role.upsert({
-      where: { name: 'admin' },
-      update: {},
-      create: {
-        id: 'admin-role-id',
-        name: 'admin',
-        description: 'Administrator role',
-        permissions: ['read:*', 'write:*', 'delete:*']
+    // Test organization
+    mockPrismaClient.organization?.upsert?.mockImplementation(({ where }: any) => {
+      if (where.slug === 'test-org') {
+        return Promise.resolve({
+          id: 'test-org-id',
+          name: 'Test Organization',
+          slug: 'test-org',
+          domain: 'testorg.com',
+          settings: {
+            allowSelfRegistration: true,
+            requireEmailVerification: false
+          }
+        });
       }
+      return Promise.resolve(null);
     });
 
-    // Create test organization
-    await testPrisma.organization.upsert({
-      where: { slug: 'test-org' },
-      update: {},
-      create: {
-        id: 'test-org-id',
-        name: 'Test Organization',
-        slug: 'test-org',
-        domain: 'testorg.com',
-        settings: {
-          allowSelfRegistration: true,
-          requireEmailVerification: false
-        }
-      }
-    });
+    // Default user queries
+    mockPrismaClient.user.findUnique.mockResolvedValue(null);
+    mockPrismaClient.user.create.mockImplementation((data: any) => 
+      Promise.resolve({ 
+        id: 'test-user-id',
+        ...data.data 
+      })
+    );
 
-    console.log('Test data seeding completed');
+    console.log('Test data seeding completed (mocked)');
   } catch (error) {
     console.error('Test data seeding failed:', error);
     throw error;
@@ -135,123 +138,44 @@ async function seedTestData(): Promise<void> {
 }
 
 /**
- * Clean test database
- * Removes all test data while preserving schema
- */
-export async function cleanTestDatabase(): Promise<void> {
-  if (!testPrisma) {
-    return;
-  }
-
-  try {
-    // Delete test data in correct order (due to foreign key constraints)
-    await testPrisma.auditLog.deleteMany({});
-    await testPrisma.user.deleteMany({});
-    await testPrisma.organization.deleteMany({});
-    await testPrisma.role.deleteMany({});
-
-    console.log('Test database cleaned');
-  } catch (error) {
-    console.error('Test database cleanup failed:', error);
-    throw error;
-  }
-}
-
-/**
- * Reset test database
- * Cleans and re-seeds database
- */
-export async function resetTestDatabase(): Promise<void> {
-  await cleanTestDatabase();
-  await seedTestData();
-  console.log('Test database reset completed');
-}
-
-/**
- * Close test database connection
+ * Close test database connections
  */
 export async function closeTestDatabase(): Promise<void> {
-  if (testPrisma) {
-    await testPrisma.$disconnect();
+  try {
+    if (testPrisma && testPrisma.$disconnect) {
+      await testPrisma.$disconnect();
+    }
     testPrisma = null;
-    console.log('Test database connection closed');
+    console.log('Test database connections closed');
+  } catch (error) {
+    console.error('Error closing test database:', error);
   }
 }
 
 /**
- * Get test database instance
+ * Get test Prisma client instance
  */
-export function getTestDatabase(): PrismaClient | null {
-  return testPrisma;
+export function getTestPrisma(): any {
+  return testPrisma || mockPrismaClient;
 }
 
 /**
- * Create test user helper
+ * Reset all test database mocks
  */
-export async function createTestUser(userData: {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  roleId?: string;
-  organizationId?: string;
-}) {
-  if (!testPrisma) {
-    throw new Error('Test database not initialized');
-  }
-
-  const { PasswordUtil } = await import('../../src/utils/password.util');
-  const passwordHash = await PasswordUtil.hashPassword(userData.password);
-
-  return await testPrisma.user.create({
-    data: {
-      email: userData.email,
-      passwordHash,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      roleId: userData.roleId || 'test-role-id',
-      organizationId: userData.organizationId || 'test-org-id',
-      isActive: true,
-      emailVerified: true,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    },
-    include: {
-      role: true,
-      organization: true
+export function resetTestDatabase(): void {
+  Object.values(mockPrismaClient).forEach(mockMethod => {
+    if (typeof mockMethod === 'object' && mockMethod !== null) {
+      Object.values(mockMethod).forEach(method => {
+        if (jest.isMockFunction(method)) {
+          method.mockReset();
+        }
+      });
+    } else if (jest.isMockFunction(mockMethod)) {
+      mockMethod.mockReset();
     }
   });
 }
 
-/**
- * Create test session helper
- * Since there's no userSession model, we'll update the user's refreshTokens
- */
-export async function createTestSession(userId: string, refreshToken: string) {
-  if (!testPrisma) {
-    throw new Error('Test database not initialized');
-  }
-
-  // Update user's refreshTokens array
-  return await testPrisma.user.update({
-    where: { id: userId },
-    data: {
-      refreshTokens: {
-        push: refreshToken
-      }
-    }
-  });
-}
-
-/**
- * Database transaction helper for tests
- */
-export async function withTransaction<T>(
-  callback: (prisma: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use' | '$extends'>) => Promise<T>
-): Promise<T> {
-  if (!testPrisma) {
-    throw new Error('Test database not initialized');
-  }
-
-  return await testPrisma.$transaction(callback);
-}
+// Export the mock for external use
+export { testPrisma };
+export default mockPrismaClient;

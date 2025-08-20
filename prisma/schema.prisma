@@ -26,6 +26,7 @@ model Organization {
   // Relations
   users       User[]
   assessments Assessment[]
+  memberships OrganizationMembership[]
 
   @@map("organizations")
 }
@@ -37,7 +38,7 @@ model User {
   lastName       String
   profileImage   String?
   timezone       String    @default("UTC")
-  preferences    Json      @default("{}")
+  preferences    String    @default("{}")  // JSON as string for SQLite
   isActive       Boolean   @default(true)
   emailVerified  Boolean   @default(false)
   lastLoginAt    DateTime?
@@ -62,6 +63,10 @@ model User {
   auditLogs      AuditLog[]
   assessmentParticipations AssessmentParticipation[]
   proctoringSessions ProctorSession[]
+  organizationMemberships OrganizationMembership[]
+  assessmentSessions AssessmentSession[]
+  calendarAuth   CalendarAuth[]
+  calendarIntegrations CalendarIntegration[]
 
   @@map("users")
 }
@@ -70,7 +75,7 @@ model Role {
   id          String   @id @default(cuid())
   name        String   @unique // SuperAdmin, OrgAdmin, Interviewer, Candidate
   description String?
-  permissions Json     @default("[]") // Array of permission strings
+  permissions String   @default("[]")  // Array as JSON string for SQLite
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -86,7 +91,7 @@ model AuditLog {
   action     String   // CREATE, UPDATE, DELETE, LOGIN, LOGOUT, etc.
   resource   String   // users, assessments, etc.
   resourceId String?
-  details    Json     @default("{}")
+  details    String   @default("{}")  // JSON as string for SQLite
   ipAddress  String?
   userAgent  String?
   createdAt  DateTime @default(now())
@@ -95,6 +100,24 @@ model AuditLog {
   user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@map("audit_logs")
+}
+
+model OrganizationMembership {
+  id             String   @id @default(cuid())
+  userId         String
+  organizationId String
+  role           String   // Organization-specific role
+  status         String   @default("ACTIVE") // ACTIVE, INACTIVE, PENDING
+  joinedAt       DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@map("organization_memberships")
 }
 
 // ============================================================================
@@ -108,7 +131,8 @@ model Assessment {
   type              AssessmentType
   status            AssessmentStatus @default(DRAFT)
   timeLimit         Int?      // in minutes
-  settings          Json      @default("{}")
+  difficultyLevel   Difficulty @default(MEDIUM)
+  settings          String    @default("{}")  // JSON as string for SQLite
   scheduledAt       DateTime?
   startsAt          DateTime?
   endsAt            DateTime?
@@ -123,6 +147,7 @@ model Assessment {
   questions         AssessmentQuestion[]
   participations    AssessmentParticipation[]
   proctoringSessions ProctorSession[]
+  assessmentSessions AssessmentSession[]
 
   @@map("assessments")
 }
@@ -135,7 +160,7 @@ model Question {
   difficulty    Difficulty
   tags          String[]      @default([])
   content       Json          // Question-specific content
-  metadata      Json          @default("{}")
+  metadata      String        @default("{}")  // JSON as string for SQLite
   isActive      Boolean       @default(true)
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
@@ -463,4 +488,79 @@ enum NotificationStatus {
   DELIVERED
   FAILED
   CANCELLED
+}
+
+// ============================================================================
+// MISSING MODELS FOR INTEGRATION SERVICES
+// ============================================================================
+
+model AssessmentSession {
+  id            String   @id @default(cuid())
+  sessionToken  String   @unique
+  assessmentId  String
+  userId        String
+  status        String
+  metadata      Json     @default("{}")
+  startedAt     DateTime @default(now())
+  endedAt       DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assessment    Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+
+  @@map("assessment_sessions")
+}
+
+model CalendarAuth {
+  id           String   @id @default(cuid())
+  userId       String
+  provider     String
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime
+  scope        String?
+  tokenType    String   @default("Bearer")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider])
+  @@map("calendar_auth")
+}
+
+model CalendarIntegration {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider    String   // GOOGLE, MICROSOFT, OUTLOOK, etc.
+  providerId  String   // External calendar system ID
+  name        String
+  timezone    String?
+  isEnabled   Boolean  @default(true)
+  settings    Json     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, provider, providerId])
+  @@map("calendar_integrations")
+}
+
+model WebhookEvent {
+  id         String   @id @default(cuid())
+  provider   String
+  event      String
+  timestamp  DateTime
+  data       Json     @default("{}")
+  processed  Boolean  @default(false)
+  attempts   Int      @default(0)
+  processedAt DateTime?
+  errorMessage String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("webhook_events")
 }

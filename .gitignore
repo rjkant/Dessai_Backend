@@ -291,3 +291,242 @@ storybook-static/
 
 # Rush
 common/temp/
+
+# ================================
+# Dessai Platform Specific Extensions
+# ================================
+
+# Database & Storage
+*.db
+*.sqlite
+*.sqlite3
+postgres-data/
+redis-data/
+dump.rdb
+*.rdb
+
+# Prisma specific
+prisma/migrations/deployment/
+.env.prisma
+
+# AI/ML & Analytics
+models/
+*.model
+*.pkl
+*.h5
+*.pb
+training-data/
+datasets/
+ai-models/
+ml-models/
+*.weights
+*.ckpt
+analytics-data/
+bias-reports/
+statistical-analysis/
+bias-analysis-results/
+
+# Code Execution & Sandbox
+code-execution/
+sandbox/
+execution-results/
+user-code/
+execution-logs/
+
+# WebRTC & Media Processing
+webrtc-recordings/
+media-processing/
+stream-data/
+proctoring-recordings/
+recordings/
+*.mp4
+*.avi
+*.mov
+*.webm
+*.mp3
+*.wav
+
+# Assessment & Collaboration
+assessment-data/
+collaboration-sessions/
+real-time-data/
+uploads/
+media/
+static/uploads/
+public/uploads/
+storage/
+files/
+documents/
+
+# Integration Services
+ats-cache/
+calendar-cache/
+integration-logs/
+greenhouse-cache/
+workday-cache/
+bamboohr-cache/
+
+# Notification System
+notification-logs/
+email-templates/compiled/
+sms-logs/
+notification-queue/
+
+# Docker & Kubernetes
+docker-compose.override.yml
+docker-compose.local.yml
+k8s/secrets/
+k8s/local/
+k8s/*.local.yaml
+kubeconfig
+*.kubeconfig
+
+# Performance & Monitoring
+performance-reports/
+load-test-results/
+monitoring/
+metrics/
+traces/
+prometheus-data/
+grafana-data/
+elasticsearch-data/
+jaeger-data/
+elk-data/
+
+# Testing & QA
+test-results/
+test-reports/
+screenshots/
+videos/
+cypress/videos/
+cypress/screenshots/
+playwright-report/
+test-results.xml
+coverage.xml
+
+# Security & Compliance
+security-audit.json
+audit-report.html
+vulnerability-report.json
+ssl/
+tls/
+certs/
+*.pem
+*.key
+*.csr
+*.crt
+
+# Development Utilities
+.local/
+local/
+scripts/local/
+utils/local/
+tools/local/
+
+# Deployment & Infrastructure
+deployment/
+releases/
+*.tar.gz
+*.zip
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Helm charts
+charts/*/charts/
+charts/*/requirements.lock
+
+# Backup & Archive files
+*.bak
+*.backup
+*.old
+*.orig
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# System & OS files
+.fuse_hidden*
+.nfs*
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+desktop.ini
+
+# Error & Application logs
+error.log
+crash.log
+application.log
+
+# API Documentation
+api-docs/
+swagger-ui/
+
+# Documentation build
+docs/build/
+docs/_build/
+site/
+
+# Package manager considerations
+# Uncomment based on your primary package manager
+# package-lock.json  # if using yarn
+# yarn.lock         # if using npm
+# pnpm-lock.yaml    # if using npm/yarn
+
+# ================================
+# Project Reports & Documentation
+# ================================
+
+# Epic completion reports
+EPIC-*-COMPLETION-REPORT.md
+EPIC-*-FINAL-*.md
+EPIC-*-PROGRESS-REPORT.md
+EPIC-*-STATUS-*.md
+PLATFORM-COMPLETION-*.md
+COMPREHENSIVE-PROJECT-*.md
+
+# Debug and test servers
+debug-server.js
+*-test-server.js
+simple-test.js
+test-*.js
+test-*.ts
+quick-test.ts
+env-test-server.ts
+execution-server.ts
+simple-execution-server.ts
+isolated-*.js
+
+# Temporary service files
+*.disabled
+*.backup.ts
+*.fixed.ts
+*.simple.ts
+*.clean.ts
+*.production.ts
+*.old.ts
+
+# Configuration files
+.lighthouserc.json
+.snyk
+sonar-project.properties
+lighthouse.config.js
+
+# Scripts and utilities
+scripts/docker-entrypoint.sh
+scripts/init-db.sql
+scripts/verify-docker-setup.js
+
+# Mock and disabled services
+*-mock.service.ts
+*redis.service.ts.disabled

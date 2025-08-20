@@ -1,0 +1,225 @@
+# Integration Services Configuration & Secrets
+# Epic 8: Infrastructure & DevOps - Configuration Management for Integration Services
+#
+# This file contains ConfigMaps and Secrets for our Epic 7: Integration Services
+# production deployment with proper secret management and configuration separation.
+
+---
+# ConfigMap for Integration Services Configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: integration-config
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: integration-config
+    app.kubernetes.io/component: configuration
+    app.kubernetes.io/part-of: dessai
+    epic: "epic-7-integration-services"
+data:
+  # ATS Provider Configuration
+  GREENHOUSE_API_URL: "https://harvest.greenhouse.io/v1"
+  WORKDAY_API_URL: "https://wd2-impl-services1.workday.com"
+  BAMBOOHR_API_URL: "https://api.bamboohr.com/api/gateway.php"
+  
+  # Calendar Provider Configuration
+  GOOGLE_CALENDAR_API_URL: "https://www.googleapis.com/calendar/v3"
+  MICROSOFT_GRAPH_API_URL: "https://graph.microsoft.com/v1.0"
+  
+  # OAuth2 Redirect URIs (non-sensitive)
+  GOOGLE_REDIRECT_URI: "https://api.dessai.com/api/integrations/calendar/google/callback"
+  MICROSOFT_REDIRECT_URI: "https://api.dessai.com/api/integrations/calendar/outlook/callback"
+  
+  # Rate Limiting Configuration
+  RATE_LIMIT_WINDOW_MS: "900000"  # 15 minutes
+  RATE_LIMIT_MAX_REQUESTS: "100"
+  RATE_LIMIT_GREENHOUSE_REQUESTS: "50"
+  RATE_LIMIT_GOOGLE_REQUESTS: "1000"
+  RATE_LIMIT_MICROSOFT_REQUESTS: "500"
+  
+  # Integration Features Configuration
+  ATS_SYNC_ENABLED: "true"
+  CALENDAR_SYNC_ENABLED: "true"
+  WEBHOOK_ENABLED: "true"
+  BATCH_PROCESSING_ENABLED: "true"
+  
+  # Batch Processing Configuration
+  BATCH_SIZE_CANDIDATES: "50"
+  BATCH_SIZE_JOBS: "25"
+  BATCH_SIZE_EVENTS: "100"
+  SYNC_INTERVAL_MINUTES: "60"
+  
+  # Timeout Configuration
+  HTTP_TIMEOUT_MS: "30000"
+  DATABASE_TIMEOUT_MS: "10000"
+  REDIS_TIMEOUT_MS: "5000"
+  
+  # Logging Configuration
+  INTEGRATION_LOG_LEVEL: "info"
+  AUDIT_LOG_ENABLED: "true"
+  PERFORMANCE_LOG_ENABLED: "true"
+  
+  # Health Check Configuration
+  HEALTH_CHECK_INTERVAL_MS: "30000"
+  PROVIDER_HEALTH_CHECK_ENABLED: "true"
+  
+  # Optional Provider Configuration (for future use)
+  WORKDAY_TENANT: ""
+  BAMBOOHR_SUBDOMAIN: ""
+  SLACK_WORKSPACE_URL: ""
+  TEAMS_TENANT_ID: ""
+
+---
+# Secret for Integration Services API Keys and Credentials
+# NOTE: In production, these values should be created separately using:
+# kubectl create secret generic integration-secrets --from-env-file=integration.env
+apiVersion: v1
+kind: Secret
+metadata:
+  name: integration-secrets
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: integration-secrets
+    app.kubernetes.io/component: secrets
+    app.kubernetes.io/part-of: dessai
+    epic: "epic-7-integration-services"
+type: Opaque
+data:
+  # Integration Service Master Key (base64 encoded placeholder)
+  INTEGRATION_SECRET_KEY: "aW50ZWdyYXRpb24tc2VjcmV0LWtleS1jaGFuZ2UtaW4tcHJvZHVjdGlvbg=="
+  
+  # Greenhouse ATS API Key (base64 encoded placeholder)
+  GREENHOUSE_API_KEY: "Z3JlZW5ob3VzZS1hcGkta2V5LXBsYWNlaG9sZGVy"
+  
+  # Google OAuth2 Credentials (base64 encoded placeholders)
+  GOOGLE_CLIENT_ID: "Z29vZ2xlLWNsaWVudC1pZC1wbGFjZWhvbGRlcg=="
+  GOOGLE_CLIENT_SECRET: "Z29vZ2xlLWNsaWVudC1zZWNyZXQtcGxhY2Vob2xkZXI="
+  
+  # Microsoft OAuth2 Credentials (base64 encoded placeholders)
+  MICROSOFT_CLIENT_ID: "bWljcm9zb2Z0LWNsaWVudC1pZC1wbGFjZWhvbGRlcg=="
+  MICROSOFT_CLIENT_SECRET: "bWljcm9zb2Z0LWNsaWVudC1zZWNyZXQtcGxhY2Vob2xkZXI="
+  
+  # Workday Credentials (base64 encoded placeholders - optional)
+  WORKDAY_USERNAME: "d29ya2RheS11c2VybmFtZS1wbGFjZWhvbGRlcg=="
+  WORKDAY_PASSWORD: "d29ya2RheS1wYXNzd29yZC1wbGFjZWhvbGRlcg=="
+  
+  # BambooHR API Key (base64 encoded placeholder - optional)
+  BAMBOOHR_API_KEY: "YmFtYm9vaHItYXBpLWtleS1wbGFjZWhvbGRlcg=="
+  
+  # Future Integration Secrets (base64 encoded placeholders)
+  SLACK_BOT_TOKEN: "c2xhY2stYm90LXRva2VuLXBsYWNlaG9sZGVy"
+  TEAMS_APP_SECRET: "dGVhbXMtYXBwLXNlY3JldC1wbGFjZWhvbGRlcg=="
+
+---
+# Service Account for Integration Services
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dessai-integration-service-account
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: dessai-integration-service-account
+    app.kubernetes.io/component: security
+    app.kubernetes.io/part-of: dessai
+    epic: "epic-7-integration-services"
+automountServiceAccountToken: true
+
+---
+# Role for Integration Services (RBAC)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: dessai
+  name: dessai-integration-role
+  labels:
+    app.kubernetes.io/name: dessai-integration-role
+    app.kubernetes.io/component: security
+    app.kubernetes.io/part-of: dessai
+    epic: "epic-7-integration-services"
+rules:
+# Allow reading ConfigMaps and Secrets
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+# Allow reading service information for health checks
+- apiGroups: [""]
+  resources: ["services", "endpoints"]
+  verbs: ["get", "list", "watch"]
+# Allow reading pod information for service discovery
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+
+---
+# RoleBinding for Integration Services
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: dessai-integration-rolebinding
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: dessai-integration-rolebinding
+    app.kubernetes.io/component: security
+    app.kubernetes.io/part-of: dessai
+    epic: "epic-7-integration-services"
+subjects:
+- kind: ServiceAccount
+  name: dessai-integration-service-account
+  namespace: dessai
+roleRef:
+  kind: Role
+  name: dessai-integration-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# PersistentVolumeClaim for Integration Logs (optional)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: integration-logs-pvc
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: integration-logs-pvc
+    app.kubernetes.io/component: storage
+    app.kubernetes.io/part-of: dessai
+    epic: "epic-7-integration-services"
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: "standard"  # Adjust based on your cluster's storage classes
+
+---
+# ServiceMonitor for Prometheus Monitoring (if using Prometheus Operator)
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: dessai-integration-services-monitor
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: dessai-integration-services-monitor
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: dessai
+    epic: "epic-7-integration-services"
+    prometheus: dessai
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dessai-integration-services
+  endpoints:
+  - port: integration-api
+    path: /api/integrations/health
+    interval: 30s
+    scrapeTimeout: 10s
+    honorLabels: true
+    relabelings:
+    - sourceLabels: [__meta_kubernetes_pod_name]
+      targetLabel: pod
+    - sourceLabels: [__meta_kubernetes_pod_node_name]
+      targetLabel: node
+    metricRelabelings:
+    - sourceLabels: [__name__]
+      regex: 'integration_.*'
+      action: keep

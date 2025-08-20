@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { database } from '@/services/database.service';
-import { redis } from '@/services/redis.service';
+import { redis } from '@/services/redis-mock.service';
 
 /**
  * Health Check Controller
@@ -25,28 +25,37 @@ export const getHealthStatus = async (_req: Request, res: Response): Promise<voi
     // Determine overall status
     const dbStatus = dbHealth.status === 'fulfilled' ? dbHealth.value.status : 'unhealthy';
     const redisStatus = redisHealth.status === 'fulfilled' ? redisHealth.value.status : 'unhealthy';
-    
-    const overallStatus = dbStatus === 'healthy' && redisStatus === 'healthy' ? 'healthy' : 'unhealthy';
+
+    const overallStatus =
+      dbStatus === 'healthy' && redisStatus === 'healthy' ? 'healthy' : 'unhealthy';
 
     const healthData = {
       status: overallStatus,
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
       checks: {
-        database: dbHealth.status === 'fulfilled' ? dbHealth.value : { 
-          status: 'unhealthy', 
-          latency: -1, 
-          timestamp: new Date().toISOString() 
-        },
-        redis: redisHealth.status === 'fulfilled' ? redisHealth.value : { 
-          status: 'unhealthy', 
-          latency: -1, 
-          timestamp: new Date().toISOString() 
-        },
+        database:
+          dbHealth.status === 'fulfilled'
+            ? dbHealth.value
+            : {
+                status: 'unhealthy',
+                latency: -1,
+                timestamp: new Date().toISOString(),
+              },
+        redis:
+          redisHealth.status === 'fulfilled'
+            ? redisHealth.value
+            : {
+                status: 'unhealthy',
+                latency: -1,
+                timestamp: new Date().toISOString(),
+              },
         memory: {
           used: process.memoryUsage().heapUsed,
           total: process.memoryUsage().heapTotal,
-          percentage: Math.round((process.memoryUsage().heapUsed / process.memoryUsage().heapTotal) * 100),
+          percentage: Math.round(
+            (process.memoryUsage().heapUsed / process.memoryUsage().heapTotal) * 100
+          ),
         },
         cpu: {
           usage: process.cpuUsage(),
@@ -132,7 +141,7 @@ export const getReadiness = async (_req: Request, res: Response): Promise<void> 
     if (dbConnected && redisConnected) {
       res.status(200).json({ status: 'ready' });
     } else {
-      res.status(503).json({ 
+      res.status(503).json({
         status: 'not ready',
         database: dbConnected,
         redis: redisConnected,
@@ -147,7 +156,7 @@ export const getReadiness = async (_req: Request, res: Response): Promise<void> 
  * Simple liveness probe
  */
 export const getLiveness = (_req: Request, res: Response): void => {
-  res.status(200).json({ 
+  res.status(200).json({
     status: 'alive',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),

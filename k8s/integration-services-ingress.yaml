@@ -1,0 +1,264 @@
+# Integration Services Ingress Configuration
+# Epic 8: Infrastructure & DevOps - Ingress Routes for Integration Services
+#
+# This file adds ingress routing for our Epic 7: Integration Services
+# to the existing Dessai platform ingress with proper load balancing,
+# SSL termination, and security configurations.
+
+---
+# Ingress for Integration Services API
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dessai-integration-services-ingress
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: dessai-integration-services-ingress
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/part-of: dessai
+    epic: "epic-7-integration-services"
+  annotations:
+    # Ingress class and controller
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    
+    # SSL and security
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    
+    # Rate limiting for integration APIs
+    nginx.ingress.kubernetes.io/rate-limit-connections: "10"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    nginx.ingress.kubernetes.io/rate-limit-rpm: "100"
+    
+    # Authentication and authorization
+    nginx.ingress.kubernetes.io/auth-method: "POST"
+    nginx.ingress.kubernetes.io/auth-url: "http://dessai-api.dessai.svc.cluster.local/api/auth/validate"
+    nginx.ingress.kubernetes.io/auth-response-headers: "X-User-ID,X-User-Role,X-Organization-ID"
+    
+    # Timeouts for external API calls
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+    
+    # Request size limits
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    
+    # CORS configuration for integration endpoints
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://app.dessai.com,https://admin.dessai.com"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET,POST,PUT,DELETE,OPTIONS"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Authorization,Content-Type,X-Requested-With"
+    
+    # Load balancing configuration
+    nginx.ingress.kubernetes.io/upstream-hash-by: "$remote_addr"
+    nginx.ingress.kubernetes.io/session-affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "dessai-integration-session"
+    nginx.ingress.kubernetes.io/session-cookie-expires: "3600"
+    
+    # Health check configuration
+    nginx.ingress.kubernetes.io/server-snippet: |
+      location /api/integrations/health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+      }
+    
+    # Security headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      add_header X-Content-Type-Options "nosniff" always;
+      add_header X-Frame-Options "DENY" always;
+      add_header X-XSS-Protection "1; mode=block" always;
+      add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+      add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';" always;
+      
+      # Integration service specific headers
+      add_header X-Service-Version "1.0.0" always;
+      add_header X-Epic "epic-7-integration-services" always;
+
+spec:
+  tls:
+  - hosts:
+    - api.dessai.com
+    - integrations.dessai.com
+    secretName: dessai-integration-tls
+  
+  rules:
+  # Main API domain - integration endpoints
+  - host: api.dessai.com
+    http:
+      paths:
+      # Integration Services API routes
+      - path: /api/integrations
+        pathType: Prefix
+        backend:
+          service:
+            name: dessai-integration-services
+            port:
+              number: 80
+      
+      # Health check endpoint (no auth required)
+      - path: /api/integrations/health
+        pathType: Exact
+        backend:
+          service:
+            name: dessai-integration-services
+            port:
+              number: 80
+      
+      # OAuth callback endpoints (special handling)
+      - path: /api/integrations/calendar/google/callback
+        pathType: Exact
+        backend:
+          service:
+            name: dessai-integration-services
+            port:
+              number: 80
+      
+      - path: /api/integrations/calendar/outlook/callback
+        pathType: Exact
+        backend:
+          service:
+            name: dessai-integration-services
+            port:
+              number: 80
+  
+  # Dedicated integrations subdomain
+  - host: integrations.dessai.com
+    http:
+      paths:
+      # All integration services under dedicated subdomain
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: dessai-integration-services
+            port:
+              number: 80
+
+---
+# Ingress for Integration Services Admin/Monitoring
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dessai-integration-admin-ingress
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: dessai-integration-admin-ingress
+    app.kubernetes.io/component: ingress
+    app.kubernetes.io/part-of: dessai
+    epic: "epic-7-integration-services"
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    
+    # Admin access requires additional authentication
+    nginx.ingress.kubernetes.io/auth-method: "POST"
+    nginx.ingress.kubernetes.io/auth-url: "http://dessai-api.dessai.svc.cluster.local/api/auth/validate-admin"
+    
+    # Stricter rate limiting for admin endpoints
+    nginx.ingress.kubernetes.io/rate-limit-connections: "5"
+    nginx.ingress.kubernetes.io/rate-limit-rpm: "30"
+    
+    # IP whitelist for admin access (adjust for your admin IPs)
+    nginx.ingress.kubernetes.io/whitelist-source-range: "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16"
+
+spec:
+  tls:
+  - hosts:
+    - admin.dessai.com
+    secretName: dessai-admin-tls
+  
+  rules:
+  - host: admin.dessai.com
+    http:
+      paths:
+      # Integration services admin endpoints
+      - path: /integrations/admin
+        pathType: Prefix
+        backend:
+          service:
+            name: dessai-integration-services
+            port:
+              number: 80
+      
+      # Integration monitoring and metrics
+      - path: /integrations/metrics
+        pathType: Prefix
+        backend:
+          service:
+            name: dessai-integration-services
+            port:
+              number: 80
+
+---
+# TLS Certificate for Integration Services
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: dessai-integration-tls
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: dessai-integration-tls
+    app.kubernetes.io/component: tls
+    app.kubernetes.io/part-of: dessai
+    epic: "epic-7-integration-services"
+spec:
+  secretName: dessai-integration-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+  - api.dessai.com
+  - integrations.dessai.com
+
+---
+# Network Policy for Ingress Traffic to Integration Services
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dessai-integration-ingress-netpol
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: dessai-integration-ingress-netpol
+    app.kubernetes.io/component: security
+    app.kubernetes.io/part-of: dessai
+    epic: "epic-7-integration-services"
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: dessai-integration-services
+  policyTypes:
+  - Ingress
+  ingress:
+  # Allow traffic from ingress controller
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: nginx-ingress-controller
+    ports:
+    - protocol: TCP
+      port: 3001
+  
+  # Allow traffic from main API service (for internal calls)
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dessai-api
+    ports:
+    - protocol: TCP
+      port: 3001
+  
+  # Allow monitoring traffic
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: prometheus
+    ports:
+    - protocol: TCP
+      port: 3001

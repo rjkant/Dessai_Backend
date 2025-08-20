@@ -5,11 +5,9 @@
 
 import { Request, Response } from 'express';
 import { AuthService } from '@/services/auth.service';
-import { 
-  LoginRequest, 
-  MfaVerifyRequest,
-  PasswordChangeRequest 
-} from '@/types/auth.types';
+import { LoginRequest, MfaVerifyRequest, PasswordChangeRequest } from '@/types/auth.types';
+// Import Express type augmentation
+import '../types/express';
 
 export class AuthController {
   private static authService = AuthService.getInstance();
@@ -25,7 +23,8 @@ export class AuthController {
       if (!email || !password || !firstName || !lastName || !roleId || !organizationId) {
         res.status(400).json({
           success: false,
-          message: 'All fields are required: email, password, firstName, lastName, roleId, organizationId'
+          message:
+            'All fields are required: email, password, firstName, lastName, roleId, organizationId',
         });
         return;
       }
@@ -35,7 +34,7 @@ export class AuthController {
       if (!emailRegex.test(email)) {
         res.status(400).json({
           success: false,
-          message: 'Invalid email format'
+          message: 'Invalid email format',
         });
         return;
       }
@@ -46,21 +45,21 @@ export class AuthController {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         roleId,
-        organizationId
+        organizationId,
       });
 
       // Remove sensitive information
-      const { passwordHash, mfaSecret, ...sanitizedUser } = user;
+      const { passwordHash: _passwordHash, mfaSecret: _mfaSecret, ...sanitizedUser } = user;
 
       res.status(201).json({
         success: true,
         message: 'User registered successfully',
-        data: { user: sanitizedUser }
+        data: { user: sanitizedUser },
       });
     } catch (error) {
       res.status(400).json({
         success: false,
-        message: error instanceof Error ? error.message : 'Registration failed'
+        message: error instanceof Error ? error.message : 'Registration failed',
       });
     }
   }
@@ -75,7 +74,7 @@ export class AuthController {
       if (!email || !password) {
         res.status(400).json({
           success: false,
-          message: 'Email and password are required'
+          message: 'Email and password are required',
         });
         return;
       }
@@ -85,24 +84,20 @@ export class AuthController {
 
       const loginRequest: LoginRequest = {
         email: email.toLowerCase().trim(),
-        password
+        password,
       };
 
       if (mfaToken) {
         loginRequest.mfaToken = mfaToken;
       }
 
-      const loginResponse = await this.authService.login(
-        loginRequest,
-        ipAddress,
-        userAgent
-      );
+      const loginResponse = await this.authService.login(loginRequest, ipAddress, userAgent);
 
       if (loginResponse.requiresMfa) {
         res.status(200).json({
           success: true,
           message: 'MFA token required',
-          data: { requiresMfa: true }
+          data: { requiresMfa: true },
         });
         return;
       }
@@ -110,12 +105,12 @@ export class AuthController {
       res.status(200).json({
         success: true,
         message: 'Login successful',
-        data: loginResponse
+        data: loginResponse,
       });
     } catch (error) {
       res.status(401).json({
         success: false,
-        message: error instanceof Error ? error.message : 'Login failed'
+        message: error instanceof Error ? error.message : 'Login failed',
       });
     }
   }
@@ -130,7 +125,7 @@ export class AuthController {
       if (!refreshToken) {
         res.status(400).json({
           success: false,
-          message: 'Refresh token is required'
+          message: 'Refresh token is required',
         });
         return;
       }
@@ -140,12 +135,12 @@ export class AuthController {
       res.status(200).json({
         success: true,
         message: 'Token refreshed successfully',
-        data: tokenResponse
+        data: tokenResponse,
       });
     } catch (error) {
       res.status(401).json({
         success: false,
-        message: error instanceof Error ? error.message : 'Token refresh failed'
+        message: error instanceof Error ? error.message : 'Token refresh failed',
       });
     }
   }
@@ -155,25 +150,25 @@ export class AuthController {
    */
   static async setupMFA(req: Request, res: Response): Promise<void> {
     try {
-      if (!req.user) {
+      if (!(req as any).user) {
         res.status(401).json({
           success: false,
-          message: 'Authentication required'
+          message: 'Authentication required',
         });
         return;
       }
 
-      const mfaSetup = await this.authService.setupMfa(req.user.id);
+      const mfaSetup = await this.authService.setupMfa((req as any).user.id);
 
       res.status(200).json({
         success: true,
         message: 'MFA setup generated',
-        data: mfaSetup
+        data: mfaSetup,
       });
     } catch (error) {
       res.status(400).json({
         success: false,
-        message: error instanceof Error ? error.message : 'MFA setup failed'
+        message: error instanceof Error ? error.message : 'MFA setup failed',
       });
     }
   }
@@ -183,10 +178,10 @@ export class AuthController {
    */
   static async verifyMFA(req: Request, res: Response): Promise<void> {
     try {
-      if (!req.user) {
+      if (!(req as any).user) {
         res.status(401).json({
           success: false,
-          message: 'Authentication required'
+          message: 'Authentication required',
         });
         return;
       }
@@ -196,7 +191,7 @@ export class AuthController {
       if (!token) {
         res.status(400).json({
           success: false,
-          message: 'MFA token is required'
+          message: 'MFA token is required',
         });
         return;
       }
@@ -206,23 +201,23 @@ export class AuthController {
         verifyRequest.secret = secret;
       }
 
-      const isVerified = await this.authService.verifyMfa(req.user.id, verifyRequest);
+      const isVerified = await this.authService.verifyMfa((req as any).user.id, verifyRequest);
 
       if (isVerified) {
         res.status(200).json({
           success: true,
-          message: 'MFA enabled successfully'
+          message: 'MFA enabled successfully',
         });
       } else {
         res.status(400).json({
           success: false,
-          message: 'Invalid MFA token'
+          message: 'Invalid MFA token',
         });
       }
     } catch (error) {
       res.status(400).json({
         success: false,
-        message: error instanceof Error ? error.message : 'MFA verification failed'
+        message: error instanceof Error ? error.message : 'MFA verification failed',
       });
     }
   }
@@ -232,8 +227,9 @@ export class AuthController {
    */
   static async logout(req: Request, res: Response): Promise<void> {
     try {
-      const refreshToken = req.body.refreshToken || req.headers['authorization']?.replace('Bearer ', '');
-      const userId = req.user?.id;
+      const refreshToken =
+        req.body.refreshToken || req.headers['authorization']?.replace('Bearer ', '');
+      const userId = (req as any).user?.id;
 
       if (userId && refreshToken) {
         await this.authService.logout(userId, refreshToken);
@@ -241,12 +237,12 @@ export class AuthController {
 
       res.status(200).json({
         success: true,
-        message: 'Logout successful'
+        message: 'Logout successful',
       });
     } catch (error) {
       res.status(400).json({
         success: false,
-        message: error instanceof Error ? error.message : 'Logout failed'
+        message: error instanceof Error ? error.message : 'Logout failed',
       });
     }
   }
@@ -256,10 +252,10 @@ export class AuthController {
    */
   static async changePassword(req: Request, res: Response): Promise<void> {
     try {
-      if (!req.user) {
+      if (!(req as any).user) {
         res.status(401).json({
           success: false,
-          message: 'Authentication required'
+          message: 'Authentication required',
         });
         return;
       }
@@ -269,31 +265,31 @@ export class AuthController {
       if (!currentPassword || !newPassword) {
         res.status(400).json({
           success: false,
-          message: 'Current password and new password are required'
+          message: 'Current password and new password are required',
         });
         return;
       }
 
-      const success = await this.authService.changePassword(req.user.id, {
+      const success = await this.authService.changePassword((req as any).user.id, {
         currentPassword,
-        newPassword
+        newPassword,
       });
 
       if (success) {
         res.status(200).json({
           success: true,
-          message: 'Password changed successfully'
+          message: 'Password changed successfully',
         });
       } else {
         res.status(400).json({
           success: false,
-          message: 'Password change failed'
+          message: 'Password change failed',
         });
       }
     } catch (error) {
       res.status(400).json({
         success: false,
-        message: error instanceof Error ? error.message : 'Password change failed'
+        message: error instanceof Error ? error.message : 'Password change failed',
       });
     }
   }
@@ -303,10 +299,10 @@ export class AuthController {
    */
   static async getProfile(req: Request, res: Response): Promise<void> {
     try {
-      if (!req.user) {
+      if (!(req as any).user) {
         res.status(401).json({
           success: false,
-          message: 'Authentication required'
+          message: 'Authentication required',
         });
         return;
       }
@@ -314,12 +310,12 @@ export class AuthController {
       res.status(200).json({
         success: true,
         message: 'Profile retrieved successfully',
-        data: { user: req.user }
+        data: { user: (req as any).user },
       });
     } catch (error) {
       res.status(400).json({
         success: false,
-        message: error instanceof Error ? error.message : 'Failed to get profile'
+        message: error instanceof Error ? error.message : 'Failed to get profile',
       });
     }
   }
@@ -332,12 +328,12 @@ export class AuthController {
       res.status(200).json({
         success: true,
         message: 'Authentication service is healthy',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       res.status(500).json({
         success: false,
-        message: 'Authentication service is unhealthy'
+        message: 'Authentication service is unhealthy',
       });
     }
   }

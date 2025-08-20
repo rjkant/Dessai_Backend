@@ -1,0 +1,480 @@
+name: 'Performance Testing'
+
+on:
+  schedule:
+    - cron: '0 4 * * 1'  # Weekly on Mondays at 4 AM UTC
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      test_duration:
+        description: 'Test duration in seconds'
+        required: false
+        default: '300'
+        type: string
+      concurrent_users:
+        description: 'Number of concurrent users'
+        required: false
+        default: '100'
+        type: string
+      environment:
+        description: 'Environment to test'
+        required: false
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  NODE_VERSION: '18'
+  PERFORMANCE_THRESHOLD_P95: '2000'  # 2 seconds
+  PERFORMANCE_THRESHOLD_P99: '5000'  # 5 seconds
+  ERROR_RATE_THRESHOLD: '1'          # 1%
+  THROUGHPUT_THRESHOLD: '100'        # 100 RPS minimum
+
+jobs:
+  # Prepare Performance Environment
+  setup-performance-env:
+    name: 'Setup Performance Environment'
+    runs-on: ubuntu-latest
+    
+    outputs:
+      target-url: ${{ steps.config.outputs.url }}
+      test-duration: ${{ steps.config.outputs.duration }}
+      concurrent-users: ${{ steps.config.outputs.users }}
+    
+    steps:
+      - name: 'Determine Test Configuration'
+        id: config
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ENVIRONMENT="${{ github.event.inputs.environment }}"
+            DURATION="${{ github.event.inputs.test_duration }}"
+            USERS="${{ github.event.inputs.concurrent_users }}"
+          else
+            ENVIRONMENT="staging"
+            DURATION="180"
+            USERS="50"
+          fi
+          
+          case $ENVIRONMENT in
+            "production")
+              URL="https://api.dessai.com"
+              ;;
+            "staging")
+              URL="https://api-staging.dessai.com"
+              ;;
+            *)
+              URL="https://api-staging.dessai.com"
+              ;;
+          esac
+          
+          echo "url=${URL}" >> $GITHUB_OUTPUT
+          echo "duration=${DURATION}" >> $GITHUB_OUTPUT
+          echo "users=${USERS}" >> $GITHUB_OUTPUT
+          
+          echo "🎯 Performance testing configuration:"
+          echo "Environment: ${ENVIRONMENT}"
+          echo "Target URL: ${URL}"
+          echo "Duration: ${DURATION} seconds"
+          echo "Concurrent users: ${USERS}"
+
+      - name: 'Environment Health Check'
+        run: |
+          echo "🔍 Checking target environment health..."
+          
+          # Check if target environment is accessible and healthy
+          curl -f ${{ steps.config.outputs.url }}/health || {
+            echo "❌ Target environment is not healthy"
+            exit 1
+          }
+          
+          echo "✅ Target environment is healthy"
+
+  # Load Testing with Artillery
+  artillery-load-test:
+    name: 'Artillery Load Testing'
+    runs-on: ubuntu-latest
+    needs: setup-performance-env
+    
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      - name: 'Setup Node.js'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 'Install Dependencies'
+        run: |
+          npm ci
+          npm install -g artillery@latest
+
+      - name: 'Create Artillery Configuration'
+        run: |
+          cat > artillery-config.yml << EOF
+          config:
+            target: '${{ needs.setup-performance-env.outputs.target-url }}'
+            phases:
+              - duration: 60
+                arrivalRate: 10
+                name: "Warm up"
+              - duration: ${{ needs.setup-performance-env.outputs.test-duration }}
+                arrivalRate: ${{ needs.setup-performance-env.outputs.concurrent-users }}
+                name: "Load test"
+              - duration: 60
+                arrivalRate: 5
+                name: "Cool down"
+            processor: "./artillery-processor.js"
+            plugins:
+              metrics-by-endpoint:
+                useOnlyRequestNames: true
+          
+          scenarios:
+            - name: "API Health Check"
+              weight: 10
+              flow:
+                - get:
+                    url: "/health"
+                    name: "health_check"
+                - think: 1
+            
+            - name: "API Metrics"
+              weight: 5
+              flow:
+                - get:
+                    url: "/metrics"
+                    name: "metrics_endpoint"
+                - think: 2
+            
+            - name: "API Ready Check"
+              weight: 15
+              flow:
+                - get:
+                    url: "/ready"
+                    name: "ready_check"
+                - think: 1
+            
+            - name: "Authentication Flow"
+              weight: 20
+              flow:
+                - post:
+                    url: "/api/auth/login"
+                    name: "auth_login"
+                    json:
+                      email: "test@example.com"
+                      password: "invalidpassword"
+                - think: 3
+            
+            - name: "User Management"
+              weight: 25
+              flow:
+                - get:
+                    url: "/api/users"
+                    name: "list_users"
+                    headers:
+                      Authorization: "Bearer invalid-token"
+                - think: 2
+            
+            - name: "Assessment Operations"
+              weight: 25
+              flow:
+                - get:
+                    url: "/api/assessments"
+                    name: "list_assessments"
+                    headers:
+                      Authorization: "Bearer invalid-token"
+                - think: 5
+          EOF
+
+      - name: 'Create Artillery Processor'
+        run: |
+          cat > artillery-processor.js << 'EOF'
+          module.exports = {
+            setDynamicData: function(requestParams, context, ee, next) {
+              // Add dynamic test data
+              context.vars.timestamp = Date.now();
+              context.vars.userId = `user_${Math.floor(Math.random() * 1000)}`;
+              return next();
+            },
+            
+            logResponse: function(requestParams, response, context, ee, next) {
+              if (response.statusCode >= 400) {
+                console.log(`Error response: ${response.statusCode} for ${requestParams.url}`);
+              }
+              return next();
+            }
+          };
+          EOF
+
+      - name: 'Run Artillery Load Test'
+        run: |
+          echo "🚀 Starting Artillery load test..."
+          
+          artillery run artillery-config.yml \
+            --output artillery-results.json \
+            --config artillery-config.yml
+          
+          echo "✅ Artillery load test completed"
+
+      - name: 'Generate Artillery Report'
+        run: |
+          echo "📊 Generating Artillery HTML report..."
+          artillery report artillery-results.json --output artillery-report.html
+
+      - name: 'Upload Artillery Results'
+        uses: actions/upload-artifact@v3
+        with:
+          name: artillery-results
+          path: |
+            artillery-results.json
+            artillery-report.html
+          retention-days: 30
+
+  # Autocannon Benchmarking
+  autocannon-benchmark:
+    name: 'Autocannon Benchmarking'
+    runs-on: ubuntu-latest
+    needs: setup-performance-env
+    
+    steps:
+      - name: 'Setup Node.js'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 'Install Autocannon'
+        run: npm install -g autocannon
+
+      - name: 'Health Endpoint Benchmark'
+        run: |
+          echo "🔍 Benchmarking health endpoint..."
+          
+          autocannon \
+            -c ${{ needs.setup-performance-env.outputs.concurrent-users }} \
+            -d ${{ needs.setup-performance-env.outputs.test-duration }} \
+            -p 10 \
+            -m GET \
+            --renderStatusCodes \
+            --json \
+            ${{ needs.setup-performance-env.outputs.target-url }}/health \
+            > autocannon-health.json
+
+      - name: 'Metrics Endpoint Benchmark'
+        run: |
+          echo "📊 Benchmarking metrics endpoint..."
+          
+          autocannon \
+            -c 20 \
+            -d 60 \
+            -p 5 \
+            -m GET \
+            --renderStatusCodes \
+            --json \
+            ${{ needs.setup-performance-env.outputs.target-url }}/metrics \
+            > autocannon-metrics.json
+
+      - name: 'API Endpoint Benchmark'
+        run: |
+          echo "🔗 Benchmarking API endpoints..."
+          
+          # Test authentication endpoint
+          autocannon \
+            -c 10 \
+            -d 30 \
+            -p 2 \
+            -m POST \
+            -H 'Content-Type=application/json' \
+            -b '{"email":"test@example.com","password":"test"}' \
+            --renderStatusCodes \
+            --json \
+            ${{ needs.setup-performance-env.outputs.target-url }}/api/auth/login \
+            > autocannon-auth.json
+
+      - name: 'Upload Autocannon Results'
+        uses: actions/upload-artifact@v3
+        with:
+          name: autocannon-results
+          path: |
+            autocannon-*.json
+          retention-days: 30
+
+  # Application Performance Monitoring
+  apm-analysis:
+    name: 'APM Analysis'
+    runs-on: ubuntu-latest
+    needs: setup-performance-env
+    
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      - name: 'Setup Node.js'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 'Install Performance Tools'
+        run: |
+          npm ci
+          npm install -g clinic
+          npm install -g 0x
+
+      - name: 'Memory Usage Analysis'
+        run: |
+          echo "🧠 Analyzing memory usage patterns..."
+          
+          # This would typically run against a local test instance
+          echo "Memory analysis would require local application instance"
+
+      - name: 'CPU Profiling Analysis'
+        run: |
+          echo "⚡ Analyzing CPU usage patterns..."
+          
+          # This would typically run CPU profiling
+          echo "CPU profiling would require local application instance"
+
+      - name: 'Database Performance Check'
+        run: |
+          echo "🗄️ Checking database performance..."
+          
+          # Check database metrics via API
+          curl -s ${{ needs.setup-performance-env.outputs.target-url }}/metrics | \
+          grep -E "(db_|database_)" || echo "Database metrics not available"
+
+  # Performance Regression Detection
+  regression-analysis:
+    name: 'Performance Regression Analysis'
+    runs-on: ubuntu-latest
+    needs: [autocannon-benchmark, artillery-load-test]
+    
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      - name: 'Download Test Results'
+        uses: actions/download-artifact@v3
+        with:
+          name: autocannon-results
+          path: results/
+
+      - name: 'Download Artillery Results'
+        uses: actions/download-artifact@v3
+        with:
+          name: artillery-results
+          path: results/
+
+      - name: 'Analyze Performance Metrics'
+        run: |
+          echo "📈 Analyzing performance metrics..."
+          
+          # Extract key metrics from autocannon results
+          if [ -f "results/autocannon-health.json" ]; then
+            THROUGHPUT=$(jq -r '.requests.average' results/autocannon-health.json 2>/dev/null || echo "0")
+            LATENCY_P95=$(jq -r '.latency.p95' results/autocannon-health.json 2>/dev/null || echo "0")
+            LATENCY_P99=$(jq -r '.latency.p99' results/autocannon-health.json 2>/dev/null || echo "0")
+            ERROR_RATE=$(jq -r '.errors' results/autocannon-health.json 2>/dev/null || echo "0")
+            
+            echo "Performance Metrics:"
+            echo "- Throughput: ${THROUGHPUT} req/sec"
+            echo "- P95 Latency: ${LATENCY_P95} ms"
+            echo "- P99 Latency: ${LATENCY_P99} ms"
+            echo "- Error Rate: ${ERROR_RATE}%"
+            
+            # Check thresholds
+            if (( $(echo "$LATENCY_P95 > $PERFORMANCE_THRESHOLD_P95" | bc -l) )); then
+              echo "⚠️ P95 latency exceeds threshold: ${LATENCY_P95}ms > ${PERFORMANCE_THRESHOLD_P95}ms"
+            fi
+            
+            if (( $(echo "$LATENCY_P99 > $PERFORMANCE_THRESHOLD_P99" | bc -l) )); then
+              echo "⚠️ P99 latency exceeds threshold: ${LATENCY_P99}ms > ${PERFORMANCE_THRESHOLD_P99}ms"
+            fi
+            
+            if (( $(echo "$THROUGHPUT < $THROUGHPUT_THRESHOLD" | bc -l) )); then
+              echo "⚠️ Throughput below threshold: ${THROUGHPUT} < ${THROUGHPUT_THRESHOLD} req/sec"
+            fi
+          fi
+
+      - name: 'Compare with Baseline'
+        run: |
+          echo "📊 Comparing with performance baseline..."
+          
+          # This would typically compare with stored baseline metrics
+          echo "Baseline comparison would require historical data storage"
+
+      - name: 'Generate Performance Report'
+        run: |
+          echo "📋 Generating performance summary..."
+          
+          cat > performance-summary.md << EOF
+          # Performance Test Summary
+          
+          ## 🎯 Test Configuration
+          - Target: ${{ needs.setup-performance-env.outputs.target-url }}
+          - Duration: ${{ needs.setup-performance-env.outputs.test-duration }} seconds
+          - Concurrent Users: ${{ needs.setup-performance-env.outputs.concurrent-users }}
+          
+          ## 📊 Results
+          - Test Date: $(date -u)
+          - Branch: ${{ github.ref_name }}
+          - Commit: ${{ github.sha }}
+          
+          ## 🎯 Thresholds
+          - P95 Latency Threshold: ${PERFORMANCE_THRESHOLD_P95}ms
+          - P99 Latency Threshold: ${PERFORMANCE_THRESHOLD_P99}ms
+          - Throughput Threshold: ${THROUGHPUT_THRESHOLD} req/sec
+          - Error Rate Threshold: ${ERROR_RATE_THRESHOLD}%
+          
+          ## 📈 Recommendations
+          1. Monitor latency trends over time
+          2. Optimize slow endpoints identified in testing
+          3. Scale resources if throughput is below threshold
+          4. Investigate error patterns and root causes
+          
+          EOF
+
+      - name: 'Upload Performance Report'
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-report
+          path: performance-summary.md
+          retention-days: 90
+
+  # Performance Notification
+  notify-performance:
+    name: 'Performance Test Notification'
+    runs-on: ubuntu-latest
+    needs: [artillery-load-test, autocannon-benchmark, apm-analysis, regression-analysis]
+    if: always()
+    
+    steps:
+      - name: 'Performance Test Summary'
+        run: |
+          echo "## ⚡ Performance Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Artillery Load Test**: ${{ needs.artillery-load-test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Autocannon Benchmark**: ${{ needs.autocannon-benchmark.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **APM Analysis**: ${{ needs.apm-analysis.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Regression Analysis**: ${{ needs.regression-analysis.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Target**: ${{ needs.setup-performance-env.outputs.target-url }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Duration**: ${{ needs.setup-performance-env.outputs.test-duration }}s" >> $GITHUB_STEP_SUMMARY
+          echo "- **Concurrent Users**: ${{ needs.setup-performance-env.outputs.concurrent-users }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: 'Success Notification'
+        if: needs.artillery-load-test.result == 'success' && needs.autocannon-benchmark.result == 'success'
+        run: |
+          echo "✅ Performance testing completed successfully"
+          echo "📊 All benchmarks executed"
+          echo "📈 Performance metrics collected"
+
+      - name: 'Failure Notification'
+        if: needs.artillery-load-test.result == 'failure' || needs.autocannon-benchmark.result == 'failure'
+        run: |
+          echo "❌ Performance testing failed"
+          echo "🔍 Check test logs for details"
+          echo "🎯 Review performance thresholds"

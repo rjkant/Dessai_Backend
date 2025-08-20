@@ -1,0 +1,392 @@
+# Dessai Platform - Enhanced Prometheus Alerting Rules
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-alerting-rules
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/component: alerting
+data:
+  dessai-alerting-rules.yml: |
+    groups:
+      - name: dessai.critical
+        interval: 30s
+        rules:
+          # Critical System Alerts
+          - alert: DessaiAPIDown
+            expr: up{job="dessai-api"} == 0
+            for: 1m
+            labels:
+              severity: critical
+              service: api
+              category: availability
+            annotations:
+              summary: "Dessai API service is down"
+              description: "The main Dessai API service has been down for more than 1 minute"
+              runbook_url: "https://docs.dessai.com/runbooks/api-down"
+
+          - alert: DatabaseConnectionFailure
+            expr: pg_up{job="postgres"} == 0
+            for: 2m
+            labels:
+              severity: critical
+              service: database
+              category: availability
+            annotations:
+              summary: "PostgreSQL database is not responding"
+              description: "Cannot connect to PostgreSQL database for {{ $value }} minutes"
+              runbook_url: "https://docs.dessai.com/runbooks/database-down"
+
+          - alert: RedisConnectionFailure
+            expr: redis_up{job="redis"} == 0
+            for: 2m
+            labels:
+              severity: critical
+              service: cache
+              category: availability
+            annotations:
+              summary: "Redis cache is not responding"
+              description: "Cannot connect to Redis cache for {{ $value }} minutes"
+              runbook_url: "https://docs.dessai.com/runbooks/redis-down"
+
+          - alert: HighErrorRate
+            expr: rate(dessai_http_requests_total{status_code=~"5.."}[5m]) / rate(dessai_http_requests_total[5m]) > 0.1
+            for: 3m
+            labels:
+              severity: critical
+              service: api
+              category: performance
+            annotations:
+              summary: "High API error rate detected"
+              description: "API error rate is {{ $value | humanizePercentage }} for more than 3 minutes"
+              runbook_url: "https://docs.dessai.com/runbooks/high-error-rate"
+
+      - name: dessai.performance
+        interval: 30s
+        rules:
+          # Performance Alerts
+          - alert: HighAPIResponseTime
+            expr: histogram_quantile(0.95, rate(dessai_http_request_duration_seconds_bucket[5m])) > 2
+            for: 5m
+            labels:
+              severity: warning
+              service: api
+              category: performance
+            annotations:
+              summary: "High API response time"
+              description: "95th percentile API response time is {{ $value }}s for {{ $labels.route }}"
+              runbook_url: "https://docs.dessai.com/runbooks/slow-api"
+
+          - alert: HighDatabaseLatency
+            expr: histogram_quantile(0.95, rate(dessai_db_operation_duration_seconds_bucket[5m])) > 1
+            for: 3m
+            labels:
+              severity: warning
+              service: database
+              category: performance
+            annotations:
+              summary: "High database query latency"
+              description: "95th percentile database query time is {{ $value }}s"
+              runbook_url: "https://docs.dessai.com/runbooks/slow-database"
+
+          - alert: CodeExecutionTimeout
+            expr: histogram_quantile(0.95, rate(dessai_code_execution_duration_seconds_bucket[5m])) > 30
+            for: 2m
+            labels:
+              severity: warning
+              service: execution
+              category: performance
+            annotations:
+              summary: "Code execution taking too long"
+              description: "95th percentile code execution time is {{ $value }}s for {{ $labels.language }}"
+
+      - name: dessai.resources
+        interval: 1m
+        rules:
+          # Resource Usage Alerts
+          - alert: HighMemoryUsage
+            expr: container_memory_usage_bytes{namespace="dessai",name=~"dessai-.*"} / container_spec_memory_limit_bytes > 0.85
+            for: 5m
+            labels:
+              severity: warning
+              service: "{{ $labels.name }}"
+              category: resources
+            annotations:
+              summary: "High memory usage detected"
+              description: "Memory usage is {{ $value | humanizePercentage }} for {{ $labels.name }}"
+              runbook_url: "https://docs.dessai.com/runbooks/high-memory"
+
+          - alert: HighCPUUsage
+            expr: rate(container_cpu_usage_seconds_total{namespace="dessai",name=~"dessai-.*"}[5m]) > 0.8
+            for: 5m
+            labels:
+              severity: warning
+              service: "{{ $labels.name }}"
+              category: resources
+            annotations:
+              summary: "High CPU usage detected"
+              description: "CPU usage is {{ $value | humanizePercentage }} for {{ $labels.name }}"
+              runbook_url: "https://docs.dessai.com/runbooks/high-cpu"
+
+          - alert: DiskSpaceRunningLow
+            expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.1
+            for: 2m
+            labels:
+              severity: warning
+              category: resources
+            annotations:
+              summary: "Disk space running low"
+              description: "Disk space is {{ $value | humanizePercentage }} full on {{ $labels.instance }}"
+
+      - name: dessai.security
+        interval: 1m
+        rules:
+          # Security Alerts
+          - alert: HighAuthenticationFailureRate
+            expr: rate(dessai_auth_failures_total[5m]) > 0.1
+            for: 2m
+            labels:
+              severity: warning
+              category: security
+            annotations:
+              summary: "High authentication failure rate"
+              description: "Authentication failure rate is {{ $value }} failures/second"
+              runbook_url: "https://docs.dessai.com/runbooks/auth-failures"
+
+          - alert: SuspiciousLoginActivity
+            expr: rate(dessai_auth_failures_total[1m]) > 1
+            for: 1m
+            labels:
+              severity: critical
+              category: security
+            annotations:
+              summary: "Suspicious login activity detected"
+              description: "High rate of login failures detected: {{ $value }} failures/second"
+              runbook_url: "https://docs.dessai.com/runbooks/suspicious-activity"
+
+          - alert: ProctoringViolationSpike
+            expr: rate(dessai_proctoring_violations_total[5m]) > 0.05
+            for: 3m
+            labels:
+              severity: warning
+              category: security
+            annotations:
+              summary: "Spike in proctoring violations"
+              description: "Proctoring violation rate is {{ $value }} violations/second"
+
+      - name: dessai.business
+        interval: 2m
+        rules:
+          # Business Logic Alerts
+          - alert: LowAssessmentCompletionRate
+            expr: rate(dessai_assessments_completed_total{result="pass"}[1h]) / rate(dessai_assessments_created_total[1h]) < 0.3
+            for: 10m
+            labels:
+              severity: warning
+              category: business
+            annotations:
+              summary: "Low assessment completion rate"
+              description: "Assessment completion rate is {{ $value | humanizePercentage }} over the last hour"
+
+          - alert: HighAssessmentAbandonmentRate
+            expr: rate(dessai_assessments_completed_total{result="abandoned"}[1h]) / rate(dessai_assessments_created_total[1h]) > 0.3
+            for: 10m
+            labels:
+              severity: warning
+              category: business
+            annotations:
+              summary: "High assessment abandonment rate"
+              description: "Assessment abandonment rate is {{ $value | humanizePercentage }} over the last hour"
+
+          - alert: CodeExecutionFailureSpike
+            expr: rate(dessai_code_executions_total{result="error"}[5m]) / rate(dessai_code_executions_total[5m]) > 0.2
+            for: 5m
+            labels:
+              severity: warning
+              category: business
+            annotations:
+              summary: "High code execution failure rate"
+              description: "Code execution failure rate is {{ $value | humanizePercentage }}"
+
+      - name: dessai.infrastructure
+        interval: 1m
+        rules:
+          # Infrastructure Alerts
+          - alert: PodRestartingFrequently
+            expr: increase(kube_pod_container_status_restarts_total{namespace="dessai"}[1h]) > 3
+            for: 0m
+            labels:
+              severity: warning
+              category: infrastructure
+            annotations:
+              summary: "Pod restarting frequently"
+              description: "Pod {{ $labels.pod }} has restarted {{ $value }} times in the last hour"
+
+          - alert: PodCrashLooping
+            expr: rate(kube_pod_container_status_restarts_total{namespace="dessai"}[15m]) > 0
+            for: 5m
+            labels:
+              severity: critical
+              category: infrastructure
+            annotations:
+              summary: "Pod is crash looping"
+              description: "Pod {{ $labels.pod }} is crash looping"
+
+          - alert: DeploymentReplicasMismatch
+            expr: kube_deployment_status_replicas{namespace="dessai"} != kube_deployment_spec_replicas{namespace="dessai"}
+            for: 5m
+            labels:
+              severity: warning
+              category: infrastructure
+            annotations:
+              summary: "Deployment replicas mismatch"
+              description: "Deployment {{ $labels.deployment }} has {{ $value }} replicas running, expected {{ $labels.spec_replicas }}"
+
+          - alert: HPAScalingEvent
+            expr: increase(kube_hpa_status_current_replicas{namespace="dessai"}[5m]) > 2
+            for: 0m
+            labels:
+              severity: info
+              category: infrastructure
+            annotations:
+              summary: "HPA scaling event"
+              description: "HPA {{ $labels.hpa }} scaled to {{ $value }} replicas"
+
+      - name: dessai.integration
+        interval: 1m
+        rules:
+          # Integration Alerts
+          - alert: IntegrationHighLatency
+            expr: histogram_quantile(0.95, rate(dessai_integration_latency_seconds_bucket[5m])) > 5
+            for: 3m
+            labels:
+              severity: warning
+              category: integration
+            annotations:
+              summary: "High integration latency"
+              description: "95th percentile latency for {{ $labels.integration }} is {{ $value }}s"
+
+          - alert: IntegrationFailureRate
+            expr: rate(dessai_integration_requests_total{status=~"5.."}[5m]) / rate(dessai_integration_requests_total[5m]) > 0.1
+            for: 2m
+            labels:
+              severity: warning
+              category: integration
+            annotations:
+              summary: "High integration failure rate"
+              description: "Integration {{ $labels.integration }} failure rate is {{ $value | humanizePercentage }}"
+
+      - name: dessai.cache
+        interval: 1m
+        rules:
+          # Cache Performance Alerts
+          - alert: LowCacheHitRate
+            expr: dessai_cache_hit_rate < 0.8
+            for: 5m
+            labels:
+              severity: warning
+              category: performance
+            annotations:
+              summary: "Low cache hit rate"
+              description: "Cache hit rate is {{ $value | humanizePercentage }}"
+
+          - alert: RedisMemoryUsageHigh
+            expr: redis_memory_used_bytes{job="redis"} / redis_memory_max_bytes{job="redis"} > 0.9
+            for: 3m
+            labels:
+              severity: warning
+              category: resources
+            annotations:
+              summary: "Redis memory usage high"
+              description: "Redis memory usage is {{ $value | humanizePercentage }}"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: alertmanager
+    app.kubernetes.io/component: config
+data:
+  alertmanager.yml: |
+    global:
+      smtp_smarthost: 'smtp.gmail.com:587'
+      smtp_from: 'alerts@dessai.com'
+      smtp_auth_username: 'alerts@dessai.com'
+      smtp_auth_password: 'your-app-password'
+
+    route:
+      group_by: ['alertname', 'category']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 4h
+      receiver: 'web.hook'
+      routes:
+      - match:
+          severity: critical
+        receiver: 'critical-alerts'
+        group_wait: 10s
+        repeat_interval: 1h
+      - match:
+          category: security
+        receiver: 'security-alerts'
+        group_wait: 10s
+        repeat_interval: 30m
+      - match:
+          category: business
+        receiver: 'business-alerts'
+        repeat_interval: 2h
+
+    receivers:
+    - name: 'web.hook'
+      webhook_configs:
+      - url: 'http://dessai-api-service.dessai.svc.cluster.local:3000/api/v1/alerts/webhook'
+        send_resolved: true
+
+    - name: 'critical-alerts'
+      email_configs:
+      - to: 'ops-critical@dessai.com'
+        subject: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+        body: |
+          {{ range .Alerts }}
+          Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          Severity: {{ .Labels.severity }}
+          Service: {{ .Labels.service }}
+          {{ end }}
+      slack_configs:
+      - api_url: 'YOUR_SLACK_WEBHOOK_URL'
+        channel: '#alerts-critical'
+        title: '🚨 Critical Alert'
+        text: '{{ range .Alerts }}{{ .Annotations.summary }}{{ end }}'
+
+    - name: 'security-alerts'
+      email_configs:
+      - to: 'security@dessai.com'
+        subject: '🔒 SECURITY: {{ .GroupLabels.alertname }}'
+        body: |
+          {{ range .Alerts }}
+          Security Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          {{ end }}
+
+    - name: 'business-alerts'
+      email_configs:
+      - to: 'business@dessai.com'
+        subject: '📊 BUSINESS: {{ .GroupLabels.alertname }}'
+        body: |
+          {{ range .Alerts }}
+          Business Alert: {{ .Annotations.summary }}
+          Description: {{ .Annotations.description }}
+          {{ end }}
+
+    inhibit_rules:
+    - source_match:
+        severity: 'critical'
+      target_match:
+        severity: 'warning'
+      equal: ['alertname', 'service']

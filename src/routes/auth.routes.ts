@@ -49,30 +49,21 @@ router.get('/profile', AuthMiddleware.authenticate, AuthController.getProfile);
  * @desc    Change user password
  * @access  Private
  */
-router.post('/change-password', 
-  AuthMiddleware.authenticate,
-  AuthController.changePassword
-);
+router.post('/change-password', AuthMiddleware.authenticate, AuthController.changePassword);
 
 /**
  * @route   POST /api/auth/mfa/setup
  * @desc    Setup MFA for user account
  * @access  Private
  */
-router.post('/mfa/setup', 
-  AuthMiddleware.authenticate,
-  AuthController.setupMFA
-);
+router.post('/mfa/setup', AuthMiddleware.authenticate, AuthController.setupMFA);
 
 /**
  * @route   POST /api/auth/mfa/verify
  * @desc    Verify and enable MFA
  * @access  Private
  */
-router.post('/mfa/verify', 
-  AuthMiddleware.authenticate,
-  AuthController.verifyMFA
-);
+router.post('/mfa/verify', AuthMiddleware.authenticate, AuthController.verifyMFA);
 
 /**
  * @route   GET /api/auth/health

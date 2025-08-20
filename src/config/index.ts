@@ -17,7 +17,7 @@ const envSchema = z.object({
   DATABASE_TIMEOUT: z.string().transform(Number).default('30000'),
 
   // Redis
-  REDIS_URL: z.string(),
+  REDIS_URL: z.string().optional(),
   REDIS_PASSWORD: z.string().optional(),
   REDIS_DB: z.string().transform(Number).default('0'),
   REDIS_TIMEOUT: z.string().transform(Number).default('5000'),

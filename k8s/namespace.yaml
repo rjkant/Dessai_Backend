@@ -1,0 +1,90 @@
+# Dessai Backend - Kubernetes Namespace Configuration
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dessai
+  labels:
+    name: dessai
+    environment: production
+    app.kubernetes.io/name: dessai
+    app.kubernetes.io/version: "1.0.0"
+  annotations:
+    kubernetes.io/managed-by: "kubectl"
+    description: "Dessai AI-native technical hiring platform namespace"
+---
+# Resource Quotas for the Dessai namespace
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: dessai-resource-quota
+  namespace: dessai
+spec:
+  hard:
+    # Compute resources
+    requests.cpu: "8"
+    requests.memory: 16Gi
+    limits.cpu: "16"
+    limits.memory: 32Gi
+    
+    # Storage resources
+    requests.storage: 100Gi
+    persistentvolumeclaims: "10"
+    
+    # Object count quotas
+    pods: "20"
+    replicationcontrollers: "10"
+    services: "10"
+    secrets: "20"
+    configmaps: "20"
+    
+    # Network policies
+    services.nodeports: "5"
+    services.loadbalancers: "3"
+---
+# Network Policy for Dessai namespace
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dessai-network-policy
+  namespace: dessai
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  
+  # Ingress rules
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: dessai
+    - namespaceSelector:
+        matchLabels:
+          name: istio-system
+    - namespaceSelector:
+        matchLabels:
+          name: monitoring
+  
+  # Egress rules
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: dessai
+    - namespaceSelector:
+        matchLabels:
+          name: istio-system
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 443
+    - protocol: TCP
+      port: 80

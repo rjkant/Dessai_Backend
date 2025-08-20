@@ -1,0 +1,108 @@
+# Integration Services Production Dockerfile
+# Epic 8: Infrastructure & DevOps - Container for Integration Services
+# 
+# Multi-stage Docker build for Epic 7: Integration Services
+# Optimized for production deployment with security and performance best practices
+
+# Build stage
+FROM node:20-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Install build dependencies
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    git
+
+# Copy package files for dependency installation
+COPY package*.json ./
+COPY tsconfig.json ./
+COPY tsconfig.build.json ./
+COPY .eslintrc.js ./
+COPY .prettierrc ./
+
+# Install all dependencies (including dev dependencies for build)
+RUN npm ci --include=dev
+
+# Copy source code
+COPY src/ ./src/
+COPY prisma/ ./prisma/
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Build the application
+RUN npm run build
+
+# Remove dev dependencies to reduce size
+RUN npm prune --production
+
+# Production stage
+FROM node:20-alpine AS production
+
+# Create app user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S dessai -u 1001 -G nodejs
+
+# Set working directory
+WORKDIR /app
+
+# Install production runtime dependencies
+RUN apk add --no-cache \
+    tini \
+    curl \
+    ca-certificates && \
+    apk upgrade --available && \
+    rm -rf /var/cache/apk/*
+
+# Copy package files
+COPY package*.json ./
+
+# Install only production dependencies
+RUN npm ci --only=production --no-audit --no-fund && \
+    npm cache clean --force
+
+# Copy built application from builder stage
+COPY --from=builder --chown=dessai:nodejs /app/dist ./dist
+COPY --from=builder --chown=dessai:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=dessai:nodejs /app/prisma ./prisma
+
+# Create necessary directories with proper permissions
+RUN mkdir -p logs temp uploads cache && \
+    chown -R dessai:nodejs logs temp uploads cache
+
+# Copy startup scripts
+COPY --chown=dessai:nodejs scripts/docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
+
+# Switch to non-root user for security
+USER dessai
+
+# Expose integration services port
+EXPOSE 3001
+
+# Add health check for container orchestration
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:3001/api/integrations/health || exit 1
+
+# Set environment variables
+ENV NODE_ENV=production \
+    PORT=3001 \
+    SERVICE_NAME=integration-services \
+    LOG_LEVEL=info
+
+# Add labels for better container management
+LABEL maintainer="Dessai Development Team" \
+      version="1.0.0" \
+      description="Dessai Integration Services - ATS and Calendar Integrations" \
+      epic="epic-7-integration-services" \
+      component="integration-services"
+
+# Use tini as PID 1 for proper signal handling
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# Start the application
+CMD ["./docker-entrypoint.sh"]

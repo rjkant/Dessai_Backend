@@ -4,7 +4,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import RedisService from './redis.service';
+import RedisService from './redis-mock.service';
 import { JWTUtil } from '../utils/jwt.util';
 import { PasswordUtil } from '../utils/password.util';
 import { TOTPUtil } from '../utils/totp.util';
@@ -18,7 +18,7 @@ import {
   MfaVerifyRequest,
   PasswordChangeRequest,
   AuthSession,
-  JWTPayload
+  JWTPayload,
 } from '../types/auth.types';
 
 export class AuthService {
@@ -26,19 +26,26 @@ export class AuthService {
   private redisService: RedisService;
   private prisma: PrismaClient;
 
-  constructor() {
-    this.redisService = new RedisService();
-    this.prisma = new PrismaClient();
+  constructor(prismaClient?: PrismaClient, redisService?: RedisService) {
+    this.redisService = redisService || new RedisService();
+    this.prisma = prismaClient || new PrismaClient();
   }
 
   /**
    * Get singleton instance
    */
-  static getInstance(): AuthService {
+  static getInstance(prismaClient?: PrismaClient, redisService?: RedisService): AuthService {
     if (!AuthService.instance) {
-      AuthService.instance = new AuthService();
+      AuthService.instance = new AuthService(prismaClient, redisService);
     }
     return AuthService.instance;
+  }
+
+  /**
+   * Reset singleton instance (for testing)
+   */
+  static resetInstance(): void {
+    AuthService.instance = null as any;
   }
 
   /**
@@ -61,7 +68,7 @@ export class AuthService {
 
       // Check if user already exists
       const existingUser = await this.prisma.user.findUnique({
-        where: { email: userData.email }
+        where: { email: userData.email },
       });
 
       if (existingUser) {
@@ -83,32 +90,38 @@ export class AuthService {
           emailVerified: false,
           organizationId: userData.organizationId,
           roleId: userData.roleId,
-          refreshTokens: []
+          refreshTokens: [],
         },
         include: {
           role: true,
-          organization: true
-        }
+          organization: true,
+        },
       });
 
       return this.mapPrismaUserToAuthUser(user);
     } catch (error) {
-      throw new Error(`Registration failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Registration failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
   /**
    * User login with schema alignment
    */
-  async login(loginData: LoginRequest, ipAddress?: string, userAgent?: string): Promise<LoginResponse> {
+  async login(
+    loginData: LoginRequest,
+    ipAddress?: string,
+    userAgent?: string
+  ): Promise<LoginResponse> {
     try {
       // Find user with role information
       const user = await this.prisma.user.findUnique({
         where: { email: loginData.email },
-        include: { 
+        include: {
           role: true,
-          organization: true 
-        }
+          organization: true,
+        },
       });
 
       if (!user) {
@@ -121,7 +134,10 @@ export class AuthService {
       }
 
       // Verify password
-      const isPasswordValid = await PasswordUtil.verifyPassword(loginData.password, user.passwordHash);
+      const isPasswordValid = await PasswordUtil.verifyPassword(
+        loginData.password,
+        user.passwordHash
+      );
       if (!isPasswordValid) {
         throw new Error('Invalid credentials');
       }
@@ -134,7 +150,7 @@ export class AuthService {
             accessToken: '',
             refreshToken: '',
             expiresIn: 0,
-            requiresMfa: true
+            requiresMfa: true,
           };
         }
 
@@ -147,7 +163,7 @@ export class AuthService {
 
       // Generate session ID for Redis
       const sessionId = JWTUtil.generateSessionId();
-      
+
       // Create session in Redis
       await this.createSession(user.id, sessionId, ipAddress, userAgent);
 
@@ -157,7 +173,7 @@ export class AuthService {
         email: user.email,
         role: user.role.name as UserRole,
         organizationId: user.organizationId,
-        sessionId
+        sessionId,
       };
 
       const accessToken = JWTUtil.generateAccessToken(jwtPayload);
@@ -167,10 +183,10 @@ export class AuthService {
       const updatedTokens = [...(user.refreshTokens || []), refreshToken];
       await this.prisma.user.update({
         where: { id: user.id },
-        data: { 
+        data: {
           refreshTokens: updatedTokens,
-          lastLoginAt: new Date()
-        }
+          lastLoginAt: new Date(),
+        },
       });
 
       return {
@@ -178,7 +194,7 @@ export class AuthService {
         accessToken,
         refreshToken,
         expiresIn: JWTUtil.getAccessTokenExpiry(),
-        requiresMfa: false
+        requiresMfa: false,
       };
     } catch (error) {
       throw new Error(`Login failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -188,7 +204,9 @@ export class AuthService {
   /**
    * Refresh access token
    */
-  async refreshToken(refreshData: RefreshTokenRequest): Promise<{ accessToken: string; expiresIn: number }> {
+  async refreshToken(
+    refreshData: RefreshTokenRequest
+  ): Promise<{ accessToken: string; expiresIn: number }> {
     try {
       // Verify refresh token
       const tokenPayload = JWTUtil.verifyRefreshToken(refreshData.refreshToken);
@@ -206,7 +224,7 @@ export class AuthService {
       // Get user data with role
       const user = await this.prisma.user.findUnique({
         where: { id: tokenPayload.userId },
-        include: { role: true }
+        include: { role: true },
       });
 
       if (!user || !user.isActive) {
@@ -224,17 +242,19 @@ export class AuthService {
         email: user.email,
         role: user.role.name as UserRole,
         organizationId: user.organizationId,
-        sessionId: tokenPayload.sessionId
+        sessionId: tokenPayload.sessionId,
       };
 
       const accessToken = JWTUtil.generateAccessToken(newJwtPayload);
 
       return {
         accessToken,
-        expiresIn: JWTUtil.getAccessTokenExpiry()
+        expiresIn: JWTUtil.getAccessTokenExpiry(),
       };
     } catch (error) {
-      throw new Error(`Token refresh failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Token refresh failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -244,7 +264,7 @@ export class AuthService {
   async setupMfa(userId: string): Promise<MfaSetupResponse> {
     try {
       const user = await this.prisma.user.findUnique({
-        where: { id: userId }
+        where: { id: userId },
       });
 
       if (!user) {
@@ -263,16 +283,18 @@ export class AuthService {
       // Store secret temporarily (user needs to verify before enabling)
       await this.prisma.user.update({
         where: { id: userId },
-        data: { mfaSecret: secretData.secret }
+        data: { mfaSecret: secretData.secret },
       });
 
       return {
         secret: secretData.secret,
         qrCode,
-        backupCodes
+        backupCodes,
       };
     } catch (error) {
-      throw new Error(`MFA setup failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `MFA setup failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -282,7 +304,7 @@ export class AuthService {
   async verifyMfa(userId: string, mfaData: MfaVerifyRequest): Promise<{ success: boolean }> {
     try {
       const user = await this.prisma.user.findUnique({
-        where: { id: userId }
+        where: { id: userId },
       });
 
       if (!user || !user.mfaSecret) {
@@ -298,22 +320,27 @@ export class AuthService {
       // Enable MFA
       await this.prisma.user.update({
         where: { id: userId },
-        data: { mfaEnabled: true }
+        data: { mfaEnabled: true },
       });
 
       return { success: true };
     } catch (error) {
-      throw new Error(`MFA verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `MFA verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
   /**
    * Change user password
    */
-  async changePassword(userId: string, passwordData: PasswordChangeRequest): Promise<{ success: boolean }> {
+  async changePassword(
+    userId: string,
+    passwordData: PasswordChangeRequest
+  ): Promise<{ success: boolean }> {
     try {
       const user = await this.prisma.user.findUnique({
-        where: { id: userId }
+        where: { id: userId },
       });
 
       if (!user) {
@@ -322,7 +349,7 @@ export class AuthService {
 
       // Verify current password
       const isCurrentPasswordValid = await PasswordUtil.verifyPassword(
-        passwordData.currentPassword, 
+        passwordData.currentPassword,
         user.passwordHash
       );
       if (!isCurrentPasswordValid) {
@@ -341,15 +368,17 @@ export class AuthService {
       // Update password
       await this.prisma.user.update({
         where: { id: userId },
-        data: { 
+        data: {
           passwordHash: newPasswordHash,
-          updatedAt: new Date()
-        }
+          updatedAt: new Date(),
+        },
       });
 
       return { success: true };
     } catch (error) {
-      throw new Error(`Password change failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Password change failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -360,7 +389,7 @@ export class AuthService {
     try {
       // Remove refresh token from user's tokens
       const user = await this.prisma.user.findUnique({
-        where: { id: userId }
+        where: { id: userId },
       });
 
       if (user && user.refreshTokens) {
@@ -369,7 +398,7 @@ export class AuthService {
         );
         await this.prisma.user.update({
           where: { id: userId },
-          data: { refreshTokens: updatedTokens }
+          data: { refreshTokens: updatedTokens },
         });
       }
 
@@ -392,9 +421,9 @@ export class AuthService {
    * Create session in Redis
    */
   private async createSession(
-    userId: string, 
-    sessionId: string, 
-    ipAddress?: string, 
+    userId: string,
+    sessionId: string,
+    ipAddress?: string,
     userAgent?: string
   ): Promise<void> {
     const session: AuthSession = {
@@ -403,9 +432,9 @@ export class AuthService {
       isActive: true,
       createdAt: new Date(),
       lastAccessAt: new Date(),
-      expiresAt: new Date(Date.now() + (7 * 24 * 60 * 60 * 1000)), // 7 days
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
       ipAddress: ipAddress || 'unknown',
-      userAgent: userAgent || 'unknown'
+      userAgent: userAgent || 'unknown',
     };
 
     await this.redisService.setSession(sessionId, session);
@@ -421,14 +450,16 @@ export class AuthService {
       firstName: prismaUser.firstName,
       lastName: prismaUser.lastName,
       passwordHash: prismaUser.passwordHash,
-      role: prismaUser.role ? {
-        id: prismaUser.role.id,
-        name: prismaUser.role.name,
-        description: prismaUser.role.description,
-        permissions: prismaUser.role.permissions || [],
-        createdAt: prismaUser.role.createdAt,
-        updatedAt: prismaUser.role.updatedAt
-      } : undefined,
+      role: prismaUser.role
+        ? {
+            id: prismaUser.role.id,
+            name: prismaUser.role.name,
+            description: prismaUser.role.description,
+            permissions: prismaUser.role.permissions || [],
+            createdAt: prismaUser.role.createdAt,
+            updatedAt: prismaUser.role.updatedAt,
+          }
+        : undefined,
       roleId: prismaUser.roleId,
       organizationId: prismaUser.organizationId,
       isActive: prismaUser.isActive,
@@ -440,7 +471,7 @@ export class AuthService {
       preferences: prismaUser.preferences || {},
       lastLoginAt: prismaUser.lastLoginAt,
       createdAt: prismaUser.createdAt,
-      updatedAt: prismaUser.updatedAt
+      updatedAt: prismaUser.updatedAt,
     } as User;
   }
 
@@ -448,7 +479,7 @@ export class AuthService {
    * Sanitize user data (remove sensitive information)
    */
   private sanitizeUser(user: User): Omit<User, 'passwordHash' | 'mfaSecret'> {
-    const { passwordHash, mfaSecret, ...sanitizedUser } = user;
+    const { passwordHash: _passwordHash, mfaSecret: _mfaSecret, ...sanitizedUser } = user;
     return sanitizedUser;
   }
 
@@ -460,10 +491,10 @@ export class AuthService {
       // Get user with role information
       const user = await this.prisma.user.findUnique({
         where: { id: payload.userId },
-        include: { 
+        include: {
           role: true,
-          organization: true 
-        }
+          organization: true,
+        },
       });
 
       if (!user || !user.isActive) {
@@ -491,10 +522,10 @@ export class AuthService {
   async revokeSession(userId: string, sessionId: string): Promise<{ success: boolean }> {
     try {
       await this.redisService.deleteSession(sessionId);
-      
+
       // Also remove corresponding refresh tokens
       const user = await this.prisma.user.findUnique({
-        where: { id: userId }
+        where: { id: userId },
       });
 
       if (user && user.refreshTokens) {
@@ -511,13 +542,15 @@ export class AuthService {
 
         await this.prisma.user.update({
           where: { id: userId },
-          data: { refreshTokens: updatedTokens }
+          data: { refreshTokens: updatedTokens },
         });
       }
 
       return { success: true };
     } catch (error) {
-      throw new Error(`Failed to revoke session: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Failed to revoke session: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 }

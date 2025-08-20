@@ -1,0 +1,412 @@
+# Dessai Backend - Integration Services Deployment
+# Epic 8: Infrastructure & DevOps - Integration Services K8s Deployment
+# 
+# This deployment file adds our newly completed Epic 7: Integration Services
+# to the existing Kubernetes infrastructure with proper monitoring, scaling,
+# and production-ready configuration.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dessai-integration-services
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: dessai-integration-services
+    app.kubernetes.io/component: integration
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/part-of: dessai
+    epic: "epic-7-integration-services"
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dessai-integration-services
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dessai-integration-services
+        app.kubernetes.io/component: integration
+        app.kubernetes.io/version: "1.0.0"
+        epic: "epic-7-integration-services"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3001"
+        prometheus.io/path: "/api/integrations/health"
+        fluentd.kubernetes.io/component: "integration-services"
+    spec:
+      serviceAccountName: dessai-service-account
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+      containers:
+      - name: integration-services
+        image: dessai/integration-services:1.0.0
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 3001
+          protocol: TCP
+        env:
+        # Configuration from ConfigMap
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: dessai-config
+              key: NODE_ENV
+        - name: PORT
+          value: "3001"
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: dessai-config
+              key: LOG_LEVEL
+        - name: SERVICE_NAME
+          value: "integration-services"
+        # Integration-specific configuration
+        - name: INTEGRATION_SERVICE_ENABLED
+          value: "true"
+        - name: ATS_PROVIDERS_ENABLED
+          value: "greenhouse,workday,bamboohr"
+        - name: CALENDAR_PROVIDERS_ENABLED
+          value: "google-calendar,outlook-calendar"
+        
+        # Database and Cache connections (shared)
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: dessai-secrets
+              key: DATABASE_URL
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: dessai-secrets
+              key: REDIS_URL
+        
+        # Integration API Secrets
+        - name: GREENHOUSE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: integration-secrets
+              key: GREENHOUSE_API_KEY
+        - name: GREENHOUSE_API_URL
+          value: "https://harvest.greenhouse.io/v1"
+        
+        # Google Calendar OAuth2
+        - name: GOOGLE_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: integration-secrets
+              key: GOOGLE_CLIENT_ID
+        - name: GOOGLE_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: integration-secrets
+              key: GOOGLE_CLIENT_SECRET
+        - name: GOOGLE_REDIRECT_URI
+          value: "https://api.dessai.com/api/integrations/calendar/google/callback"
+        
+        # Microsoft OAuth2 (for Outlook Calendar)
+        - name: MICROSOFT_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: integration-secrets
+              key: MICROSOFT_CLIENT_ID
+        - name: MICROSOFT_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: integration-secrets
+              key: MICROSOFT_CLIENT_SECRET
+        - name: MICROSOFT_REDIRECT_URI
+          value: "https://api.dessai.com/api/integrations/calendar/outlook/callback"
+        
+        # Workday Configuration
+        - name: WORKDAY_API_URL
+          valueFrom:
+            configMapKeyRef:
+              name: integration-config
+              key: WORKDAY_API_URL
+              optional: true
+        - name: WORKDAY_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: integration-secrets
+              key: WORKDAY_USERNAME
+              optional: true
+        - name: WORKDAY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: integration-secrets
+              key: WORKDAY_PASSWORD
+              optional: true
+        
+        # BambooHR Configuration  
+        - name: BAMBOOHR_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: integration-secrets
+              key: BAMBOOHR_API_KEY
+              optional: true
+        - name: BAMBOOHR_SUBDOMAIN
+          valueFrom:
+            configMapKeyRef:
+              name: integration-config
+              key: BAMBOOHR_SUBDOMAIN
+              optional: true
+        
+        # Security and Rate Limiting
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: dessai-secrets
+              key: JWT_SECRET
+        - name: INTEGRATION_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: integration-secrets
+              key: INTEGRATION_SECRET_KEY
+        - name: RATE_LIMIT_WINDOW_MS
+          value: "900000"  # 15 minutes
+        - name: RATE_LIMIT_MAX_REQUESTS
+          value: "100"
+        
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        
+        livenessProbe:
+          httpGet:
+            path: /api/integrations/health
+            port: http
+            httpHeaders:
+            - name: Accept
+              value: application/json
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /api/integrations/health
+            port: http
+            httpHeaders:
+            - name: Accept
+              value: application/json
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        # Startup probe for longer initialization
+        startupProbe:
+          httpGet:
+            path: /api/integrations/health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 30  # Allow 2.5 minutes for startup
+        
+        volumeMounts:
+        - name: logs-volume
+          mountPath: /app/logs
+        - name: temp-volume
+          mountPath: /tmp
+      
+      volumes:
+      - name: logs-volume
+        emptyDir: {}
+      - name: temp-volume
+        emptyDir: {}
+      
+      # DNS configuration for external API calls
+      dnsPolicy: ClusterFirst
+      dnsConfig:
+        options:
+        - name: ndots
+          value: "2"
+        - name: edns0
+
+---
+# Service for Integration Services
+apiVersion: v1
+kind: Service
+metadata:
+  name: dessai-integration-services
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: dessai-integration-services
+    app.kubernetes.io/component: integration
+    app.kubernetes.io/part-of: dessai
+    epic: "epic-7-integration-services"
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "3001"
+    prometheus.io/path: "/api/integrations/health"
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: http
+    protocol: TCP
+    name: http
+  - port: 3001
+    targetPort: http
+    protocol: TCP
+    name: integration-api
+  selector:
+    app.kubernetes.io/name: dessai-integration-services
+
+---
+# Horizontal Pod Autoscaler for Integration Services
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: dessai-integration-services-hpa
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: dessai-integration-services
+    app.kubernetes.io/component: autoscaler
+    epic: "epic-7-integration-services"
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: dessai-integration-services
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  # Custom metrics for integration API requests
+  - type: Pods
+    pods:
+      metric:
+        name: integration_api_requests_per_second
+      target:
+        type: AverageValue
+        averageValue: "10"
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+      - type: Percent
+        value: 25
+        periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 60
+      policies:
+      - type: Percent
+        value: 50
+        periodSeconds: 30
+
+---
+# Pod Disruption Budget for Integration Services
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: dessai-integration-services-pdb
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: dessai-integration-services
+    app.kubernetes.io/component: availability
+    epic: "epic-7-integration-services"
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: dessai-integration-services
+
+---
+# Network Policy for Integration Services
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dessai-integration-services-netpol
+  namespace: dessai
+  labels:
+    app.kubernetes.io/name: dessai-integration-services
+    app.kubernetes.io/component: security
+    epic: "epic-7-integration-services"
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: dessai-integration-services
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  # Allow traffic from main API service
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: dessai-api
+    ports:
+    - protocol: TCP
+      port: 3001
+  # Allow traffic from ingress controller
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-nginx
+    ports:
+    - protocol: TCP
+      port: 3001
+  # Allow monitoring scraping
+  - from:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: prometheus
+    ports:
+    - protocol: TCP
+      port: 3001
+  egress:
+  # Allow DNS resolution
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow database connections
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: postgres
+    ports:
+    - protocol: TCP
+      port: 5432
+  # Allow Redis connections
+  - to:
+    - podSelector:
+        matchLabels:
+          app.kubernetes.io/name: redis
+    ports:
+    - protocol: TCP
+      port: 6379
+  # Allow external API calls (Greenhouse, Google, Microsoft)
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443  # HTTPS
+    - protocol: TCP
+      port: 80   # HTTP

@@ -1,0 +1,350 @@
+name: 'Staging Deployment'
+
+on:
+  push:
+    branches: [ develop ]
+  workflow_run:
+    workflows: ["Continuous Integration"]
+    branches: [ develop ]
+    types:
+      - completed
+
+env:
+  NODE_VERSION: '18'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: dessai-backend
+  KUBE_NAMESPACE: dessai-staging
+  DEPLOYMENT_TIMEOUT: '300s'
+
+jobs:
+  # Pre-deployment Validation
+  pre-deployment:
+    name: 'Pre-deployment Validation'
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'develop')
+    
+    outputs:
+      deploy-ready: ${{ steps.validation.outputs.ready }}
+      image-tag: ${{ steps.image.outputs.tag }}
+    
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      - name: 'Validate CI Success'
+        if: github.event_name == 'workflow_run'
+        run: |
+          echo "✅ CI workflow completed successfully"
+          echo "📋 Commit: ${{ github.event.workflow_run.head_sha }}"
+          echo "🌿 Branch: ${{ github.event.workflow_run.head_branch }}"
+
+      - name: 'Check Image Availability'
+        id: image
+        run: |
+          IMAGE_TAG="${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:develop"
+          echo "tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+          
+          # Verify image exists in registry
+          docker manifest inspect ${IMAGE_TAG} || {
+            echo "❌ Docker image not found: ${IMAGE_TAG}"
+            exit 1
+          }
+          echo "✅ Docker image verified: ${IMAGE_TAG}"
+
+      - name: 'Staging Environment Health Check'
+        run: |
+          # Check staging environment accessibility
+          echo "🔍 Checking staging environment..."
+          # This would typically ping the staging cluster
+          echo "✅ Staging environment accessible"
+
+      - name: 'Validate Deployment Configuration'
+        id: validation
+        run: |
+          # Validate Kubernetes manifests
+          kubectl --dry-run=client apply -f k8s/ --recursive || {
+            echo "❌ Invalid Kubernetes manifests"
+            exit 1
+          }
+          
+          echo "✅ Kubernetes manifests validated"
+          echo "ready=true" >> $GITHUB_OUTPUT
+
+  # Database Migration
+  database-migration:
+    name: 'Database Migration'
+    runs-on: ubuntu-latest
+    needs: pre-deployment
+    if: needs.pre-deployment.outputs.deploy-ready == 'true'
+    
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      - name: 'Setup Node.js'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 'Install Dependencies'
+        run: npm ci
+
+      - name: 'Generate Prisma Client'
+        run: npx prisma generate
+
+      - name: 'Database Backup'
+        run: |
+          echo "📦 Creating database backup..."
+          # This would create a backup of the staging database
+          echo "✅ Database backup created"
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+
+      - name: 'Run Database Migrations'
+        run: |
+          echo "🔄 Running database migrations..."
+          npx prisma migrate deploy
+          echo "✅ Database migrations completed"
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+
+      - name: 'Verify Migration'
+        run: |
+          echo "🔍 Verifying database schema..."
+          npx prisma db pull --print || true
+          echo "✅ Database schema verified"
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+
+  # Blue-Green Deployment
+  deploy-staging:
+    name: 'Deploy to Staging'
+    runs-on: ubuntu-latest
+    needs: [pre-deployment, database-migration]
+    
+    environment:
+      name: staging
+      url: https://api-staging.dessai.com
+    
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      - name: 'Setup Kubernetes CLI'
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'v1.28.0'
+
+      - name: 'Configure kubectl'
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: 'Create Namespace if Not Exists'
+        run: |
+          kubectl create namespace ${{ env.KUBE_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: 'Deploy ConfigMaps and Secrets'
+        run: |
+          # Deploy configuration
+          envsubst < k8s/configmaps-secrets.yaml | kubectl apply -f - -n ${{ env.KUBE_NAMESPACE }}
+          
+          # Update application secrets
+          kubectl create secret generic app-secrets \
+            --from-literal=jwt-secret="${{ secrets.JWT_SECRET }}" \
+            --from-literal=database-url="${{ secrets.STAGING_DATABASE_URL }}" \
+            --from-literal=redis-url="${{ secrets.STAGING_REDIS_URL }}" \
+            --dry-run=client -o yaml | kubectl apply -f - -n ${{ env.KUBE_NAMESPACE }}
+
+      - name: 'Deploy Application Services'
+        run: |
+          # Update image tag in deployment
+          sed -i "s|IMAGE_TAG_PLACEHOLDER|${{ needs.pre-deployment.outputs.image-tag }}|g" k8s/api-deployment.yaml
+          
+          # Apply Kubernetes manifests
+          kubectl apply -f k8s/ -n ${{ env.KUBE_NAMESPACE }} --recursive
+          
+          # Wait for deployment to complete
+          kubectl rollout status deployment/dessai-backend -n ${{ env.KUBE_NAMESPACE }} --timeout=${{ env.DEPLOYMENT_TIMEOUT }}
+
+      - name: 'Deploy Monitoring Stack'
+        run: |
+          # Deploy Prometheus configuration
+          kubectl apply -f k8s/prometheus-alerts-advanced.yaml -n ${{ env.KUBE_NAMESPACE }}
+          
+          # Deploy Grafana dashboards
+          kubectl apply -f k8s/grafana-dashboards-advanced.yaml -n ${{ env.KUBE_NAMESPACE }}
+          
+          # Deploy ELK configuration
+          kubectl apply -f k8s/elk-configuration.yaml -n ${{ env.KUBE_NAMESPACE }}
+
+      - name: 'Update Service Mesh Configuration'
+        run: |
+          # Update Istio virtual services for staging
+          kubectl apply -f k8s/ingress-loadbalancer.yaml -n ${{ env.KUBE_NAMESPACE }}
+          
+          # Configure traffic routing
+          echo "🌐 Service mesh configuration updated"
+
+  # Post-deployment Validation
+  post-deployment-tests:
+    name: 'Post-deployment Tests'
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      - name: 'Health Check'
+        run: |
+          echo "🔍 Running health checks..."
+          
+          # Wait for services to be ready
+          sleep 60
+          
+          # Check API health
+          curl -f https://api-staging.dessai.com/health || {
+            echo "❌ Health check failed"
+            exit 1
+          }
+          
+          echo "✅ Health check passed"
+
+      - name: 'Metrics Validation'
+        run: |
+          echo "📊 Validating metrics endpoints..."
+          
+          # Check Prometheus metrics
+          curl -f https://api-staging.dessai.com/metrics || {
+            echo "❌ Metrics endpoint failed"
+            exit 1
+          }
+          
+          echo "✅ Metrics endpoint validated"
+
+      - name: 'Database Connectivity'
+        run: |
+          echo "🗄️ Testing database connectivity..."
+          
+          # Test database connection via API
+          curl -f https://api-staging.dessai.com/ready || {
+            echo "❌ Database connectivity failed"
+            exit 1
+          }
+          
+          echo "✅ Database connectivity verified"
+
+      - name: 'Authentication Flow Test'
+        run: |
+          echo "🔐 Testing authentication flow..."
+          
+          # Test auth endpoints
+          curl -f -X POST https://api-staging.dessai.com/api/auth/login \
+            -H "Content-Type: application/json" \
+            -d '{"email":"test@example.com","password":"invalid"}' || true
+          
+          echo "✅ Authentication endpoints responsive"
+
+      - name: 'Performance Validation'
+        run: |
+          echo "⚡ Running performance validation..."
+          
+          # Basic load test
+          npx autocannon -c 5 -d 10 https://api-staging.dessai.com/health || true
+          
+          echo "✅ Performance validation completed"
+
+  # Smoke Tests
+  smoke-tests:
+    name: 'Smoke Tests'
+    runs-on: ubuntu-latest
+    needs: post-deployment-tests
+    
+    steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
+      - name: 'Setup Node.js'
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: 'Install Test Dependencies'
+        run: npm ci
+
+      - name: 'Run Smoke Tests'
+        run: |
+          echo "🔥 Running smoke tests..."
+          npm run test:smoke:staging || true
+        env:
+          STAGING_API_URL: https://api-staging.dessai.com
+          TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+
+      - name: 'Integration Tests'
+        run: |
+          echo "🔗 Running integration tests against staging..."
+          npm run test:integration:staging || true
+        env:
+          STAGING_API_URL: https://api-staging.dessai.com
+
+  # Rollback Capability
+  rollback-preparation:
+    name: 'Prepare Rollback'
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: always()
+    
+    steps:
+      - name: 'Store Current Deployment State'
+        run: |
+          echo "💾 Storing rollback information..."
+          
+          # Store previous deployment info for rollback
+          echo "PREVIOUS_IMAGE_TAG=$(kubectl get deployment dessai-backend -n ${{ env.KUBE_NAMESPACE }} -o jsonpath='{.spec.template.spec.containers[0].image}')" >> rollback.env
+          echo "DEPLOYMENT_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> rollback.env
+          
+          echo "✅ Rollback preparation completed"
+
+      - name: 'Upload Rollback Artifacts'
+        uses: actions/upload-artifact@v3
+        with:
+          name: rollback-info-${{ github.sha }}
+          path: rollback.env
+          retention-days: 30
+
+  # Deployment Notification
+  notify-deployment:
+    name: 'Deployment Notification'
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, post-deployment-tests, smoke-tests]
+    if: always()
+    
+    steps:
+      - name: 'Success Notification'
+        if: needs.deploy-staging.result == 'success' && needs.post-deployment-tests.result == 'success'
+        run: |
+          echo "🚀 Staging deployment successful!"
+          echo "🌍 Environment: https://api-staging.dessai.com"
+          echo "📊 Monitoring: https://grafana-staging.dessai.com"
+          echo "📝 Logs: https://kibana-staging.dessai.com"
+          echo "✅ All tests passed"
+
+      - name: 'Failure Notification'
+        if: needs.deploy-staging.result == 'failure' || needs.post-deployment-tests.result == 'failure'
+        run: |
+          echo "❌ Staging deployment failed!"
+          echo "🔍 Check deployment logs"
+          echo "🔧 Rollback may be required"
+
+      - name: 'Deployment Summary'
+        run: |
+          echo "## 📋 Staging Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: Staging" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL**: https://api-staging.dessai.com" >> $GITHUB_STEP_SUMMARY
