@@ -1,7 +1,7 @@
 /**
  * Analytics Engine Service
  * Epic 5: Analytics Engine Service - Task 5.1: Data Collection Pipeline
- * 
+ *
  * Comprehensive analytics service for collecting, processing, and analyzing
  * assessment, proctoring, and performance data across the Dessai platform.
  */
@@ -9,19 +9,26 @@
 import { PrismaClient } from '@prisma/client';
 import RedisService from './redis.service';
 import { Logger } from '../utils/logger.util';
-import {
-  EventType,
-  AnalyticsEvent
-} from '../types/analytics.types';
+import { EventType, AnalyticsEvent } from '../types/analytics.types';
 
 // InfluxDB Point type (simplified)
 class Point {
   constructor(private measurement: string) {}
-  tag(key: string, value: string): Point { return this; }
-  floatField(key: string, value: number): Point { return this; }
-  stringField(key: string, value: string): Point { return this; }
-  booleanField(key: string, value: boolean): Point { return this; }
-  timestamp(ts: Date): Point { return this; }
+  tag(key: string, value: string): Point {
+    return this;
+  }
+  floatField(key: string, value: number): Point {
+    return this;
+  }
+  stringField(key: string, value: string): Point {
+    return this;
+  }
+  booleanField(key: string, value: boolean): Point {
+    return this;
+  }
+  timestamp(ts: Date): Point {
+    return this;
+  }
 }
 
 // Analytics Error Classes
@@ -41,7 +48,7 @@ export enum AnalyticsErrorCode {
   INVALID_EVENT_FORMAT = 'INVALID_EVENT_FORMAT',
   DATABASE_CONNECTION_FAILED = 'DATABASE_CONNECTION_FAILED',
   QUERY_EXECUTION_FAILED = 'QUERY_EXECUTION_FAILED',
-  KAFKA_CONNECTION_FAILED = 'KAFKA_CONNECTION_FAILED'
+  KAFKA_CONNECTION_FAILED = 'KAFKA_CONNECTION_FAILED',
 }
 
 // Simplified types for compatibility
@@ -112,7 +119,7 @@ export class AnalyticsService {
     try {
       this.logger.info('Analytics data storage initialized', {
         bufferSize: this.bufferSize,
-        flushInterval: this.flushInterval
+        flushInterval: this.flushInterval,
       });
 
       // Create analytics tables if they don't exist (handled by Prisma migrations)
@@ -153,11 +160,13 @@ export class AnalyticsService {
       // Send to Kafka for real-time processing
       await this.kafkaProducer.send({
         topic: 'dessai-analytics-events',
-        messages: [{
-          key: event.id,
-          value: JSON.stringify(event),
-          timestamp: event.timestamp.toISOString()
-        }]
+        messages: [
+          {
+            key: event.id,
+            value: JSON.stringify(event),
+            timestamp: event.timestamp.toISOString(),
+          },
+        ],
       });
 
       // Flush buffer if full
@@ -169,7 +178,7 @@ export class AnalyticsService {
         serviceName: 'AnalyticsService',
         eventId: event.id,
         eventType: event.type,
-        bufferSize: this.eventBuffer.length
+        bufferSize: this.eventBuffer.length,
       });
     } catch (err) {
       this.logger.error('Failed to collect event', err as Error);
@@ -184,7 +193,9 @@ export class AnalyticsService {
   /**
    * Collect multiple analytics events in batch
    */
-  async collectEvents(events: AnalyticsEvent[]): Promise<{ success: boolean; processed: number; errors: string[] }> {
+  async collectEvents(
+    events: AnalyticsEvent[]
+  ): Promise<{ success: boolean; processed: number; errors: string[] }> {
     const errors: string[] = [];
     let processed = 0;
 
@@ -200,7 +211,7 @@ export class AnalyticsService {
     return {
       success: errors.length === 0,
       processed,
-      errors
+      errors,
     };
   }
 
@@ -234,7 +245,7 @@ export class AnalyticsService {
       this.logger.debug('Real-time event processed', {
         serviceName: 'AnalyticsService',
         eventId: event.id,
-        eventType: event.type
+        eventType: event.type,
       });
     } catch (err) {
       this.logger.error('Failed to process real-time event', err as Error);
@@ -245,7 +256,9 @@ export class AnalyticsService {
    * Flush buffered events to InfluxDB
    */
   private async flushEvents(): Promise<void> {
-    if (this.eventBuffer.length === 0) return;
+    if (this.eventBuffer.length === 0) {
+      return;
+    }
 
     try {
       const events = [...this.eventBuffer];
@@ -260,7 +273,7 @@ export class AnalyticsService {
 
       this.logger.info('Events flushed to InfluxDB', {
         serviceName: 'AnalyticsService',
-        count: events.length
+        count: events.length,
       });
     } catch (err) {
       this.logger.error('Failed to flush events', err as Error);
@@ -321,28 +334,27 @@ export class AnalyticsService {
             timestamp: new Date(record._time),
             measurement: record._measurement,
             value: record._value,
-            tags: this.extractTags(record)
+            tags: this.extractTags(record),
           });
         },
         error: (error: any) => {
           throw error;
-        }
+        },
       });
 
       this.logger.info('Metrics query executed', {
         serviceName: 'AnalyticsService',
         measurement: query.measurement,
-        resultCount: result.length
+        resultCount: result.length,
       });
 
       return result;
     } catch (err) {
       this.logger.error('Failed to query metrics', err as Error);
-      throw new AnalyticsError(
-        'Metrics query failed',
-        AnalyticsErrorCode.QUERY_EXECUTION_FAILED,
-        { query, errorMessage: (err as Error).message }
-      );
+      throw new AnalyticsError('Metrics query failed', AnalyticsErrorCode.QUERY_EXECUTION_FAILED, {
+        query,
+        errorMessage: (err as Error).message,
+      });
     }
   }
 
@@ -351,35 +363,35 @@ export class AnalyticsService {
    */
   private buildFluxQuery(query: MetricsQuery): string {
     let fluxQuery = `from(bucket: "${process.env['INFLUXDB_BUCKET'] || 'analytics'}")`;
-    
+
     // Time range
     fluxQuery += `\n  |> range(start: ${query.timeRange.start}, stop: ${query.timeRange.stop})`;
-    
+
     // Filter by measurement
     fluxQuery += `\n  |> filter(fn: (r) => r._measurement == "${query.measurement}")`;
-    
+
     // Add filters
     if (query.filters) {
       Object.entries(query.filters).forEach(([key, value]) => {
         fluxQuery += `\n  |> filter(fn: (r) => r.${key} == "${value}")`;
       });
     }
-    
+
     // Group by
     if (query.groupBy && query.groupBy.length > 0) {
       fluxQuery += `\n  |> group(columns: [${query.groupBy.map(col => `"${col}"`).join(', ')}])`;
     }
-    
+
     // Aggregation
     if (query.aggregation) {
       fluxQuery += `\n  |> aggregateWindow(every: ${query.aggregation.window}, fn: ${query.aggregation.function})`;
     }
-    
+
     // Limit
     if (query.limit) {
       fluxQuery += `\n  |> limit(n: ${query.limit})`;
     }
-    
+
     return fluxQuery;
   }
 
@@ -389,7 +401,10 @@ export class AnalyticsService {
   private extractTags(record: any): Record<string, string> {
     const tags: Record<string, string> = {};
     Object.entries(record).forEach(([key, value]) => {
-      if (key.startsWith('tag_') || ['user_id', 'session_id', 'organization_id', 'assessment_id'].includes(key)) {
+      if (
+        key.startsWith('tag_') ||
+        ['user_id', 'session_id', 'organization_id', 'assessment_id'].includes(key)
+      ) {
         tags[key] = value as string;
       }
     });
@@ -399,11 +414,14 @@ export class AnalyticsService {
   /**
    * Get performance metrics for a user
    */
-  async getPerformanceMetrics(userId: string, timeRange?: { start: string; stop: string }): Promise<PerformanceMetrics> {
+  async getPerformanceMetrics(
+    userId: string,
+    timeRange?: { start: string; stop: string }
+  ): Promise<PerformanceMetrics> {
     try {
       const defaultTimeRange = {
         start: '-30d',
-        stop: 'now()'
+        stop: 'now()',
       };
       const range = timeRange || defaultTimeRange;
 
@@ -412,21 +430,21 @@ export class AnalyticsService {
         measurement: EventType.ASSESSMENT_COMPLETED,
         timeRange: range,
         filters: { user_id: userId },
-        groupBy: ['assessment_id']
+        groupBy: ['assessment_id'],
       });
 
       // Query code executions
       const codeMetrics = await this.queryMetrics({
         measurement: EventType.CODE_EXECUTED,
         timeRange: range,
-        filters: { user_id: userId }
+        filters: { user_id: userId },
       });
 
       // Query proctoring violations
       const violationMetrics = await this.queryMetrics({
         measurement: EventType.VIOLATION_DETECTED,
         timeRange: range,
-        filters: { user_id: userId }
+        filters: { user_id: userId },
       });
 
       // Calculate performance metrics
@@ -434,9 +452,11 @@ export class AnalyticsService {
       const totalCodeExecutions = codeMetrics.length;
       const totalViolations = violationMetrics.length;
 
-      const averageScore = totalAssessments > 0 
-        ? assessmentMetrics.reduce((sum, metric) => sum + (metric.value as number), 0) / totalAssessments 
-        : 0;
+      const averageScore =
+        totalAssessments > 0
+          ? assessmentMetrics.reduce((sum, metric) => sum + (metric.value as number), 0) /
+            totalAssessments
+          : 0;
 
       const performanceMetrics: PerformanceMetrics = {
         userId,
@@ -447,11 +467,11 @@ export class AnalyticsService {
         averageScore,
         assessmentCompletionRate: totalAssessments > 0 ? 1.0 : 0, // Simplified calculation
         codeSuccessRate: totalCodeExecutions > 0 ? 0.85 : 0, // Simplified calculation
-        integrityScore: Math.max(0, 100 - (totalViolations * 10)), // Simplified calculation
+        integrityScore: Math.max(0, 100 - totalViolations * 10), // Simplified calculation
         engagementScore: Math.min(100, totalCodeExecutions * 2 + totalAssessments * 5), // Simplified calculation
         skillLevel: this.calculateSkillLevel(averageScore),
         improvementTrend: 'stable', // Simplified - would require time-series analysis
-        recommendations: this.generateRecommendations(averageScore, totalViolations)
+        recommendations: this.generateRecommendations(averageScore, totalViolations),
       };
 
       return performanceMetrics;
@@ -468,10 +488,18 @@ export class AnalyticsService {
   /**
    * Calculate skill level based on average score
    */
-  private calculateSkillLevel(averageScore: number): 'beginner' | 'intermediate' | 'advanced' | 'expert' {
-    if (averageScore >= 90) return 'expert';
-    if (averageScore >= 75) return 'advanced';
-    if (averageScore >= 60) return 'intermediate';
+  private calculateSkillLevel(
+    averageScore: number
+  ): 'beginner' | 'intermediate' | 'advanced' | 'expert' {
+    if (averageScore >= 90) {
+      return 'expert';
+    }
+    if (averageScore >= 75) {
+      return 'advanced';
+    }
+    if (averageScore >= 60) {
+      return 'intermediate';
+    }
     return 'beginner';
   }
 
@@ -524,19 +552,23 @@ export class AnalyticsService {
   private async updateRealtimeMetrics(event: AnalyticsEvent): Promise<void> {
     try {
       const key = `realtime:${event.type}:${event.organizationId || 'global'}`;
-      
+
       // Increment event counter
       await this.redis.incrementRateLimit(key, 3600); // 1 hour window
-      
+
       // Update last event timestamp
       await this.redis.set(`${key}:last`, event.timestamp.toISOString(), 3600);
 
       // Store recent events for dashboard
       const recentEventsKey = `recent:${event.organizationId || 'global'}`;
-      await this.redis.set(recentEventsKey, JSON.stringify({
-        ...event,
-        timestamp: event.timestamp.toISOString()
-      }), 300); // 5 minutes TTL
+      await this.redis.set(
+        recentEventsKey,
+        JSON.stringify({
+          ...event,
+          timestamp: event.timestamp.toISOString(),
+        }),
+        300
+      ); // 5 minutes TTL
     } catch (err) {
       this.logger.error('Failed to update real-time metrics', err as Error);
     }
@@ -570,7 +602,7 @@ export class AnalyticsService {
         score: event.metadata?.score || 0,
         timeSpent: event.metadata?.timeSpent || 0,
         completionRate: event.metadata?.completionRate || 0,
-        timestamp: event.timestamp
+        timestamp: event.timestamp,
       };
 
       // await this.prisma.assessmentAnalytics.create(...); // TODO: Add Prisma model
@@ -599,19 +631,15 @@ export class AnalyticsService {
    */
   private validateEvent(event: AnalyticsEvent): void {
     if (!event.id) {
-      throw new AnalyticsError(
-        'Event ID is required',
-        AnalyticsErrorCode.INVALID_EVENT_FORMAT,
-        { event }
-      );
+      throw new AnalyticsError('Event ID is required', AnalyticsErrorCode.INVALID_EVENT_FORMAT, {
+        event,
+      });
     }
 
     if (!event.type || !Object.values(EventType).includes(event.type)) {
-      throw new AnalyticsError(
-        'Invalid event type',
-        AnalyticsErrorCode.INVALID_EVENT_FORMAT,
-        { eventType: event.type }
-      );
+      throw new AnalyticsError('Invalid event type', AnalyticsErrorCode.INVALID_EVENT_FORMAT, {
+        eventType: event.type,
+      });
     }
 
     if (!event.timestamp) {
@@ -688,5 +716,3 @@ export class AnalyticsService {
     this.logger.debug('User performance score updated', { userId, score });
   }
 }
-
-

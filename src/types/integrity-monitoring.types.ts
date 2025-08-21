@@ -4,10 +4,15 @@
  * Epic 4 Task 4.3: Integrity Monitoring System
  */
 
-import { ViolationSeverity, GazeViolationType, AudioViolationType, RetryPolicy } from './ai-analysis.types';
+import {
+  ViolationSeverity,
+  GazeViolationType,
+  AudioViolationType,
+  RetryPolicy,
+} from './ai-analysis.types';
 
 // General violation type union
-export type ViolationType = 
+export type ViolationType =
   | 'face_not_detected'
   | 'multiple_faces'
   | 'face_obscured'
@@ -31,18 +36,18 @@ export interface IntegrityMonitoringConfig {
 }
 
 export enum MonitoringMode {
-  STRICT = 'strict',           // Zero tolerance
-  STANDARD = 'standard',       // Normal monitoring
-  LENIENT = 'lenient',        // Relaxed monitoring
-  CUSTOM = 'custom'           // Custom rule configuration
+  STRICT = 'strict', // Zero tolerance
+  STANDARD = 'standard', // Normal monitoring
+  LENIENT = 'lenient', // Relaxed monitoring
+  CUSTOM = 'custom', // Custom rule configuration
 }
 
 export enum SensitivityLevel {
-  VERY_HIGH = 'very_high',    // Detects subtle violations
-  HIGH = 'high',              // Standard detection
-  MEDIUM = 'medium',          // Moderate detection
-  LOW = 'low',                // Only obvious violations
-  VERY_LOW = 'very_low'       // Minimal detection
+  VERY_HIGH = 'very_high', // Detects subtle violations
+  HIGH = 'high', // Standard detection
+  MEDIUM = 'medium', // Moderate detection
+  LOW = 'low', // Only obvious violations
+  VERY_LOW = 'very_low', // Minimal detection
 }
 
 // Violation detection and scoring
@@ -57,13 +62,13 @@ export interface ViolationThresholds {
 
 export interface FaceViolationThresholds {
   noFaceDetected: {
-    durationMs: number;         // How long before violation
-    confidence: number;         // Detection confidence threshold
+    durationMs: number; // How long before violation
+    confidence: number; // Detection confidence threshold
     severity: ViolationSeverity;
   };
   multipleFaces: {
-    count: number;              // Max allowed faces
-    durationMs: number;         // Duration threshold
+    count: number; // Max allowed faces
+    durationMs: number; // Duration threshold
     confidence: number;
     severity: ViolationSeverity;
   };
@@ -73,48 +78,48 @@ export interface FaceViolationThresholds {
     severity: ViolationSeverity;
   };
   lookAway: {
-    angleThreshold: number;     // Degrees away from center
+    angleThreshold: number; // Degrees away from center
     durationMs: number;
-    frequency: number;          // Max instances per minute
+    frequency: number; // Max instances per minute
     severity: ViolationSeverity;
   };
 }
 
 export interface GazeViolationThresholds {
   gazeDeviation: {
-    horizontalDegrees: number;  // Max horizontal deviation
-    verticalDegrees: number;    // Max vertical deviation
+    horizontalDegrees: number; // Max horizontal deviation
+    verticalDegrees: number; // Max vertical deviation
     durationMs: number;
     severity: ViolationSeverity;
   };
   gazePatterns: {
     suspiciousMovement: number; // Pattern detection threshold
-    readingBehavior: number;    // Reading pattern threshold
-    searchingBehavior: number;  // Searching pattern threshold
+    readingBehavior: number; // Reading pattern threshold
+    searchingBehavior: number; // Searching pattern threshold
     severity: ViolationSeverity;
   };
   eyeClosure: {
-    durationMs: number;         // Max eye closure duration
-    frequency: number;          // Max instances per minute
+    durationMs: number; // Max eye closure duration
+    frequency: number; // Max instances per minute
     severity: ViolationSeverity;
   };
 }
 
 export interface AudioViolationThresholds {
   voiceDetection: {
-    otherVoices: number;        // Max additional voices
-    volumeThreshold: number;    // dB threshold
+    otherVoices: number; // Max additional voices
+    volumeThreshold: number; // dB threshold
     durationMs: number;
     severity: ViolationSeverity;
   };
   backgroundNoise: {
-    volumeThreshold: number;    // dB threshold
+    volumeThreshold: number; // dB threshold
     durationMs: number;
-    patterns: string[];         // Suspicious patterns
+    patterns: string[]; // Suspicious patterns
     severity: ViolationSeverity;
   };
   silence: {
-    unexpectedSilence: number;  // ms of unexpected silence
+    unexpectedSilence: number; // ms of unexpected silence
     severity: ViolationSeverity;
   };
   keywordDetection: {
@@ -126,19 +131,19 @@ export interface AudioViolationThresholds {
 
 export interface BehaviorViolationThresholds {
   typingPatterns: {
-    unusualSpeed: number;       // WPM threshold
+    unusualSpeed: number; // WPM threshold
     pauseAnalysis: boolean;
     copyPasteDetection: boolean;
     severity: ViolationSeverity;
   };
   navigationPatterns: {
-    tabSwitching: number;       // Max tab switches
-    windowChanges: number;      // Max window changes
-    browserActions: string[];   // Prohibited actions
+    tabSwitching: number; // Max tab switches
+    windowChanges: number; // Max window changes
+    browserActions: string[]; // Prohibited actions
     severity: ViolationSeverity;
   };
   timeAnalysis: {
-    unexpectedSpeed: number;    // Completion time threshold
+    unexpectedSpeed: number; // Completion time threshold
     inconsistentTiming: boolean;
     severity: ViolationSeverity;
   };
@@ -146,20 +151,20 @@ export interface BehaviorViolationThresholds {
 
 export interface EnvironmentViolationThresholds {
   lighting: {
-    minLux: number;             // Minimum lighting
-    maxLux: number;             // Maximum lighting
-    consistency: number;        // Lighting consistency
+    minLux: number; // Minimum lighting
+    maxLux: number; // Maximum lighting
+    consistency: number; // Lighting consistency
     severity: ViolationSeverity;
   };
   background: {
-    changeDetection: boolean;   // Detect background changes
-    personDetection: boolean;   // Detect other people
-    objectDetection: string[];  // Prohibited objects
+    changeDetection: boolean; // Detect background changes
+    personDetection: boolean; // Detect other people
+    objectDetection: string[]; // Prohibited objects
     severity: ViolationSeverity;
   };
   location: {
-    gpsVariance: number;        // Max location variance (meters)
-    ipConsistency: boolean;     // Check IP consistency
+    gpsVariance: number; // Max location variance (meters)
+    ipConsistency: boolean; // Check IP consistency
     timezoneConsistency: boolean;
     severity: ViolationSeverity;
   };
@@ -167,23 +172,23 @@ export interface EnvironmentViolationThresholds {
 
 export interface TechnicalViolationThresholds {
   screenCapture: {
-    detection: boolean;         // Detect screen capture attempts
-    prevention: boolean;        // Prevent screen capture
+    detection: boolean; // Detect screen capture attempts
+    prevention: boolean; // Prevent screen capture
     severity: ViolationSeverity;
   };
   devTools: {
-    detection: boolean;         // Detect dev tools usage
-    prevention: boolean;        // Prevent dev tools
+    detection: boolean; // Detect dev tools usage
+    prevention: boolean; // Prevent dev tools
     severity: ViolationSeverity;
   };
   automation: {
-    botDetection: boolean;      // Detect automation tools
-    scriptDetection: boolean;   // Detect running scripts
+    botDetection: boolean; // Detect automation tools
+    scriptDetection: boolean; // Detect running scripts
     severity: ViolationSeverity;
   };
   virtualMachine: {
-    detection: boolean;         // Detect VM usage
-    prevention: boolean;        // Prevent VM usage
+    detection: boolean; // Detect VM usage
+    prevention: boolean; // Prevent VM usage
     severity: ViolationSeverity;
   };
 }
@@ -209,21 +214,21 @@ export enum RuleCategory {
   ENVIRONMENT_CONTROL = 'environment_control',
   TECHNICAL_SECURITY = 'technical_security',
   BEHAVIORAL_ANALYSIS = 'behavioral_analysis',
-  AUDIO_MONITORING = 'audio_monitoring'
+  AUDIO_MONITORING = 'audio_monitoring',
 }
 
 export enum RulePriority {
-  CRITICAL = 1,   // Immediate action required
-  HIGH = 2,       // High priority
-  MEDIUM = 3,     // Standard priority
-  LOW = 4,        // Low priority
-  INFO = 5        // Informational only
+  CRITICAL = 1, // Immediate action required
+  HIGH = 2, // High priority
+  MEDIUM = 3, // Standard priority
+  LOW = 4, // Low priority
+  INFO = 5, // Informational only
 }
 
 export interface RuleCondition {
-  field: string;              // Field to evaluate
+  field: string; // Field to evaluate
   operator: ComparisonOperator;
-  value: any;                 // Comparison value
+  value: any; // Comparison value
   logicalOperator?: LogicalOperator; // AND/OR with next condition
 }
 
@@ -240,25 +245,25 @@ export enum ComparisonOperator {
   NOT_IN = 'not_in',
   REGEX = 'regex',
   EXISTS = 'exists',
-  NOT_EXISTS = 'not_exists'
+  NOT_EXISTS = 'not_exists',
 }
 
 export enum LogicalOperator {
   AND = 'and',
   OR = 'or',
-  NOT = 'not'
+  NOT = 'not',
 }
 
 export interface RuleAction {
   type: ActionType;
   parameters: ActionParameters;
-  delay?: number;             // Delay before action (ms)
-  conditions?: string[];      // Additional conditions for action
+  delay?: number; // Delay before action (ms)
+  conditions?: string[]; // Additional conditions for action
 }
 
 export enum ActionType {
-  ALERT = 'alert',           // Generate alert
-  WARNING = 'warning',       // Show warning to candidate
+  ALERT = 'alert', // Generate alert
+  WARNING = 'warning', // Show warning to candidate
   PAUSE_ASSESSMENT = 'pause_assessment',
   END_ASSESSMENT = 'end_assessment',
   FLAG_FOR_REVIEW = 'flag_for_review',
@@ -266,13 +271,13 @@ export enum ActionType {
   INCREASE_MONITORING = 'increase_monitoring',
   CAPTURE_EVIDENCE = 'capture_evidence',
   LOG_INCIDENT = 'log_incident',
-  CUSTOM_ACTION = 'custom_action'
+  CUSTOM_ACTION = 'custom_action',
 }
 
 export interface ActionParameters {
-  message?: string;           // Alert/warning message
+  message?: string; // Alert/warning message
   severity?: ViolationSeverity;
-  recipients?: string[];      // Notification recipients
+  recipients?: string[]; // Notification recipients
   evidence?: EvidenceCapture;
   customData?: Record<string, any>;
 }
@@ -282,23 +287,23 @@ export interface EvidenceCapture {
   videoClip: boolean;
   audioClip: boolean;
   logSnapshot: boolean;
-  duration?: number;          // Evidence duration (ms)
-  quality?: string;           // Evidence quality
+  duration?: number; // Evidence duration (ms)
+  quality?: string; // Evidence quality
 }
 
 export interface EscalationPolicy {
   enabled: boolean;
   levels: EscalationLevel[];
   maxLevel: number;
-  resetTimeMs: number;        // Time to reset escalation
+  resetTimeMs: number; // Time to reset escalation
 }
 
 export interface EscalationLevel {
   level: number;
-  threshold: number;          // Violation count threshold
-  timeWindowMs: number;       // Time window for threshold
+  threshold: number; // Violation count threshold
+  timeWindowMs: number; // Time window for threshold
   actions: RuleAction[];
-  notificationDelay: number;  // Delay between notifications
+  notificationDelay: number; // Delay between notifications
 }
 
 export interface RuleMetadata {
@@ -308,7 +313,7 @@ export interface RuleMetadata {
   updatedAt: Date;
   tags: string[];
   category: string;
-  effectiveness: number;      // Rule effectiveness score
+  effectiveness: number; // Rule effectiveness score
   falsePositiveRate: number;
 }
 
@@ -339,11 +344,11 @@ export enum ChannelType {
   TEAMS = 'teams',
   PUSH_NOTIFICATION = 'push_notification',
   IN_APP = 'in_app',
-  DASHBOARD = 'dashboard'
+  DASHBOARD = 'dashboard',
 }
 
 export interface ChannelConfiguration {
-  endpoint?: string;          // Webhook/API endpoint
+  endpoint?: string; // Webhook/API endpoint
   credentials?: Record<string, string>;
   headers?: Record<string, string>;
   retryPolicy?: RetryPolicy;
@@ -361,7 +366,7 @@ export interface RateLimitingConfig {
 export enum BackoffStrategy {
   LINEAR = 'linear',
   EXPONENTIAL = 'exponential',
-  FIXED = 'fixed'
+  FIXED = 'fixed',
 }
 
 export interface AlertTemplate {
@@ -380,14 +385,14 @@ export enum AlertType {
   THRESHOLD_EXCEEDED = 'threshold_exceeded',
   SYSTEM_ALERT = 'system_alert',
   ASSESSMENT_ANOMALY = 'assessment_anomaly',
-  TECHNICAL_ISSUE = 'technical_issue'
+  TECHNICAL_ISSUE = 'technical_issue',
 }
 
 export enum TemplateFormat {
   PLAIN_TEXT = 'plain_text',
   HTML = 'html',
   MARKDOWN = 'markdown',
-  JSON = 'json'
+  JSON = 'json',
 }
 
 export interface TemplateVariable {
@@ -404,7 +409,7 @@ export enum VariableType {
   BOOLEAN = 'boolean',
   DATE = 'date',
   OBJECT = 'object',
-  ARRAY = 'array'
+  ARRAY = 'array',
 }
 
 export interface AlertEscalation {
@@ -423,7 +428,7 @@ export enum EscalationAction {
   NOTIFY_NEXT_LEVEL = 'notify_next_level',
   REPEAT_CURRENT_LEVEL = 'repeat_current_level',
   SKIP_TO_FINAL_LEVEL = 'skip_to_final_level',
-  CUSTOM_ACTION = 'custom_action'
+  CUSTOM_ACTION = 'custom_action',
 }
 
 export interface EscalationRecipient {
@@ -457,15 +462,15 @@ export enum ReportType {
   TREND_ANALYSIS = 'trend_analysis',
   EFFECTIVENESS_REPORT = 'effectiveness_report',
   COMPLIANCE_REPORT = 'compliance_report',
-  CUSTOM_REPORT = 'custom_report'
+  CUSTOM_REPORT = 'custom_report',
 }
 
 export interface ReportSchedule {
   frequency: ReportFrequency;
-  time: string;               // Time of day (HH:MM)
+  time: string; // Time of day (HH:MM)
   timezone: string;
-  daysOfWeek?: number[];      // For weekly reports
-  dayOfMonth?: number;        // For monthly reports
+  daysOfWeek?: number[]; // For weekly reports
+  dayOfMonth?: number; // For monthly reports
 }
 
 export enum ReportFrequency {
@@ -475,13 +480,13 @@ export enum ReportFrequency {
   WEEKLY = 'weekly',
   MONTHLY = 'monthly',
   QUARTERLY = 'quarterly',
-  ON_DEMAND = 'on_demand'
+  ON_DEMAND = 'on_demand',
 }
 
 export interface ReportDelivery {
-  channels: string[];         // Delivery channels
-  recipients: string[];       // Report recipients
-  format: ReportFormat[];     // Report formats
+  channels: string[]; // Delivery channels
+  recipients: string[]; // Report recipients
+  format: ReportFormat[]; // Report formats
   compression: boolean;
 }
 
@@ -490,7 +495,7 @@ export enum ReportFormat {
   HTML = 'html',
   CSV = 'csv',
   JSON = 'json',
-  EXCEL = 'excel'
+  EXCEL = 'excel',
 }
 
 export interface ReportRetention {
@@ -525,12 +530,12 @@ export interface EventDetails {
   duration?: number;
   location?: EventLocation;
   context: Record<string, any>;
-  relatedEvents: string[];    // Related event IDs
-  parentEventId?: string;     // Parent event for grouped events
+  relatedEvents: string[]; // Related event IDs
+  parentEventId?: string; // Parent event for grouped events
 }
 
 export interface EventLocation {
-  component: string;          // Which component detected the event
+  component: string; // Which component detected the event
   coordinates?: {
     x: number;
     y: number;
@@ -546,7 +551,7 @@ export interface Evidence {
   format: string;
   size: number;
   path: string;
-  hash: string;               // Evidence integrity hash
+  hash: string; // Evidence integrity hash
   encrypted: boolean;
   retentionDate: Date;
   metadata: EvidenceMetadata;
@@ -559,7 +564,7 @@ export enum EvidenceType {
   LOG_SNAPSHOT = 'log_snapshot',
   SYSTEM_INFO = 'system_info',
   NETWORK_DATA = 'network_data',
-  BIOMETRIC_DATA = 'biometric_data'
+  BIOMETRIC_DATA = 'biometric_data',
 }
 
 export interface EvidenceMetadata {
@@ -597,11 +602,11 @@ export interface MonitoringStatistics {
 export interface TimeRange {
   start: Date;
   end: Date;
-  duration: number;           // Duration in milliseconds
+  duration: number; // Duration in milliseconds
 }
 
 export interface RiskScore {
-  overall: number;            // 0-100 risk score
+  overall: number; // 0-100 risk score
   categories: Record<RuleCategory, number>;
   trend: RiskTrend;
   factors: RiskFactor[];
@@ -611,7 +616,7 @@ export enum RiskTrend {
   DECREASING = 'decreasing',
   STABLE = 'stable',
   INCREASING = 'increasing',
-  VOLATILE = 'volatile'
+  VOLATILE = 'volatile',
 }
 
 export interface RiskFactor {
@@ -622,7 +627,7 @@ export interface RiskFactor {
 }
 
 export interface ComplianceMetrics {
-  overallScore: number;       // 0-100 compliance score
+  overallScore: number; // 0-100 compliance score
   passedChecks: number;
   failedChecks: number;
   warningChecks: number;
@@ -643,13 +648,13 @@ export enum ComplianceStatus {
   FAILED = 'failed',
   WARNING = 'warning',
   NOT_APPLICABLE = 'not_applicable',
-  PENDING = 'pending'
+  PENDING = 'pending',
 }
 
 export interface PerformanceMetrics {
-  detectionLatency: number;   // Average detection latency (ms)
-  processingTime: number;     // Average processing time (ms)
-  alertLatency: number;       // Average alert latency (ms)
+  detectionLatency: number; // Average detection latency (ms)
+  processingTime: number; // Average processing time (ms)
+  alertLatency: number; // Average alert latency (ms)
   accuracy: AccuracyMetrics;
   resourceUsage: ResourceUsage;
 }
@@ -665,10 +670,10 @@ export interface AccuracyMetrics {
 }
 
 export interface ResourceUsage {
-  cpuUsage: number;           // CPU usage percentage
-  memoryUsage: number;        // Memory usage in MB
-  networkUsage: number;       // Network usage in KB/s
-  storageUsage: number;       // Storage usage in MB
+  cpuUsage: number; // CPU usage percentage
+  memoryUsage: number; // Memory usage in MB
+  networkUsage: number; // Network usage in KB/s
+  storageUsage: number; // Storage usage in MB
 }
 
 // Integrity monitoring service options

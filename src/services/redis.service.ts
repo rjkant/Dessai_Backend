@@ -248,7 +248,9 @@ class RedisService {
    * Store session data
    */
   public async setSession(sessionId: string, data: any, ttl: number = 3600): Promise<void> {
-    if (!this.isEnabled || !this.client) return;
+    if (!this.isEnabled || !this.client) {
+      return;
+    }
     const key = `session:${sessionId}`;
     await this.set(key, data, ttl);
   }
@@ -257,7 +259,9 @@ class RedisService {
    * Get session data
    */
   public async getSession<T>(sessionId: string): Promise<T | null> {
-    if (!this.isEnabled || !this.client) return null;
+    if (!this.isEnabled || !this.client) {
+      return null;
+    }
     const key = `session:${sessionId}`;
     return await this.get<T>(key);
   }
@@ -266,7 +270,9 @@ class RedisService {
    * Delete session
    */
   public async deleteSession(sessionId: string): Promise<void> {
-    if (!this.isEnabled || !this.client) return;
+    if (!this.isEnabled || !this.client) {
+      return;
+    }
     const key = `session:${sessionId}`;
     await this.delete(key);
   }
@@ -289,7 +295,9 @@ class RedisService {
    * Update session data
    */
   public async updateSessionData(sessionId: string, data: any): Promise<void> {
-    if (!this.isEnabled || !this.client) return;
+    if (!this.isEnabled || !this.client) {
+      return;
+    }
     const key = `session:${sessionId}`;
     const existing = await this.get(key);
     if (existing) {
@@ -390,8 +398,10 @@ class RedisService {
    */
   public async listRange(key: string, start: number, stop: number): Promise<string[]> {
     const client = this.getClient();
-    if (!client) return [];
-    
+    if (!client) {
+      return [];
+    }
+
     try {
       return await client.lrange(key, start, stop);
     } catch (error) {
@@ -405,8 +415,10 @@ class RedisService {
    */
   public async listPush(key: string, value: string): Promise<number> {
     const client = this.getClient();
-    if (!client) return 0;
-    
+    if (!client) {
+      return 0;
+    }
+
     try {
       return await client.lpush(key, value);
     } catch (error) {
@@ -434,7 +446,9 @@ class RedisService {
    */
   public pipeline(): any {
     const client = this.getClient();
-    if (!client) return null;
+    if (!client) {
+      return null;
+    }
     return client.pipeline();
   }
 
@@ -443,8 +457,10 @@ class RedisService {
    */
   public async ping(): Promise<boolean> {
     const client = this.getClient();
-    if (!client) return false;
-    
+    if (!client) {
+      return false;
+    }
+
     try {
       const result = await client.ping();
       return result === 'PONG';
@@ -461,7 +477,7 @@ class RedisService {
     if (!this.client) {
       return;
     }
-    
+
     this.client.on('connect', () => {
       console.log('🔌 Redis connecting...');
     });

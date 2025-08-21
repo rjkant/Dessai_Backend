@@ -1,6 +1,6 @@
 /**
  * Enhanced Notification Routes - Epic 6: Advanced Notification & Communication
- * 
+ *
  * Comprehensive notification system with workflows, templates, and multi-channel support
  */
 
@@ -23,7 +23,7 @@ export function createNotificationRoutes(
       path: req.path,
       query: req.query,
       userAgent: req.get('User-Agent'),
-      ip: req.ip
+      ip: req.ip,
     });
     next();
   });
@@ -94,7 +94,9 @@ export function createNotificationRoutes(
     [
       body('assessmentId').trim().isLength({ min: 1 }).withMessage('Assessment ID is required'),
       body('biasType').trim().isLength({ min: 1 }).withMessage('Bias type is required'),
-      body('severity').isIn(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).withMessage('Invalid severity level'),
+      body('severity')
+        .isIn(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'])
+        .withMessage('Invalid severity level'),
       body('recipients').isArray({ min: 1 }).withMessage('At least one recipient is required'),
     ],
     async (req: Request, res: Response, next: NextFunction): Promise<Response | void> => {
@@ -104,7 +106,7 @@ export function createNotificationRoutes(
           return res.status(400).json({
             success: false,
             message: 'Validation failed',
-            errors: errors.array()
+            errors: errors.array(),
           });
         }
 
@@ -121,18 +123,18 @@ export function createNotificationRoutes(
             biasType,
             severity,
             detectedAt: new Date(),
-            actionRequired: 'immediate_review'
-          }
+            actionRequired: 'immediate_review',
+          },
         };
 
-        // Send through notification controller  
+        // Send through notification controller
         await notificationController.sendNotification(req as any, res, next);
 
         logger.warn(`Bias detection notification sent`, {
           assessmentId,
           biasType,
           severity,
-          recipientCount: recipients.length
+          recipientCount: recipients.length,
         });
 
         // Send success response if notification controller didn't already respond
@@ -144,11 +146,10 @@ export function createNotificationRoutes(
               assessmentId,
               biasType,
               severity,
-              recipientCount: recipients.length
-            }
+              recipientCount: recipients.length,
+            },
           });
         }
-
       } catch (error) {
         next(error);
       }
@@ -187,22 +188,21 @@ export function createNotificationRoutes(
             EMAIL: { sent: 12000, delivered: 11800, opened: 7080 },
             SMS: { sent: 2500, delivered: 2450, opened: 1470 },
             PUSH: { sent: 800, delivered: 720, opened: 360 },
-            IN_APP: { sent: 120, delivered: 117, opened: 32 }
+            IN_APP: { sent: 120, delivered: 117, opened: 32 },
           },
           recentActivity: [
             { date: '2025-08-21', sent: 450, delivered: 442 },
             { date: '2025-08-20', sent: 380, delivered: 375 },
-            { date: '2025-08-19', sent: 320, delivered: 318 }
-          ]
+            { date: '2025-08-19', sent: 320, delivered: 318 },
+          ],
         };
 
         res.status(200).json({
           success: true,
-          data: analytics
+          data: analytics,
         });
 
         return; // Ensure all code paths return
-
       } catch (error) {
         next(error);
       }
@@ -229,7 +229,7 @@ export function createNotificationRoutes(
           return res.status(400).json({
             success: false,
             message: 'Validation failed',
-            errors: errors.array()
+            errors: errors.array(),
           });
         }
 
@@ -242,7 +242,7 @@ export function createNotificationRoutes(
           channel,
           recipient,
           sentAt: new Date(),
-          deliveryTime: Math.floor(Math.random() * 1000) + 500 // 500-1500ms
+          deliveryTime: Math.floor(Math.random() * 1000) + 500, // 500-1500ms
         };
 
         logger.info(`Test notification sent`, testResult);
@@ -250,11 +250,10 @@ export function createNotificationRoutes(
         res.status(200).json({
           success: true,
           message: 'Test notification sent successfully',
-          data: testResult
+          data: testResult,
         });
 
         return; // Ensure all code paths return
-
       } catch (error) {
         next(error);
       }
@@ -266,11 +265,11 @@ export function createNotificationRoutes(
    */
   router.use((error: Error, req: Request, res: Response, next: NextFunction) => {
     logger.error('Notification API error', error);
-    
+
     res.status(500).json({
       success: false,
       message: 'Internal server error',
-      error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong',
     });
   });
 

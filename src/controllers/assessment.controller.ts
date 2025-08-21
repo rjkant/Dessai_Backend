@@ -2,14 +2,14 @@
  * Assessment Controller
  * TASK-CG-005: Assessment Management Core
  * Persona: Senior Software Engineer
- * 
+ *
  * REST API controller for assessment management operations
  * with comprehensive validation, error handling, and security.
  */
 
 import { Request, Response, NextFunction } from 'express';
 import { AssessmentService } from '../services/assessment.service';
-import { 
+import {
   CreateAssessmentRequest,
   UpdateAssessmentRequest,
   AssessmentSearchCriteria,
@@ -18,7 +18,7 @@ import {
   AssessmentErrorCode,
   AssessmentType,
   AssessmentStatus,
-  PaginationParams
+  PaginationParams,
 } from '../types/assessment.types';
 import { body, param, query, validationResult } from 'express-validator';
 
@@ -31,7 +31,13 @@ export class AssessmentController {
 
   private log(level: 'info' | 'error', message: string, meta?: any): void {
     const timestamp = new Date().toISOString();
-    const logObject = { timestamp, level, context: 'AssessmentController', message, ...(meta && { meta }) };
+    const logObject = {
+      timestamp,
+      level,
+      context: 'AssessmentController',
+      message,
+      ...(meta && { meta }),
+    };
     if (level === 'error') {
       console.error(JSON.stringify(logObject));
     } else {
@@ -53,37 +59,17 @@ export class AssessmentController {
       .isString()
       .isLength({ max: 1000 })
       .withMessage('Description must be max 1000 characters'),
-    body('type')
-      .isIn(Object.values(AssessmentType))
-      .withMessage('Invalid assessment type'),
+    body('type').isIn(Object.values(AssessmentType)).withMessage('Invalid assessment type'),
     body('timeLimit')
       .optional()
       .isInt({ min: 1, max: 600 })
       .withMessage('Time limit must be 1-600 minutes'),
-    body('scheduledAt')
-      .optional()
-      .isISO8601()
-      .withMessage('Invalid scheduled date format'),
-    body('startsAt')
-      .optional()
-      .isISO8601()
-      .withMessage('Invalid start date format'),
-    body('endsAt')
-      .optional()
-      .isISO8601()
-      .withMessage('Invalid end date format'),
-    body('settings')
-      .optional()
-      .isObject()
-      .withMessage('Settings must be an object'),
-    body('questionIds')
-      .optional()
-      .isArray()
-      .withMessage('Question IDs must be an array'),
-    body('questionIds.*')
-      .optional()
-      .isUUID()
-      .withMessage('Each question ID must be a valid UUID')
+    body('scheduledAt').optional().isISO8601().withMessage('Invalid scheduled date format'),
+    body('startsAt').optional().isISO8601().withMessage('Invalid start date format'),
+    body('endsAt').optional().isISO8601().withMessage('Invalid end date format'),
+    body('settings').optional().isObject().withMessage('Settings must be an object'),
+    body('questionIds').optional().isArray().withMessage('Question IDs must be an array'),
+    body('questionIds.*').optional().isUUID().withMessage('Each question ID must be a valid UUID'),
   ];
 
   static updateAssessmentValidation = [
@@ -110,15 +96,10 @@ export class AssessmentController {
       .optional()
       .isIn(Object.values(AssessmentStatus))
       .withMessage('Invalid assessment status'),
-    body('settings')
-      .optional()
-      .isObject()
-      .withMessage('Settings must be an object')
+    body('settings').optional().isObject().withMessage('Settings must be an object'),
   ];
 
-  static assessmentIdValidation = [
-    param('id').isUUID().withMessage('Invalid assessment ID')
-  ];
+  static assessmentIdValidation = [param('id').isUUID().withMessage('Invalid assessment ID')];
 
   static searchValidation = [
     query('query')
@@ -128,7 +109,7 @@ export class AssessmentController {
       .withMessage('Search query must be max 100 characters'),
     query('types')
       .optional()
-      .custom((value) => {
+      .custom(value => {
         if (typeof value === 'string') {
           return Object.values(AssessmentType).includes(value as AssessmentType);
         }
@@ -140,7 +121,7 @@ export class AssessmentController {
       .withMessage('Invalid assessment types'),
     query('statuses')
       .optional()
-      .custom((value) => {
+      .custom(value => {
         if (typeof value === 'string') {
           return Object.values(AssessmentStatus).includes(value as AssessmentStatus);
         }
@@ -150,14 +131,8 @@ export class AssessmentController {
         return false;
       })
       .withMessage('Invalid assessment statuses'),
-    query('page')
-      .optional()
-      .isInt({ min: 1 })
-      .withMessage('Page must be >= 1'),
-    query('pageSize')
-      .optional()
-      .isInt({ min: 1, max: 100 })
-      .withMessage('Page size must be 1-100'),
+    query('page').optional().isInt({ min: 1 }).withMessage('Page must be >= 1'),
+    query('pageSize').optional().isInt({ min: 1, max: 100 }).withMessage('Page size must be 1-100'),
     query('sortBy')
       .optional()
       .isIn(['createdAt', 'updatedAt', 'title', 'type', 'status'])
@@ -165,30 +140,19 @@ export class AssessmentController {
     query('sortOrder')
       .optional()
       .isIn(['ASC', 'DESC'])
-      .withMessage('Sort order must be ASC or DESC')
+      .withMessage('Sort order must be ASC or DESC'),
   ];
 
   static addQuestionsValidation = [
     param('id').isUUID().withMessage('Invalid assessment ID'),
-    body('questionIds')
-      .isArray({ min: 1 })
-      .withMessage('Question IDs array is required'),
-    body('questionIds.*')
-      .isUUID()
-      .withMessage('Each question ID must be a valid UUID')
+    body('questionIds').isArray({ min: 1 }).withMessage('Question IDs array is required'),
+    body('questionIds.*').isUUID().withMessage('Each question ID must be a valid UUID'),
   ];
 
   static startAssessmentValidation = [
-    body('assessmentId')
-      .isUUID()
-      .withMessage('Invalid assessment ID'),
-    body('candidateId')
-      .isUUID()
-      .withMessage('Invalid candidate ID'),
-    body('settings')
-      .optional()
-      .isObject()
-      .withMessage('Settings must be an object')
+    body('assessmentId').isUUID().withMessage('Invalid assessment ID'),
+    body('candidateId').isUUID().withMessage('Invalid candidate ID'),
+    body('settings').optional().isObject().withMessage('Settings must be an object'),
   ];
 
   // ============================================================================
@@ -205,7 +169,7 @@ export class AssessmentController {
       if (!errors.isEmpty()) {
         res.status(400).json({
           error: 'Validation failed',
-          details: errors.array()
+          details: errors.array(),
         });
         return;
       }
@@ -219,20 +183,17 @@ export class AssessmentController {
         return;
       }
 
-      const assessment = await this.assessmentService.createAssessment(
-        data,
-        organizationId
-      );
+      const assessment = await this.assessmentService.createAssessment(data, organizationId);
 
       this.log('info', 'Assessment created via API', {
         assessmentId: assessment.id,
         userId,
-        organizationId
+        organizationId,
       });
 
       res.status(201).json({
         success: true,
-        data: assessment
+        data: assessment,
       });
     } catch (error) {
       next(error);
@@ -249,7 +210,7 @@ export class AssessmentController {
       if (!errors.isEmpty()) {
         res.status(400).json({
           error: 'Validation failed',
-          details: errors.array()
+          details: errors.array(),
         });
         return;
       }
@@ -276,7 +237,7 @@ export class AssessmentController {
 
       res.json({
         success: true,
-        data: assessment
+        data: assessment,
       });
     } catch (error) {
       next(error);
@@ -293,7 +254,7 @@ export class AssessmentController {
       if (!errors.isEmpty()) {
         res.status(400).json({
           error: 'Validation failed',
-          details: errors.array()
+          details: errors.array(),
         });
         return;
       }
@@ -308,21 +269,17 @@ export class AssessmentController {
         return;
       }
 
-      const assessment = await this.assessmentService.updateAssessment(
-        id,
-        data,
-        organizationId
-      );
+      const assessment = await this.assessmentService.updateAssessment(id, data, organizationId);
 
       this.log('info', 'Assessment updated via API', {
         assessmentId: id,
         userId,
-        organizationId
+        organizationId,
       });
 
       res.json({
         success: true,
-        data: assessment
+        data: assessment,
       });
     } catch (error) {
       next(error);
@@ -339,7 +296,7 @@ export class AssessmentController {
       if (!errors.isEmpty()) {
         res.status(400).json({
           error: 'Validation failed',
-          details: errors.array()
+          details: errors.array(),
         });
         return;
       }
@@ -358,7 +315,7 @@ export class AssessmentController {
       this.log('info', 'Assessment deleted via API', {
         assessmentId: id,
         userId,
-        organizationId
+        organizationId,
       });
 
       res.status(204).send();
@@ -377,7 +334,7 @@ export class AssessmentController {
       if (!errors.isEmpty()) {
         res.status(400).json({
           error: 'Validation failed',
-          details: errors.array()
+          details: errors.array(),
         });
         return;
       }
@@ -396,34 +353,37 @@ export class AssessmentController {
       const to = req.query['to'] as string;
       const page = parseInt(req.query['page'] as string) || 1;
       const pageSize = parseInt(req.query['pageSize'] as string) || 20;
-      const sortBy = req.query['sortBy'] as any || 'createdAt';
-      const sortOrder = req.query['sortOrder'] as 'ASC' | 'DESC' || 'DESC';
+      const sortBy = (req.query['sortBy'] as any) || 'createdAt';
+      const sortOrder = (req.query['sortOrder'] as 'ASC' | 'DESC') || 'DESC';
 
       const criteria: AssessmentSearchCriteria = {
         query,
         ...(types && {
-          types: Array.isArray(types) ? types as AssessmentType[] : [types] as AssessmentType[]
+          types: Array.isArray(types) ? (types as AssessmentType[]) : ([types] as AssessmentType[]),
         }),
         ...(statuses && {
-          statuses: Array.isArray(statuses) ? statuses as AssessmentStatus[] : [statuses] as AssessmentStatus[]
+          statuses: Array.isArray(statuses)
+            ? (statuses as AssessmentStatus[])
+            : ([statuses] as AssessmentStatus[]),
         }),
         createdBy,
-        ...(from && to && {
-          dateRange: {
-            from: new Date(from),
-            to: new Date(to)
-          }
-        }),
+        ...(from &&
+          to && {
+            dateRange: {
+              from: new Date(from),
+              to: new Date(to),
+            },
+          }),
         pagination: { page, pageSize } as PaginationParams,
         sortBy,
-        sortOrder
+        sortOrder,
       };
 
       const result = await this.assessmentService.searchAssessments(criteria, organizationId);
 
       res.json({
         success: true,
-        data: result
+        data: result,
       });
     } catch (error) {
       next(error);
@@ -444,7 +404,7 @@ export class AssessmentController {
       if (!errors.isEmpty()) {
         res.status(400).json({
           error: 'Validation failed',
-          details: errors.array()
+          details: errors.array(),
         });
         return;
       }
@@ -459,21 +419,17 @@ export class AssessmentController {
         return;
       }
 
-      await this.assessmentService.addQuestionsToAssessment(
-        id,
-        questionIds,
-        organizationId
-      );
+      await this.assessmentService.addQuestionsToAssessment(id, questionIds, organizationId);
 
       this.log('info', 'Questions added to assessment via API', {
         assessmentId: id,
         questionCount: questionIds.length,
-        userId
+        userId,
       });
 
       res.json({
         success: true,
-        message: 'Questions added successfully'
+        message: 'Questions added successfully',
       });
     } catch (error) {
       next(error);
@@ -495,16 +451,12 @@ export class AssessmentController {
         return;
       }
 
-      await this.assessmentService.removeQuestionFromAssessment(
-        id,
-        questionId,
-        organizationId
-      );
+      await this.assessmentService.removeQuestionFromAssessment(id, questionId, organizationId);
 
       this.log('info', 'Question removed from assessment via API', {
         assessmentId: id,
         questionId,
-        userId
+        userId,
       });
 
       res.status(204).send();
@@ -527,7 +479,7 @@ export class AssessmentController {
       if (!errors.isEmpty()) {
         res.status(400).json({
           error: 'Validation failed',
-          details: errors.array()
+          details: errors.array(),
         });
         return;
       }
@@ -541,21 +493,17 @@ export class AssessmentController {
         return;
       }
 
-      const assessment = await this.assessmentService.publishAssessment(
-        id,
-        organizationId,
-        userId
-      );
+      const assessment = await this.assessmentService.publishAssessment(id, organizationId, userId);
 
       this.log('info', 'Assessment published via API', {
         assessmentId: id,
         userId,
-        newStatus: assessment.status
+        newStatus: assessment.status,
       });
 
       res.json({
         success: true,
-        data: assessment
+        data: assessment,
       });
     } catch (error) {
       next(error);
@@ -572,7 +520,7 @@ export class AssessmentController {
       if (!errors.isEmpty()) {
         res.status(400).json({
           error: 'Validation failed',
-          details: errors.array()
+          details: errors.array(),
         });
         return;
       }
@@ -586,19 +534,16 @@ export class AssessmentController {
         return;
       }
 
-      const assessment = await this.assessmentService.activateAssessment(
-        id,
-        organizationId
-      );
+      const assessment = await this.assessmentService.activateAssessment(id, organizationId);
 
       this.log('info', 'Assessment activated via API', {
         assessmentId: id,
-        userId
+        userId,
       });
 
       res.json({
         success: true,
-        data: assessment
+        data: assessment,
       });
     } catch (error) {
       next(error);
@@ -615,7 +560,7 @@ export class AssessmentController {
       if (!errors.isEmpty()) {
         res.status(400).json({
           error: 'Validation failed',
-          details: errors.array()
+          details: errors.array(),
         });
         return;
       }
@@ -629,19 +574,16 @@ export class AssessmentController {
         return;
       }
 
-      const assessment = await this.assessmentService.completeAssessment(
-        id,
-        organizationId
-      );
+      const assessment = await this.assessmentService.completeAssessment(id, organizationId);
 
       this.log('info', 'Assessment completed via API', {
         assessmentId: id,
-        userId
+        userId,
       });
 
       res.json({
         success: true,
-        data: assessment
+        data: assessment,
       });
     } catch (error) {
       next(error);
@@ -662,7 +604,7 @@ export class AssessmentController {
       if (!errors.isEmpty()) {
         res.status(400).json({
           error: 'Validation failed',
-          details: errors.array()
+          details: errors.array(),
         });
         return;
       }
@@ -683,12 +625,12 @@ export class AssessmentController {
       this.log('info', 'Assessment started via API', {
         assessmentId: data.assessmentId,
         candidateId: data.candidateId,
-        sessionId: session.sessionId
+        sessionId: session.sessionId,
       });
 
       res.json({
         success: true,
-        data: session
+        data: session,
       });
     } catch (error) {
       next(error);
@@ -705,7 +647,7 @@ export class AssessmentController {
       stack: error.stack,
       path: req.path,
       method: req.method,
-      user: (req as any).user?.id
+      user: (req as any).user?.id,
     });
 
     if (error instanceof AssessmentError) {
@@ -713,7 +655,7 @@ export class AssessmentController {
       res.status(statusCode).json({
         error: error.message,
         code: error.code,
-        details: error.details
+        details: error.details,
       });
       return;
     }
@@ -721,7 +663,7 @@ export class AssessmentController {
     // Default error response
     res.status(500).json({
       error: 'Internal server error',
-      code: 'INTERNAL_ERROR'
+      code: 'INTERNAL_ERROR',
     });
   };
 
@@ -739,7 +681,7 @@ export class AssessmentController {
       [AssessmentErrorCode.SUBMISSION_DEADLINE_PASSED]: 400,
       [AssessmentErrorCode.SESSION_EXPIRED]: 400,
       [AssessmentErrorCode.MAXIMUM_ATTEMPTS_EXCEEDED]: 400,
-      [AssessmentErrorCode.VALIDATION_ERROR]: 400
+      [AssessmentErrorCode.VALIDATION_ERROR]: 400,
     };
 
     return statusMap[code] || 500;

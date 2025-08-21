@@ -1,9 +1,9 @@
 /**
  * Epic 5 Task 5.3: Bias Detection - Comprehensive Type Definitions
- * 
+ *
  * Enterprise-grade bias detection system with statistical analysis,
  * demographic monitoring, compliance reporting, and remediation recommendations.
- * 
+ *
  * Features:
  * - Statistical bias detection algorithms with confidence intervals
  * - Protected characteristic analysis (age, gender, ethnicity, etc.)
@@ -17,10 +17,7 @@
  * - Historical bias pattern analysis and trend identification
  */
 
-import { 
-  PerformanceMetric,
-  TrendDirection
-} from './performance-analytics.types';
+import { PerformanceMetric, TrendDirection } from './performance-analytics.types';
 
 /**
  * Local type definitions for bias detection system
@@ -41,7 +38,7 @@ export enum StatisticalSignificance {
   MARGINALLY_SIGNIFICANT = 'MARGINALLY_SIGNIFICANT',
   SIGNIFICANT = 'SIGNIFICANT',
   HIGHLY_SIGNIFICANT = 'HIGHLY_SIGNIFICANT',
-  EXTREMELY_SIGNIFICANT = 'EXTREMELY_SIGNIFICANT'
+  EXTREMELY_SIGNIFICANT = 'EXTREMELY_SIGNIFICANT',
 }
 
 // Metric value with statistical properties
@@ -65,7 +62,7 @@ export enum ReportFormat {
   CSV = 'CSV',
   JSON = 'JSON',
   XLSX = 'XLSX',
-  DOCX = 'DOCX'
+  DOCX = 'DOCX',
 }
 
 // Basic dashboard configuration
@@ -77,7 +74,7 @@ export interface DashboardConfiguration {
     id: string;
     type: string;
     title: string;
-    position: { x: number; y: number; width: number; height: number; };
+    position: { x: number; y: number; width: number; height: number };
     config: Record<string, any>;
   }[];
   layout: 'GRID' | 'FLOW' | 'CUSTOM';
@@ -118,7 +115,7 @@ export enum ProtectedCharacteristic {
   GEOGRAPHIC_LOCATION = 'GEOGRAPHIC_LOCATION',
   LANGUAGE_PROFICIENCY = 'LANGUAGE_PROFICIENCY',
   PARENTAL_STATUS = 'PARENTAL_STATUS',
-  MARITAL_STATUS = 'MARITAL_STATUS'
+  MARITAL_STATUS = 'MARITAL_STATUS',
 }
 
 /**
@@ -131,22 +128,22 @@ export enum BiasDetectionAlgorithm {
   T_TEST = 'T_TEST',
   ANOVA = 'ANOVA',
   KOLMOGOROV_SMIRNOV = 'KOLMOGOROV_SMIRNOV',
-  
+
   // Advanced bias detection methods
   ADVERSE_IMPACT_RATIO = 'ADVERSE_IMPACT_RATIO',
   DEMOGRAPHIC_PARITY = 'DEMOGRAPHIC_PARITY',
   EQUALIZED_ODDS = 'EQUALIZED_ODDS',
   EQUALIZED_OPPORTUNITY = 'EQUALIZED_OPPORTUNITY',
   CALIBRATION = 'CALIBRATION',
-  
+
   // Machine learning fairness metrics
   INDIVIDUAL_FAIRNESS = 'INDIVIDUAL_FAIRNESS',
   COUNTERFACTUAL_FAIRNESS = 'COUNTERFACTUAL_FAIRNESS',
   CAUSAL_FAIRNESS = 'CAUSAL_FAIRNESS',
-  
+
   // Intersectional analysis
   INTERSECTIONAL_ANALYSIS = 'INTERSECTIONAL_ANALYSIS',
-  MULTI_DIMENSIONAL_FAIRNESS = 'MULTI_DIMENSIONAL_FAIRNESS'
+  MULTI_DIMENSIONAL_FAIRNESS = 'MULTI_DIMENSIONAL_FAIRNESS',
 }
 
 /**
@@ -157,7 +154,7 @@ export enum BiasSeverity {
   LOW = 'LOW',
   MODERATE = 'MODERATE',
   HIGH = 'HIGH',
-  CRITICAL = 'CRITICAL'
+  CRITICAL = 'CRITICAL',
 }
 
 /**
@@ -172,7 +169,7 @@ export enum BiasContext {
   FEEDBACK_GENERATION = 'FEEDBACK_GENERATION',
   PROCTORING_DECISIONS = 'PROCTORING_DECISIONS',
   SYSTEM_RECOMMENDATIONS = 'SYSTEM_RECOMMENDATIONS',
-  OVERALL_HIRING_PROCESS = 'OVERALL_HIRING_PROCESS'
+  OVERALL_HIRING_PROCESS = 'OVERALL_HIRING_PROCESS',
 }
 
 /**
@@ -188,7 +185,7 @@ export enum BiasPattern {
   ALGORITHMIC_BIAS = 'ALGORITHMIC_BIAS',
   CULTURAL_BIAS = 'CULTURAL_BIAS',
   LINGUISTIC_BIAS = 'LINGUISTIC_BIAS',
-  ACCESSIBILITY_BIAS = 'ACCESSIBILITY_BIAS'
+  ACCESSIBILITY_BIAS = 'ACCESSIBILITY_BIAS',
 }
 
 /**
@@ -199,26 +196,26 @@ export enum RemediationStrategy {
   DATA_AUGMENTATION = 'DATA_AUGMENTATION',
   RESAMPLING = 'RESAMPLING',
   BIAS_CORRECTION = 'BIAS_CORRECTION',
-  
+
   // Algorithm-based remediation
   FAIRNESS_CONSTRAINTS = 'FAIRNESS_CONSTRAINTS',
   ADVERSARIAL_DEBIASING = 'ADVERSARIAL_DEBIASING',
   POST_PROCESSING = 'POST_PROCESSING',
-  
+
   // Process-based remediation
   DIVERSE_REVIEW_PANELS = 'DIVERSE_REVIEW_PANELS',
   BLIND_EVALUATION = 'BLIND_EVALUATION',
   STRUCTURED_INTERVIEWS = 'STRUCTURED_INTERVIEWS',
-  
+
   // Training and awareness
   BIAS_TRAINING = 'BIAS_TRAINING',
   CULTURAL_COMPETENCY = 'CULTURAL_COMPETENCY',
   INCLUSIVE_DESIGN = 'INCLUSIVE_DESIGN',
-  
+
   // Monitoring and governance
   CONTINUOUS_MONITORING = 'CONTINUOUS_MONITORING',
   REGULAR_AUDITS = 'REGULAR_AUDITS',
-  STAKEHOLDER_FEEDBACK = 'STAKEHOLDER_FEEDBACK'
+  STAKEHOLDER_FEEDBACK = 'STAKEHOLDER_FEEDBACK',
 }
 
 /**
@@ -234,7 +231,7 @@ export enum ComplianceFramework {
   IEEE_2857 = 'IEEE_2857',
   EU_AI_ACT = 'EU_AI_ACT',
   UK_EQUALITY_ACT = 'UK_EQUALITY_ACT',
-  CANADA_AIDA = 'CANADA_AIDA'
+  CANADA_AIDA = 'CANADA_AIDA',
 }
 
 /**
@@ -283,26 +280,26 @@ export interface BiasAnalysisResult {
   id: string;
   timestamp: Date;
   context: BiasContext;
-  
+
   // Groups being compared
   referenceGroup: DemographicGroup;
   comparisonGroup: DemographicGroup;
-  
+
   // Metrics analyzed
   metric: PerformanceMetric;
   referenceValue: MetricValue;
   comparisonValue: MetricValue;
-  
+
   // Statistical analysis
   statisticalTests: StatisticalTestResult[];
   adverseImpactRatio: number;
-  
+
   // Bias assessment
   biasDetected: boolean;
   biasSeverity: BiasSeverity;
   biasPattern: BiasPattern;
   confidence: number; // 0-1 confidence in bias detection
-  
+
   // Additional context
   sampleSizes: {
     reference: number;
@@ -321,7 +318,7 @@ export interface IntersectionalAnalysis {
   id: string;
   timestamp: Date;
   context: BiasContext;
-  
+
   // Multiple characteristics being analyzed
   characteristics: ProtectedCharacteristic[];
   intersectionalGroups: {
@@ -330,7 +327,7 @@ export interface IntersectionalAnalysis {
     sampleSize: number;
     performanceMetrics: Record<string, MetricValue>;
   }[];
-  
+
   // Analysis results
   overallBiasDetected: boolean;
   individualCharacteristicBias: Record<ProtectedCharacteristic, BiasAnalysisResult>;
@@ -340,7 +337,7 @@ export interface IntersectionalAnalysis {
     compoundingFactor: number;
     explanation: string;
   }[];
-  
+
   // Statistical modeling
   regressionAnalysis: {
     modelType: string;
@@ -349,7 +346,7 @@ export interface IntersectionalAnalysis {
     adjustedRSquared: number;
     multicollinearity: Record<string, number>;
   };
-  
+
   recommendations: RemediationRecommendation[];
 }
 
@@ -361,7 +358,7 @@ export interface TemporalBiasAnalysis {
   characteristic: ProtectedCharacteristic;
   context: BiasContext;
   timeRange: TimeRange;
-  
+
   // Trend data
   trendData: {
     timestamp: Date;
@@ -369,7 +366,7 @@ export interface TemporalBiasAnalysis {
     sampleSize: number;
     confidence: number;
   }[];
-  
+
   // Trend analysis
   overallTrend: TrendDirection;
   trendSignificance: StatisticalSignificance;
@@ -379,7 +376,7 @@ export interface TemporalBiasAnalysis {
     magnitude: number;
     explanation?: string;
   }[];
-  
+
   // Seasonality and patterns
   seasonalPatterns: {
     period: string; // e.g., 'monthly', 'quarterly'
@@ -387,7 +384,7 @@ export interface TemporalBiasAnalysis {
     peakTimes: string[];
     explanation: string;
   }[];
-  
+
   // Predictions
   forecast: {
     timestamp: Date;
@@ -397,7 +394,7 @@ export interface TemporalBiasAnalysis {
       upper: number;
     };
   }[];
-  
+
   alerts: BiasAlert[];
 }
 
@@ -408,7 +405,7 @@ export interface MLFairnessMetrics {
   id: string;
   modelId: string;
   timestamp: Date;
-  
+
   // Demographic parity metrics
   demographicParity: {
     overallScore: number;
@@ -416,7 +413,7 @@ export interface MLFairnessMetrics {
     threshold: number;
     isPassing: boolean;
   };
-  
+
   // Equal opportunity metrics
   equalizedOpportunity: {
     truePositiveRates: Record<string, number>;
@@ -424,7 +421,7 @@ export interface MLFairnessMetrics {
     threshold: number;
     isPassing: boolean;
   };
-  
+
   // Equalized odds
   equalizedOdds: {
     truePositiveRates: Record<string, number>;
@@ -433,14 +430,14 @@ export interface MLFairnessMetrics {
     threshold: number;
     isPassing: boolean;
   };
-  
+
   // Calibration metrics
   calibration: {
     groupCalibrationScores: Record<string, number>;
     overallCalibration: number;
     isPassing: boolean;
   };
-  
+
   // Individual fairness
   individualFairness: {
     averageConsistency: number;
@@ -448,7 +445,7 @@ export interface MLFairnessMetrics {
     threshold: number;
     isPassing: boolean;
   };
-  
+
   // Overall fairness assessment
   overallFairness: {
     score: number;
@@ -467,7 +464,7 @@ export interface BiasAlert {
   timestamp: Date;
   severity: BiasSeverity;
   type: 'THRESHOLD_EXCEEDED' | 'TREND_DETECTED' | 'ANOMALY_FOUND' | 'COMPLIANCE_VIOLATION';
-  
+
   // Alert details
   title: string;
   description: string;
@@ -476,7 +473,7 @@ export interface BiasAlert {
   metric: PerformanceMetric;
   currentValue: number;
   thresholdValue: number;
-  
+
   // Alert configuration
   isActive: boolean;
   acknowledgedBy?: string;
@@ -484,11 +481,11 @@ export interface BiasAlert {
   resolvedBy?: string;
   resolvedAt?: Date;
   resolutionNotes?: string;
-  
+
   // Associated analysis
   analysisId: string;
   recommendations: RemediationRecommendation[];
-  
+
   // Escalation
   escalationLevel: number;
   notifiedUsers: string[];
@@ -502,14 +499,14 @@ export interface RemediationRecommendation {
   id: string;
   timestamp: Date;
   analysisId: string;
-  
+
   // Recommendation details
   strategy: RemediationStrategy;
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   title: string;
   description: string;
   rationale: string;
-  
+
   // Implementation guidance
   implementationSteps: {
     step: number;
@@ -519,7 +516,7 @@ export interface RemediationRecommendation {
     requiredResources: string[];
     timeline: string;
   }[];
-  
+
   // Expected impact
   expectedImpact: {
     biasReduction: number; // Expected percentage reduction in bias
@@ -527,7 +524,7 @@ export interface RemediationRecommendation {
     riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
     sideEffects: string[];
   };
-  
+
   // Monitoring and validation
   successMetrics: {
     metric: string;
@@ -535,7 +532,7 @@ export interface RemediationRecommendation {
     targetValue: number;
     measurementMethod: string;
   }[];
-  
+
   // Implementation tracking
   status: 'PROPOSED' | 'APPROVED' | 'IN_PROGRESS' | 'COMPLETED' | 'REJECTED';
   assignedTo?: string;
@@ -552,12 +549,12 @@ export interface BiasDetectionConfiguration {
   organizationId: string;
   name: string;
   description: string;
-  
+
   // Detection scope
   enabledCharacteristics: ProtectedCharacteristic[];
   enabledContexts: BiasContext[];
   enabledAlgorithms: BiasDetectionAlgorithm[];
-  
+
   // Analysis parameters
   statisticalThresholds: {
     significanceLevel: number; // e.g., 0.05
@@ -565,23 +562,23 @@ export interface BiasDetectionConfiguration {
     adverseImpactThreshold: number; // e.g., 0.8 for 80% rule
     sampleSizeRequirement: number;
   };
-  
+
   // Alert configuration
   alertThresholds: Record<BiasSeverity, number>;
   alertFrequency: 'REAL_TIME' | 'HOURLY' | 'DAILY' | 'WEEKLY' | 'MONTHLY';
   notificationChannels: ('EMAIL' | 'SLACK' | 'SMS' | 'DASHBOARD')[];
-  
+
   // Compliance requirements
   complianceFrameworks: ComplianceFramework[];
   reportingFrequency: 'WEEKLY' | 'MONTHLY' | 'QUARTERLY' | 'ANNUALLY';
   auditTrailRetention: number; // Days
-  
+
   // Advanced settings
   intersectionalAnalysis: boolean;
   temporalAnalysis: boolean;
   mlFairnessMetrics: boolean;
   automaticRemediation: boolean;
-  
+
   // Metadata
   createdBy: string;
   createdAt: Date;
@@ -596,11 +593,19 @@ export interface BiasDetectionConfiguration {
 export interface BiasDetectionDashboard extends DashboardConfiguration {
   // Bias-specific widgets
   widgets: (DashboardConfiguration['widgets'][0] & {
-    type: 'BIAS_OVERVIEW' | 'PROTECTED_CHARACTERISTICS' | 'ADVERSE_IMPACT' | 
-          'TEMPORAL_TRENDS' | 'INTERSECTIONAL_ANALYSIS' | 'ML_FAIRNESS' |
-          'ACTIVE_ALERTS' | 'REMEDIATION_PROGRESS' | 'COMPLIANCE_STATUS' |
-          'STATISTICAL_TESTS' | 'DEMOGRAPHIC_BREAKDOWN';
-    
+    type:
+      | 'BIAS_OVERVIEW'
+      | 'PROTECTED_CHARACTERISTICS'
+      | 'ADVERSE_IMPACT'
+      | 'TEMPORAL_TRENDS'
+      | 'INTERSECTIONAL_ANALYSIS'
+      | 'ML_FAIRNESS'
+      | 'ACTIVE_ALERTS'
+      | 'REMEDIATION_PROGRESS'
+      | 'COMPLIANCE_STATUS'
+      | 'STATISTICAL_TESTS'
+      | 'DEMOGRAPHIC_BREAKDOWN';
+
     biasSpecificConfig?: {
       characteristics?: ProtectedCharacteristic[];
       contexts?: BiasContext[];
@@ -610,7 +615,7 @@ export interface BiasDetectionDashboard extends DashboardConfiguration {
       includeIntersectionalData?: boolean;
     };
   })[];
-  
+
   // Dashboard-level bias settings
   defaultCharacteristics: ProtectedCharacteristic[];
   defaultTimeRange: TimeRange;
@@ -625,15 +630,19 @@ export interface BiasDetectionReport {
   id: string;
   organizationId: string;
   title: string;
-  reportType: 'COMPREHENSIVE' | 'EXECUTIVE_SUMMARY' | 'TECHNICAL_DETAIL' | 
-              'COMPLIANCE' | 'REMEDIATION_PROGRESS';
-  
+  reportType:
+    | 'COMPREHENSIVE'
+    | 'EXECUTIVE_SUMMARY'
+    | 'TECHNICAL_DETAIL'
+    | 'COMPLIANCE'
+    | 'REMEDIATION_PROGRESS';
+
   // Report metadata
   generatedAt: Date;
   generatedBy: string;
   timeRange: TimeRange;
   version: string;
-  
+
   // Executive summary
   executiveSummary: {
     overallBiasStatus: 'COMPLIANT' | 'CONCERNING' | 'NON_COMPLIANT';
@@ -643,43 +652,52 @@ export interface BiasDetectionReport {
     complianceScore: number; // 0-100
     trendDirection: TrendDirection;
   };
-  
+
   // Detailed analysis
-  characteristicAnalysis: Record<ProtectedCharacteristic, {
-    overallStatus: BiasSeverity;
-    keyMetrics: Record<string, MetricValue>;
-    significantFindings: BiasAnalysisResult[];
-    trendAnalysis: TemporalBiasAnalysis;
-    recommendations: RemediationRecommendation[];
-  }>;
-  
+  characteristicAnalysis: Record<
+    ProtectedCharacteristic,
+    {
+      overallStatus: BiasSeverity;
+      keyMetrics: Record<string, MetricValue>;
+      significantFindings: BiasAnalysisResult[];
+      trendAnalysis: TemporalBiasAnalysis;
+      recommendations: RemediationRecommendation[];
+    }
+  >;
+
   // Context-specific analysis
-  contextAnalysis: Record<BiasContext, {
-    biasDetected: boolean;
-    affectedCharacteristics: ProtectedCharacteristic[];
-    severity: BiasSeverity;
-    keyFindings: string[];
-  }>;
-  
+  contextAnalysis: Record<
+    BiasContext,
+    {
+      biasDetected: boolean;
+      affectedCharacteristics: ProtectedCharacteristic[];
+      severity: BiasSeverity;
+      keyFindings: string[];
+    }
+  >;
+
   // Intersectional analysis
   intersectionalFindings: IntersectionalAnalysis[];
-  
+
   // ML fairness assessment
   mlFairnessAssessment?: MLFairnessMetrics[];
-  
+
   // Compliance assessment
-  complianceAssessment: Record<ComplianceFramework, {
-    status: 'COMPLIANT' | 'PARTIAL' | 'NON_COMPLIANT';
-    score: number;
-    requirements: {
-      requirement: string;
-      status: boolean;
-      evidence: string[];
-      gaps: string[];
-    }[];
-    recommendations: string[];
-  }>;
-  
+  complianceAssessment: Record<
+    ComplianceFramework,
+    {
+      status: 'COMPLIANT' | 'PARTIAL' | 'NON_COMPLIANT';
+      score: number;
+      requirements: {
+        requirement: string;
+        status: boolean;
+        evidence: string[];
+        gaps: string[];
+      }[];
+      recommendations: string[];
+    }
+  >;
+
   // Remediation tracking
   remediationProgress: {
     totalRecommendations: number;
@@ -688,7 +706,7 @@ export interface BiasDetectionReport {
     overallEffectiveness: number;
     estimatedCompletionDate?: Date;
   };
-  
+
   // Statistical appendix
   statisticalAppendix: {
     methodologyNotes: string[];
@@ -699,13 +717,16 @@ export interface BiasDetectionReport {
       consistency: number;
       timeliness: number;
     };
-    sampleSizeAnalysis: Record<ProtectedCharacteristic, {
-      actualSize: number;
-      requiredSize: number;
-      adequacy: 'ADEQUATE' | 'MARGINAL' | 'INADEQUATE';
-    }>;
+    sampleSizeAnalysis: Record<
+      ProtectedCharacteristic,
+      {
+        actualSize: number;
+        requiredSize: number;
+        adequacy: 'ADEQUATE' | 'MARGINAL' | 'INADEQUATE';
+      }
+    >;
   };
-  
+
   // Export options
   exportFormats: ReportFormat[];
   attachments: {
@@ -720,9 +741,14 @@ export interface BiasDetectionReport {
  * Bias detection service events for real-time monitoring
  */
 export interface BiasDetectionEvent extends AnalyticsEvent {
-  eventType: 'BIAS_DETECTED' | 'ALERT_TRIGGERED' | 'REMEDIATION_APPLIED' | 
-            'COMPLIANCE_CHECK' | 'THRESHOLD_UPDATED' | 'AUDIT_COMPLETED';
-  
+  eventType:
+    | 'BIAS_DETECTED'
+    | 'ALERT_TRIGGERED'
+    | 'REMEDIATION_APPLIED'
+    | 'COMPLIANCE_CHECK'
+    | 'THRESHOLD_UPDATED'
+    | 'AUDIT_COMPLETED';
+
   biasSpecificData: {
     characteristic?: ProtectedCharacteristic;
     context?: BiasContext;
@@ -811,7 +837,7 @@ export interface BiasDetectionSystem {
   remediationRecommendations: RemediationRecommendation[];
   dashboards: BiasDetectionDashboard[];
   complianceStatus: Record<ComplianceFramework, 'COMPLIANT' | 'PARTIAL' | 'NON_COMPLIANT'>;
-  
+
   // System health and performance
   systemHealth: {
     analysisBacklog: number;
@@ -821,7 +847,7 @@ export interface BiasDetectionSystem {
     systemUptime: number;
     dataQualityScore: number;
   };
-  
+
   // Audit trail
   auditTrail: {
     timestamp: Date;
@@ -839,5 +865,5 @@ export default {
   BiasContext,
   BiasPattern,
   RemediationStrategy,
-  ComplianceFramework
+  ComplianceFramework,
 };

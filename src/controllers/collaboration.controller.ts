@@ -5,7 +5,11 @@
 
 import { Request, Response } from 'express';
 import { WebSocket } from 'ws';
-import { CollaborationService, CursorPosition, CodeChange } from '../services/collaboration.service';
+import {
+  CollaborationService,
+  CursorPosition,
+  CodeChange,
+} from '../services/collaboration.service';
 import { database } from '../services/database.service';
 
 export class CollaborationController {
@@ -32,7 +36,7 @@ export class CollaborationController {
       if (!userId) {
         res.status(401).json({
           success: false,
-          error: 'Authentication required'
+          error: 'Authentication required',
         });
         return;
       }
@@ -40,7 +44,7 @@ export class CollaborationController {
       if (!sessionId) {
         res.status(400).json({
           success: false,
-          error: 'Session ID is required'
+          error: 'Session ID is required',
         });
         return;
       }
@@ -59,15 +63,15 @@ export class CollaborationController {
           assessmentSessionId: session.assessmentSessionId,
           participants: Array.from(session.participants.values()),
           currentCode: session.currentCode,
-          isActive: session.isActive
+          isActive: session.isActive,
         },
-        message: 'Successfully joined collaboration session'
+        message: 'Successfully joined collaboration session',
       });
     } catch (error: any) {
       console.error('Error joining collaboration session:', error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to join collaboration session'
+        error: error.message || 'Failed to join collaboration session',
       });
     }
   };
@@ -84,7 +88,7 @@ export class CollaborationController {
       if (!userId) {
         res.status(401).json({
           success: false,
-          error: 'Authentication required'
+          error: 'Authentication required',
         });
         return;
       }
@@ -93,13 +97,13 @@ export class CollaborationController {
 
       res.status(200).json({
         success: true,
-        message: 'Successfully left collaboration session'
+        message: 'Successfully left collaboration session',
       });
     } catch (error: any) {
       console.error('Error leaving collaboration session:', error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to leave collaboration session'
+        error: error.message || 'Failed to leave collaboration session',
       });
     }
   };
@@ -116,7 +120,7 @@ export class CollaborationController {
       if (!userId) {
         res.status(401).json({
           success: false,
-          error: 'Authentication required'
+          error: 'Authentication required',
         });
         return;
       }
@@ -126,20 +130,20 @@ export class CollaborationController {
       if (!sessionState) {
         res.status(404).json({
           success: false,
-          error: 'Collaboration session not found'
+          error: 'Collaboration session not found',
         });
         return;
       }
 
       res.status(200).json({
         success: true,
-        data: sessionState
+        data: sessionState,
       });
     } catch (error: any) {
       console.error('Error getting session state:', error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to get session state'
+        error: error.message || 'Failed to get session state',
       });
     }
   };
@@ -157,7 +161,7 @@ export class CollaborationController {
       if (!userId) {
         res.status(401).json({
           success: false,
-          error: 'Authentication required'
+          error: 'Authentication required',
         });
         return;
       }
@@ -165,7 +169,7 @@ export class CollaborationController {
       if (!operation || !position || content === undefined) {
         res.status(400).json({
           success: false,
-          error: 'Operation, position, and content are required'
+          error: 'Operation, position, and content are required',
         });
         return;
       }
@@ -176,20 +180,20 @@ export class CollaborationController {
         operation: operation as 'insert' | 'delete' | 'replace',
         position,
         content,
-        ...(length && { length })
+        ...(length && { length }),
       };
 
       await this.collaborationService.applyCodeChange(sessionId, userId, codeChange);
 
       res.status(200).json({
         success: true,
-        message: 'Code change applied successfully'
+        message: 'Code change applied successfully',
       });
     } catch (error: any) {
       console.error('Error applying code change:', error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to apply code change'
+        error: error.message || 'Failed to apply code change',
       });
     }
   };
@@ -207,7 +211,7 @@ export class CollaborationController {
       if (!userId) {
         res.status(401).json({
           success: false,
-          error: 'Authentication required'
+          error: 'Authentication required',
         });
         return;
       }
@@ -215,7 +219,7 @@ export class CollaborationController {
       if (line === undefined || column === undefined) {
         res.status(400).json({
           success: false,
-          error: 'Line and column are required'
+          error: 'Line and column are required',
         });
         return;
       }
@@ -223,20 +227,20 @@ export class CollaborationController {
       const cursor: CursorPosition = {
         line,
         column,
-        ...(selection && { selection })
+        ...(selection && { selection }),
       };
 
       await this.collaborationService.updateCursorPosition(sessionId, userId, cursor);
 
       res.status(200).json({
         success: true,
-        message: 'Cursor position updated successfully'
+        message: 'Cursor position updated successfully',
       });
     } catch (error: any) {
       console.error('Error updating cursor position:', error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to update cursor position'
+        error: error.message || 'Failed to update cursor position',
       });
     }
   };
@@ -253,7 +257,7 @@ export class CollaborationController {
       if (!userId) {
         res.status(401).json({
           success: false,
-          error: 'Authentication required'
+          error: 'Authentication required',
         });
         return;
       }
@@ -263,20 +267,20 @@ export class CollaborationController {
       if (!stats) {
         res.status(404).json({
           success: false,
-          error: 'Collaboration session not found'
+          error: 'Collaboration session not found',
         });
         return;
       }
 
       res.status(200).json({
         success: true,
-        data: stats
+        data: stats,
       });
     } catch (error: any) {
       console.error('Error getting collaboration stats:', error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to get collaboration statistics'
+        error: error.message || 'Failed to get collaboration statistics',
       });
     }
   };
@@ -292,12 +296,14 @@ export class CollaborationController {
     this.collaborationService.handleWebSocketConnection(ws, userId);
 
     // Send connection acknowledgment
-    ws.send(JSON.stringify({
-      type: 'connection_ack',
-      userId,
-      timestamp: new Date(),
-      message: 'Connected to collaboration service'
-    }));
+    ws.send(
+      JSON.stringify({
+        type: 'connection_ack',
+        userId,
+        timestamp: new Date(),
+        message: 'Connected to collaboration service',
+      })
+    );
   };
 
   /**
@@ -346,7 +352,7 @@ export class CollaborationController {
       if (!userId) {
         res.status(401).json({
           success: false,
-          error: 'Authentication required'
+          error: 'Authentication required',
         });
         return;
       }
@@ -358,15 +364,15 @@ export class CollaborationController {
         data: {
           activeSessions: 0,
           totalParticipants: 0,
-          averageSessionDuration: 0
+          averageSessionDuration: 0,
         },
-        message: 'Active sessions data retrieved'
+        message: 'Active sessions data retrieved',
       });
     } catch (error: any) {
       console.error('Error getting active sessions:', error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to get active sessions'
+        error: error.message || 'Failed to get active sessions',
       });
     }
   };

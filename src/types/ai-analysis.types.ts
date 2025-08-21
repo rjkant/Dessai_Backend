@@ -32,7 +32,7 @@ export enum AIModelType {
   AUDIO_ANALYSIS = 'audio_analysis',
   BEHAVIOR_ANALYSIS = 'behavior_analysis',
   OBJECT_DETECTION = 'object_detection',
-  POSE_ESTIMATION = 'pose_estimation'
+  POSE_ESTIMATION = 'pose_estimation',
 }
 
 // Face Detection and Recognition
@@ -79,7 +79,7 @@ export enum FaceLandmarkType {
   MOUTH = 'mouth',
   LEFT_EAR = 'left_ear',
   RIGHT_EAR = 'right_ear',
-  CHIN = 'chin'
+  CHIN = 'chin',
 }
 
 export interface Point2D {
@@ -110,7 +110,7 @@ export enum EmotionType {
   SURPRISED = 'surprised',
   CONFUSED = 'confused',
   FOCUSED = 'focused',
-  STRESSED = 'stressed'
+  STRESSED = 'stressed',
 }
 
 export interface FacialExpression {
@@ -125,7 +125,7 @@ export enum ExpressionType {
   EYEBROW_RAISE = 'eyebrow_raise',
   SQUINT = 'squint',
   MOUTH_OPEN = 'mouth_open',
-  HEAD_TILT = 'head_tilt'
+  HEAD_TILT = 'head_tilt',
 }
 
 export interface FaceRecognitionResult {
@@ -142,7 +142,7 @@ export enum VerificationStatus {
   MULTIPLE_FACES = 'multiple_faces',
   NO_FACE = 'no_face',
   POOR_QUALITY = 'poor_quality',
-  SUSPICIOUS = 'suspicious'
+  SUSPICIOUS = 'suspicious',
 }
 
 // Gaze Tracking
@@ -169,7 +169,7 @@ export enum ScreenRegion {
   BROWSER_TAB = 'browser_tab',
   OUTSIDE_BROWSER = 'outside_browser',
   SECONDARY_MONITOR = 'secondary_monitor',
-  UNKNOWN = 'unknown'
+  UNKNOWN = 'unknown',
 }
 
 export interface EyeMovement {
@@ -186,7 +186,7 @@ export enum EyeMovementType {
   SACCADE = 'saccade',
   SMOOTH_PURSUIT = 'smooth_pursuit',
   MICROSACCADE = 'microsaccade',
-  BLINK = 'blink'
+  BLINK = 'blink',
 }
 
 export interface AttentionMetrics {
@@ -202,14 +202,14 @@ export enum ScanPattern {
   RANDOM = 'random',
   FOCUSED = 'focused',
   SCATTERED = 'scattered',
-  REPETITIVE = 'repetitive'
+  REPETITIVE = 'repetitive',
 }
 
 export enum CognitiveLoadLevel {
   LOW = 'low',
   MODERATE = 'moderate',
   HIGH = 'high',
-  OVERLOADED = 'overloaded'
+  OVERLOADED = 'overloaded',
 }
 
 export interface GazeViolation {
@@ -226,14 +226,14 @@ export enum GazeViolationType {
   MULTIPLE_SCREENS = 'multiple_screens',
   READING_ASSISTANCE = 'reading_assistance',
   SUSPICIOUS_BEHAVIOR = 'suspicious_behavior',
-  PROLONGED_ABSENCE = 'prolonged_absence'
+  PROLONGED_ABSENCE = 'prolonged_absence',
 }
 
 export enum ViolationSeverity {
   LOW = 'low',
   MEDIUM = 'medium',
   HIGH = 'high',
-  CRITICAL = 'critical'
+  CRITICAL = 'critical',
 }
 
 // Audio Analysis
@@ -292,7 +292,7 @@ export enum AudioPatternType {
   BACKGROUND_MUSIC = 'background_music',
   ENVIRONMENTAL_NOISE = 'environmental_noise',
   ELECTRONIC_DEVICE = 'electronic_device',
-  PAPER_RUSTLING = 'paper_rustling'
+  PAPER_RUSTLING = 'paper_rustling',
 }
 
 export interface SpeechAnalysis {
@@ -314,7 +314,7 @@ export enum SentimentType {
   POSITIVE = 'positive',
   NEGATIVE = 'negative',
   NEUTRAL = 'neutral',
-  MIXED = 'mixed'
+  MIXED = 'mixed',
 }
 
 export interface EnvironmentalAudioAnalysis {
@@ -329,7 +329,7 @@ export enum RoomSizeEstimate {
   MEDIUM = 'medium',
   LARGE = 'large',
   OPEN_SPACE = 'open_space',
-  UNKNOWN = 'unknown'
+  UNKNOWN = 'unknown',
 }
 
 export interface AcousticProperties {
@@ -354,7 +354,7 @@ export enum BackgroundActivityType {
   PETS = 'pets',
   APPLIANCES = 'appliances',
   CHILDREN = 'children',
-  OFFICE_ENVIRONMENT = 'office_environment'
+  OFFICE_ENVIRONMENT = 'office_environment',
 }
 
 export interface LocationIndicator {
@@ -370,7 +370,7 @@ export enum LocationType {
   CAFE = 'cafe',
   PUBLIC_SPACE = 'public_space',
   EDUCATIONAL_INSTITUTION = 'educational_institution',
-  UNKNOWN = 'unknown'
+  UNKNOWN = 'unknown',
 }
 
 export interface AudioViolation {
@@ -390,7 +390,7 @@ export enum AudioViolationType {
   PHONE_CALL = 'phone_call',
   SUSPICIOUS_SOUNDS = 'suspicious_sounds',
   AUDIO_TAMPERING = 'audio_tampering',
-  DICTATION_SOFTWARE = 'dictation_software'
+  DICTATION_SOFTWARE = 'dictation_software',
 }
 
 export interface AudioEvidence {
@@ -432,14 +432,14 @@ export enum BehaviorType {
   BREAK_TAKING = 'break_taking',
   QUESTION_NAVIGATION = 'question_navigation',
   ANSWER_MODIFICATION = 'answer_modification',
-  TIME_MANAGEMENT = 'time_management'
+  TIME_MANAGEMENT = 'time_management',
 }
 
 export enum TrendDirection {
   INCREASING = 'increasing',
   DECREASING = 'decreasing',
   STABLE = 'stable',
-  VOLATILE = 'volatile'
+  VOLATILE = 'volatile',
 }
 
 export interface BehaviorAnomaly {
@@ -460,7 +460,7 @@ export enum AnomalyType {
   EXTERNAL_INFLUENCE = 'external_influence',
   TECHNOLOGY_ASSISTANCE = 'technology_assistance',
   KNOWLEDGE_INCONSISTENCY = 'knowledge_inconsistency',
-  COLLABORATION_INDICATORS = 'collaboration_indicators'
+  COLLABORATION_INDICATORS = 'collaboration_indicators',
 }
 
 export interface AnomalyContext {
@@ -490,7 +490,7 @@ export enum RiskCategory {
   EXTERNAL_ASSISTANCE = 'external_assistance',
   UNAUTHORIZED_RESOURCES = 'unauthorized_resources',
   TECHNICAL_VIOLATIONS = 'technical_violations',
-  BEHAVIORAL_ANOMALIES = 'behavioral_anomalies'
+  BEHAVIORAL_ANOMALIES = 'behavioral_anomalies',
 }
 
 export interface RiskFactor {
@@ -506,7 +506,7 @@ export enum RiskRecommendation {
   REVIEW = 'review',
   FLAG = 'flag',
   REJECT = 'reject',
-  INVESTIGATE = 'investigate'
+  INVESTIGATE = 'investigate',
 }
 
 export interface RecommendedAction {
@@ -524,14 +524,14 @@ export enum ActionType {
   REQUEST_VERIFICATION = 'request_verification',
   ESCALATE_REVIEW = 'escalate_review',
   LOG_INCIDENT = 'log_incident',
-  GENERATE_REPORT = 'generate_report'
+  GENERATE_REPORT = 'generate_report',
 }
 
 export enum ActionPriority {
   LOW = 'low',
   MEDIUM = 'medium',
   HIGH = 'high',
-  URGENT = 'urgent'
+  URGENT = 'urgent',
 }
 
 // AI Processing Pipeline
@@ -567,7 +567,7 @@ export enum VideoFormat {
   YUV = 'yuv',
   JPEG = 'jpeg',
   PNG = 'png',
-  WEBP = 'webp'
+  WEBP = 'webp',
 }
 
 export interface AudioSegmentData {
@@ -584,7 +584,7 @@ export enum AudioFormat {
   WAV = 'wav',
   MP3 = 'mp3',
   AAC = 'aac',
-  OGG = 'ogg'
+  OGG = 'ogg',
 }
 
 export interface ProcessingMetadata {
@@ -619,7 +619,7 @@ export enum AccommodationType {
   BREAKS_ALLOWED = 'breaks_allowed',
   ASSISTIVE_TECHNOLOGY = 'assistive_technology',
   MODIFIED_INTERFACE = 'modified_interface',
-  ALTERNATIVE_FORMAT = 'alternative_format'
+  ALTERNATIVE_FORMAT = 'alternative_format',
 }
 
 export interface DeviceInfo {
@@ -642,7 +642,7 @@ export enum LightingCondition {
   FAIR = 'fair',
   POOR = 'poor',
   TOO_DARK = 'too_dark',
-  TOO_BRIGHT = 'too_bright'
+  TOO_BRIGHT = 'too_bright',
 }
 
 export interface MicrophoneInfo {
@@ -655,7 +655,7 @@ export enum AudioQualityLevel {
   EXCELLENT = 'excellent',
   GOOD = 'good',
   FAIR = 'fair',
-  POOR = 'poor'
+  POOR = 'poor',
 }
 
 export interface ScreenInfo {
@@ -703,7 +703,7 @@ export enum NetworkStability {
   GOOD = 'good',
   FAIR = 'fair',
   POOR = 'poor',
-  UNSTABLE = 'unstable'
+  UNSTABLE = 'unstable',
 }
 
 export interface ExternalFactor {
@@ -717,7 +717,7 @@ export enum ExternalFactorType {
   CONSTRUCTION = 'construction',
   EVENTS = 'events',
   TECHNICAL_ISSUES = 'technical_issues',
-  POWER_OUTAGE = 'power_outage'
+  POWER_OUTAGE = 'power_outage',
 }
 
 export interface AIProcessingConfig {
@@ -769,14 +769,14 @@ export enum FallbackStrategy {
   GRACEFUL_DEGRADATION = 'graceful_degradation',
   SKIP_PROCESSING = 'skip_processing',
   USE_CACHED_RESULTS = 'use_cached_results',
-  REDUCE_QUALITY = 'reduce_quality'
+  REDUCE_QUALITY = 'reduce_quality',
 }
 
 export enum ProcessingPriority {
   LOW = 'low',
   NORMAL = 'normal',
   HIGH = 'high',
-  REALTIME = 'realtime'
+  REALTIME = 'realtime',
 }
 
 // AI Processing Response
@@ -898,7 +898,7 @@ export enum ErrorSeverity {
   INFO = 'info',
   WARNING = 'warning',
   ERROR = 'error',
-  CRITICAL = 'critical'
+  CRITICAL = 'critical',
 }
 
 // Service Configuration
@@ -976,7 +976,7 @@ export enum LogLevel {
   DEBUG = 'debug',
   INFO = 'info',
   WARN = 'warn',
-  ERROR = 'error'
+  ERROR = 'error',
 }
 
 export interface AISecurityOptions {

@@ -1,6 +1,6 @@
 /**
  * Logger Utility - Enhanced for Observability
- * 
+ *
  * Centralized logging system for the Dessai Backend application
  * Provides structured logging with different levels, contexts, and output formats
  * Enhanced with observability features and specialized domain loggers
@@ -17,7 +17,7 @@ export enum LogLevel {
   WARN = 'warn',
   INFO = 'info',
   HTTP = 'http',
-  DEBUG = 'debug'
+  DEBUG = 'debug',
 }
 
 export interface LogContext {
@@ -30,7 +30,15 @@ export interface LogContext {
   action?: string;
   resource?: string;
   duration?: number;
-  category?: 'security' | 'business' | 'technical' | 'compliance' | 'integration' | 'performance' | 'http' | 'user_activity';
+  category?:
+    | 'security'
+    | 'business'
+    | 'technical'
+    | 'compliance'
+    | 'integration'
+    | 'performance'
+    | 'http'
+    | 'user_activity';
   type?: string;
   [key: string]: any;
 }
@@ -85,15 +93,15 @@ export class Logger {
       winston.format.colorize(),
       winston.format.printf(({ timestamp, level, message, context, error }) => {
         let log = `${timestamp} [${level}]: ${message}`;
-        
+
         if (context && Object.keys(context).length > 0) {
           log += ` | Context: ${JSON.stringify(context)}`;
         }
-        
+
         if (error && typeof error === 'object' && 'stack' in error) {
           log += `\n${(error as Error).stack}`;
         }
-        
+
         return log;
       })
     );
@@ -105,7 +113,7 @@ export class Logger {
       transports.push(
         new winston.transports.Console({
           format: consoleFormat,
-          level: 'debug'
+          level: 'debug',
         })
       );
     }
@@ -120,16 +128,16 @@ export class Logger {
           format: customFormat,
           maxsize: 50 * 1024 * 1024, // 50MB
           maxFiles: 10,
-          tailable: true
+          tailable: true,
         }),
-        
+
         // Combined logs
         new winston.transports.File({
           filename: path.join(logDir, 'combined.log'),
           format: customFormat,
           maxsize: 100 * 1024 * 1024, // 100MB
           maxFiles: 10,
-          tailable: true
+          tailable: true,
         }),
 
         // HTTP access logs
@@ -139,7 +147,7 @@ export class Logger {
           format: customFormat,
           maxsize: 50 * 1024 * 1024, // 50MB
           maxFiles: 5,
-          tailable: true
+          tailable: true,
         })
       );
     }
@@ -149,7 +157,7 @@ export class Logger {
       format: customFormat,
       transports,
       exitOnError: false,
-      silent: process.env['NODE_ENV'] === 'test'
+      silent: process.env['NODE_ENV'] === 'test',
     });
   }
 
@@ -173,24 +181,38 @@ export class Logger {
   static createRequestContext(req: Request): LogContext {
     const context: LogContext = {
       method: req.method,
-      url: req.originalUrl || req.url
+      url: req.originalUrl || req.url,
     };
-    
+
     const requestId = req.headers['x-request-id'] as string;
-    if (requestId) context.requestId = requestId;
-    
-    if ((req as any).user?.id) context.userId = (req as any).user.id;
-    if ((req as any).user?.organizationId) context.organizationId = (req as any).user.organizationId;
-    
+    if (requestId) {
+      context.requestId = requestId;
+    }
+
+    if ((req as any).user?.id) {
+      context.userId = (req as any).user.id;
+    }
+    if ((req as any).user?.organizationId) {
+      context.organizationId = (req as any).user.organizationId;
+    }
+
     const ipAddress = req.ip || req.connection?.remoteAddress;
-    if (ipAddress) context.ipAddress = ipAddress;
-    
+    if (ipAddress) {
+      context.ipAddress = ipAddress;
+    }
+
     const userAgent = req.headers['user-agent'];
-    if (userAgent) context.userAgent = userAgent;
-    
-    if (Object.keys(req.query).length > 0) context['query'] = req.query;
-    if (req.method !== 'GET' && req.body) context['body'] = this.sanitizeRequestBody(req.body);
-    
+    if (userAgent) {
+      context.userAgent = userAgent;
+    }
+
+    if (Object.keys(req.query).length > 0) {
+      context['query'] = req.query;
+    }
+    if (req.method !== 'GET' && req.body) {
+      context['body'] = this.sanitizeRequestBody(req.body);
+    }
+
     return context;
   }
 
@@ -203,8 +225,15 @@ export class Logger {
     }
 
     const sanitized = { ...body };
-    const sensitiveFields = ['password', 'passwordHash', 'token', 'secret', 'apiKey', 'authorization'];
-    
+    const sensitiveFields = [
+      'password',
+      'passwordHash',
+      'token',
+      'secret',
+      'apiKey',
+      'authorization',
+    ];
+
     for (const field of sensitiveFields) {
       if (sanitized[field]) {
         sanitized[field] = '[REDACTED]';
@@ -219,8 +248,12 @@ export class Logger {
    */
   error(message: string, error?: Error, context?: LogContext): void {
     const options: { error?: Error; context?: LogContext } = {};
-    if (error) options.error = error;
-    if (context) options.context = context;
+    if (error) {
+      options.error = error;
+    }
+    if (context) {
+      options.context = context;
+    }
     this.log(LogLevel.ERROR, message, options);
   }
 
@@ -229,7 +262,9 @@ export class Logger {
    */
   warn(message: string, context?: LogContext): void {
     const options: { context?: LogContext } = {};
-    if (context) options.context = context;
+    if (context) {
+      options.context = context;
+    }
     this.log(LogLevel.WARN, message, options);
   }
 
@@ -238,7 +273,9 @@ export class Logger {
    */
   info(message: string, context?: LogContext): void {
     const options: { context?: LogContext } = {};
-    if (context) options.context = context;
+    if (context) {
+      options.context = context;
+    }
     this.log(LogLevel.INFO, message, options);
   }
 
@@ -247,7 +284,9 @@ export class Logger {
    */
   http(message: string, context?: LogContext): void {
     const options: { context?: LogContext } = {};
-    if (context) options.context = context;
+    if (context) {
+      options.context = context;
+    }
     this.log(LogLevel.HTTP, message, options);
   }
 
@@ -256,27 +295,33 @@ export class Logger {
    */
   debug(message: string, context?: LogContext): void {
     const options: { context?: LogContext } = {};
-    if (context) options.context = context;
+    if (context) {
+      options.context = context;
+    }
     this.log(LogLevel.DEBUG, message, options);
   }
 
   /**
    * Log with specified level
    */
-  private log(level: LogLevel, message: string, options: { error?: Error; context?: LogContext } = {}): void {
+  private log(
+    level: LogLevel,
+    message: string,
+    options: { error?: Error; context?: LogContext } = {}
+  ): void {
     const { error, context } = options;
     const mergedContext = { ...this.defaultContext, ...context };
 
     const logEntry: any = {
       message,
-      context: Object.keys(mergedContext).length > 0 ? mergedContext : undefined
+      context: Object.keys(mergedContext).length > 0 ? mergedContext : undefined,
     };
 
     if (error) {
       logEntry.error = {
         name: error.name,
         message: error.message,
-        stack: error.stack
+        stack: error.stack,
       };
     }
 
@@ -291,7 +336,7 @@ export class Logger {
       ...context,
       action,
       duration,
-      performanceMetric: true
+      performanceMetric: true,
     });
   }
 
@@ -302,7 +347,7 @@ export class Logger {
     this.warn(`Security Event: ${event}`, {
       ...context,
       securityEvent: true,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -315,7 +360,7 @@ export class Logger {
       action,
       resource,
       auditEvent: true,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -327,7 +372,7 @@ export class Logger {
       ...context,
       businessEvent: true,
       eventData: data,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -344,7 +389,7 @@ export class Logger {
    * Flush all log buffers
    */
   async flush(): Promise<void> {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       this.winston.on('finish', resolve);
       this.winston.end();
     });
@@ -425,7 +470,13 @@ export const assessmentLogger = {
     });
   },
 
-  completed: (assessmentId: string, userId: string, duration: number, score: number, result: string) => {
+  completed: (
+    assessmentId: string,
+    userId: string,
+    duration: number,
+    score: number,
+    result: string
+  ) => {
     logger.info('Assessment completed', {
       type: 'assessment',
       action: 'completed',
@@ -451,7 +502,13 @@ export const codeExecutionLogger = {
     });
   },
 
-  completed: (executionId: string, language: string, duration: number, memory: number, result: string) => {
+  completed: (
+    executionId: string,
+    language: string,
+    duration: number,
+    memory: number,
+    result: string
+  ) => {
     logger.info('Code execution completed', {
       type: 'code_execution',
       action: 'completed',
@@ -466,7 +523,12 @@ export const codeExecutionLogger = {
 };
 
 export const securityLogger = {
-  suspiciousActivity: (userId: string, activity: string, ip: string, details: Record<string, any>) => {
+  suspiciousActivity: (
+    userId: string,
+    activity: string,
+    ip: string,
+    details: Record<string, any>
+  ) => {
     logger.warn('Suspicious activity detected', {
       type: 'security',
       action: 'suspicious_activity',
@@ -531,4 +593,3 @@ export const logAudit = (action: string, resource: string, context?: LogContext)
 export const logBusiness = (event: string, data?: any, context?: LogContext): void => {
   logger.business(event, data, context);
 };
-

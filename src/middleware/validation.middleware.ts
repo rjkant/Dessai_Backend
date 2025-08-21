@@ -1,6 +1,6 @@
 /**
  * Persona: Quality Assurance Engineer
- * 
+ *
  * Validation middleware for request validation using express-validator
  * Provides reusable validation functions for API endpoints
  */
@@ -14,7 +14,7 @@ export class ValidationMiddleware {
    */
   static handleValidationErrors(req: Request, res: Response, next: NextFunction): void {
     const errors = validationResult(req);
-    
+
     if (!errors.isEmpty()) {
       res.status(400).json({
         success: false,
@@ -27,7 +27,7 @@ export class ValidationMiddleware {
       });
       return;
     }
-    
+
     next();
   }
 
@@ -72,7 +72,8 @@ export class ValidationMiddleware {
   static validateUUID(paramName: string) {
     return (req: Request, res: Response, next: NextFunction): void => {
       const uuid = req.params[paramName];
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      const uuidRegex =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
       if (!uuidRegex.test(uuid)) {
         res.status(400).json({
@@ -164,7 +165,7 @@ export class ValidationMiddleware {
   static requireHeaders(headers: string[]) {
     return (req: Request, res: Response, next: NextFunction): void => {
       const missingHeaders = headers.filter(header => !req.headers[header.toLowerCase()]);
-      
+
       if (missingHeaders.length > 0) {
         res.status(400).json({
           success: false,
@@ -172,7 +173,7 @@ export class ValidationMiddleware {
         });
         return;
       }
-      
+
       next();
     };
   }

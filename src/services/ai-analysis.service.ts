@@ -30,7 +30,7 @@ import {
   ActionType,
   ActionPriority,
   RiskAssessment,
-  VerificationStatus
+  VerificationStatus,
 } from '../types/ai-analysis.types';
 
 const logger = new Logger('AIAnalysisEngine');
@@ -45,7 +45,7 @@ export class AIAnalysisEngine extends EventEmitter {
     successfulRequests: 0,
     failedRequests: 0,
     averageLatency: 0,
-    queueSize: 0
+    queueSize: 0,
   };
 
   constructor(
@@ -64,7 +64,7 @@ export class AIAnalysisEngine extends EventEmitter {
     try {
       logger.info('Initializing AI Analysis Engine', {
         modelCount: this.options.models.length,
-        enabledModels: this.options.models.filter(m => m.enabled).length
+        enabledModels: this.options.models.filter(m => m.enabled).length,
       });
 
       // Load and validate AI models
@@ -85,9 +85,8 @@ export class AIAnalysisEngine extends EventEmitter {
       this.emit('initialized', {
         timestamp: new Date(),
         modelsLoaded: this.models.size,
-        status: 'ready'
+        status: 'ready',
       });
-
     } catch (error) {
       logger.error('Failed to initialize AI Analysis Engine', error);
       throw new WebRTCError(
@@ -114,16 +113,15 @@ export class AIAnalysisEngine extends EventEmitter {
       try {
         await this.loadModel(modelConfig);
         this.models.set(modelConfig.type, modelConfig);
-        
+
         logger.info('AI model loaded successfully', {
           type: modelConfig.type,
           name: modelConfig.name,
-          version: modelConfig.version
+          version: modelConfig.version,
         });
-
       } catch (error) {
         logger.error(`Failed to load AI model: ${modelConfig.name}`, error);
-        
+
         // Continue loading other models if one fails
         if (modelConfig.type === AIModelType.FACE_DETECTION) {
           // Face detection is critical - fail initialization
@@ -143,7 +141,7 @@ export class AIAnalysisEngine extends EventEmitter {
   private async loadModel(config: AIModelConfig): Promise<void> {
     // In a real implementation, this would load TensorFlow.js models
     // For now, we'll simulate model loading with validation
-    
+
     logger.info(`Loading model: ${config.name} (${config.type})`);
 
     // Validate model configuration
@@ -155,11 +153,15 @@ export class AIAnalysisEngine extends EventEmitter {
     await new Promise(resolve => setTimeout(resolve, 100));
 
     // Cache model metadata in Redis
-    await this.redisService.set(`ai:model:${config.type}`, JSON.stringify({
-      config,
-      loadedAt: new Date(),
-      status: 'ready'
-    }), 3600); // 1 hour cache
+    await this.redisService.set(
+      `ai:model:${config.type}`,
+      JSON.stringify({
+        config,
+        loadedAt: new Date(),
+        status: 'ready',
+      }),
+      3600
+    ); // 1 hour cache
   }
 
   /**
@@ -170,14 +172,14 @@ export class AIAnalysisEngine extends EventEmitter {
 
     // Set up processing queue configurations
     const queueConfig = this.options.processing.queueSettings;
-    
+
     // Initialize processing workers (simulated)
     // In a real implementation, this would set up worker threads or processes
-    
+
     logger.info('Processing pipeline initialized', {
       maxConcurrentRequests: this.options.processing.maxConcurrentRequests,
       queueMaxSize: queueConfig.maxSize,
-      queueTimeout: queueConfig.timeoutMs
+      queueTimeout: queueConfig.timeoutMs,
     });
   }
 
@@ -202,7 +204,7 @@ export class AIAnalysisEngine extends EventEmitter {
     }
 
     const interval = this.options.monitoring.performance.metricsInterval;
-    
+
     setInterval(() => {
       this.emitPerformanceMetrics();
     }, interval);
@@ -218,7 +220,7 @@ export class AIAnalysisEngine extends EventEmitter {
       logger.info('Processing AI analysis request', {
         requestId: request.id,
         sessionId: request.sessionId,
-        priority: request.priority
+        priority: request.priority,
       });
 
       // Validate request
@@ -240,11 +242,10 @@ export class AIAnalysisEngine extends EventEmitter {
       this.activeProcessing.delete(request.id);
 
       return response;
-
     } catch (error) {
       logger.error('Failed to process AI analysis request', {
         requestId: request.id,
-        error: (error as any).message
+        error: (error as any).message,
       });
 
       throw new WebRTCError(
@@ -291,7 +292,7 @@ export class AIAnalysisEngine extends EventEmitter {
       }
 
       const processingTime = Date.now() - startTime;
-      
+
       const response: AIProcessingResponse = {
         id: `resp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         requestId: request.id,
@@ -300,27 +301,26 @@ export class AIAnalysisEngine extends EventEmitter {
         processingTime,
         results,
         performance: this.calculatePerformanceMetrics(processingTime),
-        errors: errors.length > 0 ? errors : undefined
+        errors: errors.length > 0 ? errors : undefined,
       };
 
       // Update statistics
       this.processingStats.totalRequests++;
       this.processingStats.successfulRequests++;
-      this.processingStats.averageLatency = 
+      this.processingStats.averageLatency =
         (this.processingStats.averageLatency + processingTime) / 2;
 
       // Emit processing event
       this.emit('analysis-completed', {
         sessionId: request.sessionId,
         response,
-        performance: response.performance
+        performance: response.performance,
       });
 
       return response;
-
     } catch (error) {
       const processingTime = Date.now() - startTime;
-      
+
       this.processingStats.totalRequests++;
       this.processingStats.failedRequests++;
 
@@ -328,7 +328,7 @@ export class AIAnalysisEngine extends EventEmitter {
         code: 'ANALYSIS_EXECUTION_FAILED',
         message: (error as any).message,
         severity: ErrorSeverity.ERROR,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       return {
@@ -339,7 +339,7 @@ export class AIAnalysisEngine extends EventEmitter {
         processingTime,
         results,
         performance: this.calculatePerformanceMetrics(processingTime),
-        errors: [processingError]
+        errors: [processingError],
       };
     }
   }
@@ -352,45 +352,58 @@ export class AIAnalysisEngine extends EventEmitter {
 
     // Simulate face detection processing
     // In a real implementation, this would use TensorFlow.js models
-    
+
     const result: FaceDetectionResult = {
       id: `face_${Date.now()}`,
       timestamp: new Date(),
       sessionId: request.sessionId,
-      detections: [{
-        id: `detection_${Date.now()}`,
-        boundingBox: { x: 100, y: 50, width: 200, height: 250 },
-        confidence: 0.95,
-        landmarks: [
-          { type: 'left_eye' as any, coordinates: { x: 150, y: 120 }, confidence: 0.92 },
-          { type: 'right_eye' as any, coordinates: { x: 200, y: 120 }, confidence: 0.94 },
-          { type: 'nose' as any, coordinates: { x: 175, y: 160 }, confidence: 0.89 },
-          { type: 'mouth' as any, coordinates: { x: 175, y: 210 }, confidence: 0.91 }
-        ],
-        features: {
-          age: 25,
-          gender: 'unknown',
-          emotion: {
-            dominant: 'focused' as any,
-            scores: { neutral: 0.7, focused: 0.8, happy: 0.1, sad: 0.05, angry: 0.05, fearful: 0.05, disgusted: 0.05, surprised: 0.05, confused: 0.05, stressed: 0.05 } as any,
-            confidence: 0.85
-          }
+      detections: [
+        {
+          id: `detection_${Date.now()}`,
+          boundingBox: { x: 100, y: 50, width: 200, height: 250 },
+          confidence: 0.95,
+          landmarks: [
+            { type: 'left_eye' as any, coordinates: { x: 150, y: 120 }, confidence: 0.92 },
+            { type: 'right_eye' as any, coordinates: { x: 200, y: 120 }, confidence: 0.94 },
+            { type: 'nose' as any, coordinates: { x: 175, y: 160 }, confidence: 0.89 },
+            { type: 'mouth' as any, coordinates: { x: 175, y: 210 }, confidence: 0.91 },
+          ],
+          features: {
+            age: 25,
+            gender: 'unknown',
+            emotion: {
+              dominant: 'focused' as any,
+              scores: {
+                neutral: 0.7,
+                focused: 0.8,
+                happy: 0.1,
+                sad: 0.05,
+                angry: 0.05,
+                fearful: 0.05,
+                disgusted: 0.05,
+                surprised: 0.05,
+                confused: 0.05,
+                stressed: 0.05,
+              } as any,
+              confidence: 0.85,
+            },
+          },
+          recognition: {
+            candidateId: request.userId,
+            similarity: 0.92,
+            isAuthorized: true,
+            confidence: 0.9,
+            verificationStatus: VerificationStatus.VERIFIED,
+          },
         },
-        recognition: {
-          candidateId: request.userId,
-          similarity: 0.92,
-          isAuthorized: true,
-          confidence: 0.90,
-          verificationStatus: VerificationStatus.VERIFIED
-        }
-      }],
+      ],
       confidence: 0.95,
       processingTime: 150,
       metadata: {
         imageWidth: 640,
         imageHeight: 480,
-        frameNumber: 1
-      }
+        frameNumber: 1,
+      },
     };
 
     return result;
@@ -412,7 +425,7 @@ export class AIAnalysisEngine extends EventEmitter {
         y: 240,
         confidence: 0.88,
         onScreen: true,
-        screenRegion: 'assessment_area' as any
+        screenRegion: 'assessment_area' as any,
       },
       eyeMovements: [
         {
@@ -421,17 +434,17 @@ export class AIAnalysisEngine extends EventEmitter {
           velocity: 0,
           amplitude: 0,
           startPoint: { x: 320, y: 240 },
-          endPoint: { x: 320, y: 240 }
-        }
+          endPoint: { x: 320, y: 240 },
+        },
       ],
       attentionMetrics: {
         focusScore: 85,
         distractionEvents: 0,
         averageFixationDuration: 250,
         scanPattern: 'focused' as any,
-        cognitiveLoad: 'moderate' as any
+        cognitiveLoad: 'moderate' as any,
       },
-      violations: []
+      violations: [],
     };
 
     return result;
@@ -454,29 +467,29 @@ export class AIAnalysisEngine extends EventEmitter {
           peak: 0.8,
           average: 0.12,
           silenceRatio: 0.7,
-          dynamicRange: 0.65
+          dynamicRange: 0.65,
         },
         frequency: {
           fundamentalFrequency: 150,
           harmonics: [300, 450, 600],
           spectralCentroid: 2000,
           spectralRolloff: 8000,
-          mfcc: [1.2, 0.8, -0.5, 0.3, -0.1, 0.7, -0.2, 0.4, -0.3, 0.1, 0.2, -0.4, 0.6]
+          mfcc: [1.2, 0.8, -0.5, 0.3, -0.1, 0.7, -0.2, 0.4, -0.3, 0.1, 0.2, -0.4, 0.6],
         },
         quality: {
           snr: 25,
           clarity: 0.85,
           distortion: 0.05,
-          backgroundNoise: 0.1
+          backgroundNoise: 0.1,
         },
         patterns: [
           {
             type: 'keyboard_typing' as any,
             confidence: 0.7,
             duration: 500,
-            intensity: 0.3
-          }
-        ]
+            intensity: 0.3,
+          },
+        ],
       },
       environmentalAnalysis: {
         roomSize: 'medium' as any,
@@ -484,25 +497,25 @@ export class AIAnalysisEngine extends EventEmitter {
           reverberation: 0.3,
           echo: 0.1,
           dampening: 0.6,
-          resonance: 0.2
+          resonance: 0.2,
         },
         backgroundActivity: [
           {
             type: 'office_environment' as any,
             intensity: 0.2,
             confidence: 0.8,
-            duration: 1000
-          }
+            duration: 1000,
+          },
         ],
         locationIndicators: [
           {
             type: 'home' as any,
             confidence: 0.75,
-            evidence: ['quiet_environment', 'minimal_background_noise']
-          }
-        ]
+            evidence: ['quiet_environment', 'minimal_background_noise'],
+          },
+        ],
       },
-      violations: []
+      violations: [],
     };
 
     return result;
@@ -511,7 +524,9 @@ export class AIAnalysisEngine extends EventEmitter {
   /**
    * Process behavior analysis
    */
-  private async processBehaviorAnalysis(request: AIProcessingRequest): Promise<BehaviorAnalysisResult> {
+  private async processBehaviorAnalysis(
+    request: AIProcessingRequest
+  ): Promise<BehaviorAnalysisResult> {
     logger.info('Processing behavior analysis', { requestId: request.id });
 
     // Simulate behavior analysis
@@ -526,7 +541,7 @@ export class AIAnalysisEngine extends EventEmitter {
           duration: 5000,
           intensity: 0.7,
           normalcy: 0.9,
-          trend: 'stable' as any
+          trend: 'stable' as any,
         },
         {
           type: 'question_navigation' as any,
@@ -534,8 +549,8 @@ export class AIAnalysisEngine extends EventEmitter {
           duration: 10000,
           intensity: 0.5,
           normalcy: 0.85,
-          trend: 'stable' as any
-        }
+          trend: 'stable' as any,
+        },
       ],
       anomalies: [],
       riskScore: {
@@ -545,7 +560,7 @@ export class AIAnalysisEngine extends EventEmitter {
           external_assistance: 3,
           unauthorized_resources: 2,
           technical_violations: 3,
-          behavioral_anomalies: 2
+          behavioral_anomalies: 2,
         } as any,
         factors: [
           {
@@ -553,12 +568,12 @@ export class AIAnalysisEngine extends EventEmitter {
             factor: 'Face verification successful',
             impact: 5,
             confidence: 0.92,
-            evidence: ['face_detection_confidence_95%']
-          }
+            evidence: ['face_detection_confidence_95%'],
+          },
         ],
-        recommendation: 'accept' as any
+        recommendation: 'accept' as any,
       },
-      recommendedActions: []
+      recommendedActions: [],
     };
 
     return result;
@@ -567,7 +582,9 @@ export class AIAnalysisEngine extends EventEmitter {
   /**
    * Generate aggregated analysis from individual results
    */
-  private async generateAggregatedAnalysis(results: AIAnalysisResults): Promise<AggregatedAnalysis> {
+  private async generateAggregatedAnalysis(
+    results: AIAnalysisResults
+  ): Promise<AggregatedAnalysis> {
     const riskFactors: number[] = [];
     const violations: any[] = [];
     const actions: RecommendedAction[] = [];
@@ -579,7 +596,7 @@ export class AIAnalysisEngine extends EventEmitter {
         type: ActionType.REQUEST_VERIFICATION,
         priority: ActionPriority.HIGH,
         description: 'No face detected - verify candidate identity',
-        automated: false
+        automated: false,
       });
     }
 
@@ -599,7 +616,8 @@ export class AIAnalysisEngine extends EventEmitter {
     }
 
     // Calculate overall risk score
-    const overallRiskScore = Math.min(100, 
+    const overallRiskScore = Math.min(
+      100,
       riskFactors.reduce((sum, factor) => sum + factor, 0) || 0
     );
 
@@ -609,14 +627,14 @@ export class AIAnalysisEngine extends EventEmitter {
         type: ActionType.PAUSE_ASSESSMENT,
         priority: ActionPriority.URGENT,
         description: 'High risk score - pause assessment for review',
-        automated: true
+        automated: true,
       });
     } else if (overallRiskScore > 40) {
       actions.push({
         type: ActionType.NOTIFY_PROCTOR,
         priority: ActionPriority.MEDIUM,
         description: 'Moderate risk - notify proctor for monitoring',
-        automated: true
+        automated: true,
       });
     }
 
@@ -628,18 +646,21 @@ export class AIAnalysisEngine extends EventEmitter {
           low: violations.filter(v => v.severity === ViolationSeverity.LOW).length,
           medium: violations.filter(v => v.severity === ViolationSeverity.MEDIUM).length,
           high: violations.filter(v => v.severity === ViolationSeverity.HIGH).length,
-          critical: violations.filter(v => v.severity === ViolationSeverity.CRITICAL).length
+          critical: violations.filter(v => v.severity === ViolationSeverity.CRITICAL).length,
         },
-        byType: violations.reduce((acc, v) => {
-          acc[v.type] = (acc[v.type] || 0) + 1;
-          return acc;
-        }, {} as Record<string, number>),
+        byType: violations.reduce(
+          (acc, v) => {
+            acc[v.type] = (acc[v.type] || 0) + 1;
+            return acc;
+          },
+          {} as Record<string, number>
+        ),
         timeline: violations.map(v => ({
           timestamp: v.timestamp || new Date(),
           type: v.type,
           severity: v.severity,
-          description: v.description
-        }))
+          description: v.description,
+        })),
       },
       recommendedActions: actions,
       confidenceMetrics: {
@@ -649,9 +670,9 @@ export class AIAnalysisEngine extends EventEmitter {
           dataQuality: 0.9,
           modelPerformance: 0.85,
           consistency: 0.8,
-          coverage: 0.9
-        }
-      }
+          coverage: 0.9,
+        },
+      },
     };
   }
 
@@ -679,7 +700,7 @@ export class AIAnalysisEngine extends EventEmitter {
     try {
       const key = `ai:results:${sessionId}:${Date.now()}`;
       const retentionDays = this.options.storage.results.retentionDays;
-      
+
       await this.redisService.set(
         key,
         JSON.stringify(results),
@@ -687,7 +708,6 @@ export class AIAnalysisEngine extends EventEmitter {
       );
 
       logger.info('Analysis results stored', { sessionId, key });
-
     } catch (error) {
       logger.error('Failed to store analysis results', { sessionId, error });
       // Don't throw - storage failure shouldn't fail the analysis
@@ -704,31 +724,31 @@ export class AIAnalysisEngine extends EventEmitter {
         preprocessing: processingTime * 0.1,
         inference: processingTime * 0.7,
         postprocessing: processingTime * 0.15,
-        networking: processingTime * 0.05
+        networking: processingTime * 0.05,
       },
       resourceUsage: {
         memory: {
           peak: 256,
           average: 128,
           allocated: 512,
-          freed: 384
+          freed: 384,
         },
         cpu: {
           average: 45,
           peak: 80,
-          cores: 4
+          cores: 4,
         },
         disk: {
           read: 1024,
           write: 512,
-          iops: 100
-        }
+          iops: 100,
+        },
       },
       throughput: {
         framesPerSecond: processingTime > 0 ? 1000 / processingTime : 0,
         samplesPerSecond: 1000,
-        requestsPerSecond: 1
-      }
+        requestsPerSecond: 1,
+      },
     };
   }
 
@@ -750,8 +770,8 @@ export class AIAnalysisEngine extends EventEmitter {
       confidences.push(results.audioAnalysis.audioFeatures.quality.clarity);
     }
 
-    return confidences.length > 0 
-      ? confidences.reduce((sum, c) => sum + c, 0) / confidences.length 
+    return confidences.length > 0
+      ? confidences.reduce((sum, c) => sum + c, 0) / confidences.length
       : 0;
   }
 
@@ -764,9 +784,10 @@ export class AIAnalysisEngine extends EventEmitter {
       [AIModelType.GAZE_TRACKING]: results.gazeTracking?.gazePoint.confidence || 0,
       [AIModelType.AUDIO_ANALYSIS]: results.audioAnalysis?.audioFeatures.quality.clarity || 0,
       [AIModelType.BEHAVIOR_ANALYSIS]: 0.8, // Simulated
-      [AIModelType.FACE_RECOGNITION]: results.faceDetection?.detections[0]?.recognition?.confidence || 0,
+      [AIModelType.FACE_RECOGNITION]:
+        results.faceDetection?.detections[0]?.recognition?.confidence || 0,
       [AIModelType.OBJECT_DETECTION]: 0,
-      [AIModelType.POSE_ESTIMATION]: 0
+      [AIModelType.POSE_ESTIMATION]: 0,
     };
   }
 
@@ -780,7 +801,7 @@ export class AIAnalysisEngine extends EventEmitter {
         total: 0,
         bySeverity: { low: 0, medium: 0, high: 0, critical: 0 },
         byType: {},
-        timeline: []
+        timeline: [],
       },
       recommendedActions: [],
       confidenceMetrics: {
@@ -790,9 +811,9 @@ export class AIAnalysisEngine extends EventEmitter {
           dataQuality: 0,
           modelPerformance: 0,
           consistency: 0,
-          coverage: 0
-        }
-      }
+          coverage: 0,
+        },
+      },
     };
   }
 
@@ -800,12 +821,16 @@ export class AIAnalysisEngine extends EventEmitter {
    * Process queue
    */
   private async processQueue(): Promise<void> {
-    if (this.processingQueue.length === 0) return;
+    if (this.processingQueue.length === 0) {
+      return;
+    }
 
     const maxConcurrent = this.options.processing.maxConcurrentRequests;
     const currentActive = this.activeProcessing.size;
 
-    if (currentActive >= maxConcurrent) return;
+    if (currentActive >= maxConcurrent) {
+      return;
+    }
 
     // Process high priority requests first
     this.processingQueue.sort((a, b) => {
@@ -813,7 +838,7 @@ export class AIAnalysisEngine extends EventEmitter {
         [ProcessingPriority.REALTIME]: 4,
         [ProcessingPriority.HIGH]: 3,
         [ProcessingPriority.NORMAL]: 2,
-        [ProcessingPriority.LOW]: 1
+        [ProcessingPriority.LOW]: 1,
       };
       return priorityOrder[b.priority] - priorityOrder[a.priority];
     });
@@ -848,7 +873,7 @@ export class AIAnalysisEngine extends EventEmitter {
       timestamp: new Date(),
       stats: { ...this.processingStats },
       activeProcessing: this.activeProcessing.size,
-      modelsLoaded: this.models.size
+      modelsLoaded: this.models.size,
     });
   }
 
@@ -861,7 +886,7 @@ export class AIAnalysisEngine extends EventEmitter {
       activeProcessing: this.activeProcessing.size,
       modelsLoaded: this.models.size,
       queueSize: this.processingQueue.length,
-      isInitialized: this.isInitialized
+      isInitialized: this.isInitialized,
     };
   }
 
@@ -874,7 +899,7 @@ export class AIAnalysisEngine extends EventEmitter {
       modelsLoaded: this.models.size,
       queueSize: this.processingQueue.length,
       activeProcessing: this.activeProcessing.size,
-      stats: this.processingStats
+      stats: this.processingStats,
     };
 
     const status = this.isInitialized && this.models.size > 0 ? 'healthy' : 'unhealthy';
@@ -894,9 +919,9 @@ export class AIAnalysisEngine extends EventEmitter {
     // Wait for active processing to complete
     if (this.activeProcessing.size > 0) {
       logger.info('Waiting for active processing to complete', {
-        count: this.activeProcessing.size
+        count: this.activeProcessing.size,
       });
-      
+
       await Promise.allSettled(Array.from(this.activeProcessing.values()));
     }
 

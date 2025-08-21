@@ -1,10 +1,10 @@
 /**
  * Notification Service Type Definitions
  * AI-native technical hiring platform - Epic 6: Notification Service
- * 
+ *
  * Comprehensive notification system supporting multiple channels:
  * - Email notifications (SendGrid)
- * - SMS notifications (Twilio) 
+ * - SMS notifications (Twilio)
  * - Push notifications (Web Push API)
  * - Webhook delivery system
  * - Template management
@@ -24,53 +24,59 @@ export enum NotificationChannel {
   IN_APP = 'IN_APP',
   SLACK = 'SLACK',
   TEAMS = 'TEAMS',
-  DISCORD = 'DISCORD'
+  DISCORD = 'DISCORD',
 }
 
 export enum NotificationType {
   // Assessment notifications
+  ASSESSMENT_INVITATION = 'ASSESSMENT_INVITATION',
   ASSESSMENT_SCHEDULED = 'ASSESSMENT_SCHEDULED',
   ASSESSMENT_REMINDER = 'ASSESSMENT_REMINDER',
   ASSESSMENT_STARTED = 'ASSESSMENT_STARTED',
   ASSESSMENT_COMPLETED = 'ASSESSMENT_COMPLETED',
   ASSESSMENT_EXPIRED = 'ASSESSMENT_EXPIRED',
+  ASSESSMENT_GRADED = 'ASSESSMENT_GRADED',
   ASSESSMENT_RESULTS = 'ASSESSMENT_RESULTS',
-  
+
   // Collaboration notifications
   COLLABORATION_INVITE = 'COLLABORATION_INVITE',
   COLLABORATION_STARTED = 'COLLABORATION_STARTED',
   COLLABORATION_ENDED = 'COLLABORATION_ENDED',
   CODE_SHARED = 'CODE_SHARED',
-  
+
   // System notifications
   SYSTEM_MAINTENANCE = 'SYSTEM_MAINTENANCE',
   SYSTEM_UPDATE = 'SYSTEM_UPDATE',
+  SYSTEM_ALERT = 'SYSTEM_ALERT',
   SECURITY_ALERT = 'SECURITY_ALERT',
-  
+
   // Account notifications
   ACCOUNT_CREATED = 'ACCOUNT_CREATED',
   ACCOUNT_VERIFIED = 'ACCOUNT_VERIFIED',
   PASSWORD_RESET = 'PASSWORD_RESET',
   LOGIN_ALERT = 'LOGIN_ALERT',
-  
+
   // Proctoring notifications
   PROCTORING_VIOLATION = 'PROCTORING_VIOLATION',
   PROCTORING_WARNING = 'PROCTORING_WARNING',
   PROCTORING_REPORT = 'PROCTORING_REPORT',
-  
+
   // Analytics notifications
   BIAS_ALERT = 'BIAS_ALERT',
   PERFORMANCE_REPORT = 'PERFORMANCE_REPORT',
   ANALYTICS_DIGEST = 'ANALYTICS_DIGEST',
-  
+
   // Integration notifications
   ATS_SYNC_SUCCESS = 'ATS_SYNC_SUCCESS',
   ATS_SYNC_FAILURE = 'ATS_SYNC_FAILURE',
   CALENDAR_CONFLICT = 'CALENDAR_CONFLICT',
-  
+
+  // Marketing notifications
+  MARKETING = 'MARKETING',
+
   // Custom notifications
   CUSTOM_ALERT = 'CUSTOM_ALERT',
-  CUSTOM_REMINDER = 'CUSTOM_REMINDER'
+  CUSTOM_REMINDER = 'CUSTOM_REMINDER',
 }
 
 export enum NotificationPriority {
@@ -78,7 +84,7 @@ export enum NotificationPriority {
   NORMAL = 'NORMAL',
   HIGH = 'HIGH',
   URGENT = 'URGENT',
-  CRITICAL = 'CRITICAL'
+  CRITICAL = 'CRITICAL',
 }
 
 export enum DeliveryStatus {
@@ -91,14 +97,14 @@ export enum DeliveryStatus {
   SPAM = 'SPAM',
   UNSUBSCRIBED = 'UNSUBSCRIBED',
   BLOCKED = 'BLOCKED',
-  EXPIRED = 'EXPIRED'
+  EXPIRED = 'EXPIRED',
 }
 
 export enum TemplateFormat {
   HTML = 'HTML',
   TEXT = 'TEXT',
   MARKDOWN = 'MARKDOWN',
-  JSON = 'JSON'
+  JSON = 'JSON',
 }
 
 export enum ConsentType {
@@ -106,7 +112,7 @@ export enum ConsentType {
   TRANSACTIONAL = 'TRANSACTIONAL',
   SYSTEM = 'SYSTEM',
   SECURITY = 'SECURITY',
-  ANALYTICS = 'ANALYTICS'
+  ANALYTICS = 'ANALYTICS',
 }
 
 export enum FrequencyLimit {
@@ -115,7 +121,23 @@ export enum FrequencyLimit {
   DAILY = 'DAILY',
   WEEKLY = 'WEEKLY',
   MONTHLY = 'MONTHLY',
-  NEVER = 'NEVER'
+  NEVER = 'NEVER',
+}
+
+export enum ChannelSelectionStrategy {
+  SINGLE_BEST = 'SINGLE_BEST',
+  MULTI_CHANNEL = 'MULTI_CHANNEL',
+  SCORE_BASED = 'SCORE_BASED',
+  COST_OPTIMIZED = 'COST_OPTIMIZED',
+  RELIABILITY_FIRST = 'RELIABILITY_FIRST',
+  SPEED_FIRST = 'SPEED_FIRST',
+}
+
+export enum FallbackStrategy {
+  NONE = 'NONE',
+  SINGLE_BEST = 'SINGLE_BEST',
+  ALL_AVAILABLE = 'ALL_AVAILABLE',
+  DIFFERENT_TYPE = 'DIFFERENT_TYPE',
 }
 
 // Core notification interfaces
@@ -177,23 +199,64 @@ export interface NotificationAction {
 
 export interface NotificationPreferences {
   userId: string;
-  channels: Record<NotificationChannel, boolean>;
-  types: Record<NotificationType, boolean>;
+  channels: Record<
+    NotificationChannel,
+    {
+      enabled: boolean;
+      priority: number;
+    }
+  >;
+  types: Record<
+    NotificationType,
+    {
+      enabled: boolean;
+      frequency: string;
+    }
+  >;
   frequency: Record<NotificationType, FrequencyLimit>;
-  quietHours?: {
-    enabled: boolean;
-    startTime: string; // HH:mm format
-    endTime: string;
-    timezone: string;
-  };
-  consent: Record<ConsentType, {
-    granted: boolean;
-    timestamp: Date;
-    source: string;
-  }>;
+  quietHours?: QuietHours;
+  consent: Record<
+    ConsentType,
+    {
+      granted: boolean;
+      timestamp: Date;
+      source: string;
+    }
+  >;
   locale: string;
   metadata?: Record<string, any>;
   updatedAt: Date;
+}
+
+export interface QuietHours {
+  enabled: boolean;
+  startHour: number;
+  endHour: number;
+  timezone: string;
+}
+
+export interface ChannelPerformanceMetrics {
+  deliveryRate: number;
+  openRate: number;
+  clickRate: number;
+  averageDeliveryTime: number;
+  costPerMessage: number;
+}
+
+export interface ChannelCostMetrics {
+  baseCost: number;
+  perRecipientCost: number;
+  currency: string;
+}
+
+export interface OrchestrationRule {
+  id: string;
+  name: string;
+  conditions: NotificationCondition[];
+  channelStrategy: ChannelSelectionStrategy;
+  fallbackStrategy: FallbackStrategy;
+  priority: number;
+  isActive: boolean;
 }
 
 export interface NotificationRule {
@@ -215,7 +278,15 @@ export interface NotificationRule {
 
 export interface NotificationCondition {
   field: string;
-  operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'greater_than' | 'less_than' | 'in' | 'not_in';
+  operator:
+    | 'equals'
+    | 'not_equals'
+    | 'contains'
+    | 'not_contains'
+    | 'greater_than'
+    | 'less_than'
+    | 'in'
+    | 'not_in';
   value: any;
   logicalOperator?: 'AND' | 'OR';
 }
@@ -440,24 +511,33 @@ export interface NotificationAnalytics {
     averageDeliveryTime: number;
     successRate: number;
   };
-  byChannel: Record<NotificationChannel, {
-    sent: number;
-    delivered: number;
-    failed: number;
-    cost: number;
-    deliveryRate: number;
-  }>;
-  byType: Record<NotificationType, {
-    sent: number;
-    delivered: number;
-    failed: number;
-    avgDeliveryTime: number;
-  }>;
-  byPriority: Record<NotificationPriority, {
-    sent: number;
-    delivered: number;
-    avgDeliveryTime: number;
-  }>;
+  byChannel: Record<
+    NotificationChannel,
+    {
+      sent: number;
+      delivered: number;
+      failed: number;
+      cost: number;
+      deliveryRate: number;
+    }
+  >;
+  byType: Record<
+    NotificationType,
+    {
+      sent: number;
+      delivered: number;
+      failed: number;
+      avgDeliveryTime: number;
+    }
+  >;
+  byPriority: Record<
+    NotificationPriority,
+    {
+      sent: number;
+      delivered: number;
+      avgDeliveryTime: number;
+    }
+  >;
   trends: {
     daily: Array<{
       date: string;
@@ -546,15 +626,10 @@ export interface GetNotificationsResponse {
 
 export interface UpdatePreferencesRequest {
   userId: string;
-  channels?: Record<NotificationChannel, boolean>;
-  types?: Record<NotificationType, boolean>;
+  channels?: Record<NotificationChannel, { enabled: boolean; priority: number }>;
+  types?: Record<NotificationType, { enabled: boolean; frequency: string }>;
   frequency?: Record<NotificationType, FrequencyLimit>;
-  quietHours?: {
-    enabled: boolean;
-    startTime: string;
-    endTime: string;
-    timezone: string;
-  };
+  quietHours?: QuietHours;
   locale?: string;
 }
 
@@ -628,16 +703,22 @@ export interface NotificationServiceConfig {
       maxPerMinute: number;
       maxPerHour: number;
     };
-    perChannel: Record<NotificationChannel, {
-      maxPerMinute: number;
-      maxPerHour: number;
-    }>;
+    perChannel: Record<
+      NotificationChannel,
+      {
+        maxPerMinute: number;
+        maxPerHour: number;
+      }
+    >;
   };
-  costs: Record<NotificationChannel, {
-    baseCost: number;
-    perRecipientCost: number;
-    currency: string;
-  }>;
+  costs: Record<
+    NotificationChannel,
+    {
+      baseCost: number;
+      perRecipientCost: number;
+      currency: string;
+    }
+  >;
   compliance: {
     unsubscribeUrl: string;
     privacyPolicyUrl: string;
@@ -658,7 +739,9 @@ export interface NotificationServiceConfig {
 export type NotificationEventHandler = (notification: NotificationRecord) => Promise<void>;
 export type TemplateRenderer = (template: string, variables: Record<string, any>) => string;
 export type PreferenceValidator = (preferences: NotificationPreferences) => boolean;
-export type CampaignTargeting = (criteria: NotificationCondition[]) => Promise<NotificationRecipient[]>;
+export type CampaignTargeting = (
+  criteria: NotificationCondition[]
+) => Promise<NotificationRecipient[]>;
 
 // Error types
 export class NotificationError extends Error {
@@ -681,7 +764,12 @@ export class TemplateError extends NotificationError {
 }
 
 export class DeliveryError extends NotificationError {
-  constructor(message: string, channel: NotificationChannel, provider: string, metadata?: Record<string, any>) {
+  constructor(
+    message: string,
+    channel: NotificationChannel,
+    provider: string,
+    metadata?: Record<string, any>
+  ) {
     super(message, 'DELIVERY_ERROR', 500, { channel, provider, ...metadata });
     this.name = 'DeliveryError';
   }
@@ -695,14 +783,24 @@ export class PreferencesError extends NotificationError {
 }
 
 export class RateLimitError extends NotificationError {
-  constructor(message: string, channel: NotificationChannel, limit: string, metadata?: Record<string, any>) {
+  constructor(
+    message: string,
+    channel: NotificationChannel,
+    limit: string,
+    metadata?: Record<string, any>
+  ) {
     super(message, 'RATE_LIMIT_ERROR', 429, { channel, limit, ...metadata });
     this.name = 'RateLimitError';
   }
 }
 
 export class ConsentError extends NotificationError {
-  constructor(message: string, userId: string, consentType: ConsentType, metadata?: Record<string, any>) {
+  constructor(
+    message: string,
+    userId: string,
+    consentType: ConsentType,
+    metadata?: Record<string, any>
+  ) {
     super(message, 'CONSENT_ERROR', 403, { userId, consentType, ...metadata });
     this.name = 'ConsentError';
   }

@@ -1,10 +1,10 @@
 /**
  * Epic 5 Task 5.3: Bias Detection Controller - Comprehensive API Implementation
- * 
+ *
  * REST API controller for bias detection system with comprehensive endpoints
  * for statistical analysis, demographic monitoring, compliance reporting,
  * and remediation management.
- * 
+ *
  * Features:
  * - Bias analysis creation and management endpoints
  * - Real-time bias monitoring and alerting APIs
@@ -37,7 +37,7 @@ import {
   BiasAlert,
   RemediationRecommendation,
   TimeRange,
-  ReportFormat
+  ReportFormat,
 } from '../types/bias-detection.types';
 
 /**
@@ -100,17 +100,21 @@ interface RemediationQueryParams {
 export class BiasDetectionController {
   private logger: Logger;
   private biasDetectionService: BiasDetectionService;
-  
+
   constructor(biasDetectionService: BiasDetectionService, logger: Logger) {
     this.biasDetectionService = biasDetectionService;
     this.logger = logger;
   }
-  
+
   /**
    * Create comprehensive bias analysis
    * POST /api/bias-detection/analysis
    */
-  async createBiasAnalysis(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  async createBiasAnalysis(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const { user } = req;
       const {
@@ -119,35 +123,35 @@ export class BiasDetectionController {
         algorithms,
         timeRange,
         includeIntersectional = false,
-        configuration
+        configuration,
       } = req.body;
-      
+
       // Validate required fields
       if (!context || !characteristics || !algorithms) {
         res.status(400).json({
-          error: 'Missing required fields: context, characteristics, algorithms'
+          error: 'Missing required fields: context, characteristics, algorithms',
         });
         return;
       }
-      
+
       // Validate enum values
-      const validCharacteristics = characteristics.every((char: string) => 
+      const validCharacteristics = characteristics.every((char: string) =>
         Object.values(ProtectedCharacteristic).includes(char as ProtectedCharacteristic)
       );
-      
-      const validAlgorithms = algorithms.every((alg: string) => 
+
+      const validAlgorithms = algorithms.every((alg: string) =>
         Object.values(BiasDetectionAlgorithm).includes(alg as BiasDetectionAlgorithm)
       );
-      
+
       const validContext = Object.values(BiasContext).includes(context as BiasContext);
-      
+
       if (!validCharacteristics || !validAlgorithms || !validContext) {
         res.status(400).json({
-          error: 'Invalid enum values provided'
+          error: 'Invalid enum values provided',
         });
         return;
       }
-      
+
       // Create analysis request
       const analysisRequest: CreateBiasAnalysisRequest = {
         organizationId: user.organizationId,
@@ -157,80 +161,86 @@ export class BiasDetectionController {
         timeRange: timeRange || {
           startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
           endDate: new Date(),
-          period: 'MONTH'
+          period: 'MONTH',
         },
         includeIntersectional,
-        configuration
+        configuration,
       };
-      
+
       // Create bias analysis
       const response = await this.biasDetectionService.createBiasAnalysis(analysisRequest);
-      
+
       this.logger.info('Bias analysis created successfully', {
         analysisId: response.analysisId,
         userId: user.id,
-        organizationId: user.organizationId
+        organizationId: user.organizationId,
       });
-      
+
       res.status(201).json({
         success: true,
-        data: response
+        data: response,
       });
-      
     } catch (error) {
       this.logger.error('Failed to create bias analysis', { error, userId: req.user?.id });
       next(error);
     }
   }
-  
+
   /**
    * Get bias analysis status and results
    * GET /api/bias-detection/analysis/:analysisId
    */
-  async getBiasAnalysis(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  async getBiasAnalysis(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const { analysisId } = req.params;
       const { user } = req;
-      
+
       if (!analysisId) {
         res.status(400).json({
-          error: 'Analysis ID is required'
+          error: 'Analysis ID is required',
         });
         return;
       }
-      
+
       // Get analysis status
       const analysis = await this.biasDetectionService.getBiasAnalysisStatus(analysisId);
-      
+
       if (!analysis) {
         res.status(404).json({
-          error: 'Analysis not found'
+          error: 'Analysis not found',
         });
         return;
       }
-      
+
       this.logger.info('Bias analysis retrieved', {
         analysisId,
         status: analysis.status,
-        userId: user.id
+        userId: user.id,
       });
-      
+
       res.json({
         success: true,
-        data: analysis
+        data: analysis,
       });
-      
     } catch (error) {
       this.logger.error('Failed to get bias analysis', { error, userId: req.user?.id });
       next(error);
     }
   }
-  
+
   /**
    * List bias analyses with filtering and pagination
    * GET /api/bias-detection/analyses
    */
-  async listBiasAnalyses(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  async listBiasAnalyses(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const { user } = req;
       const {
@@ -240,9 +250,9 @@ export class BiasDetectionController {
         page = 1,
         limit = 20,
         sortBy = 'createdAt',
-        sortOrder = 'desc'
+        sortOrder = 'desc',
       } = req.query as BiasAnalysisQueryParams;
-      
+
       // Simplified implementation - in production, this would query the database
       const mockAnalyses: BiasAnalysisResponse[] = [
         {
@@ -250,24 +260,24 @@ export class BiasDetectionController {
           status: 'COMPLETED',
           progress: 100,
           results: [],
-          alerts: []
+          alerts: [],
         },
         {
           analysisId: 'analysis_002',
           status: 'IN_PROGRESS',
           progress: 75,
-          estimatedCompletionTime: new Date(Date.now() + 60000)
-        }
+          estimatedCompletionTime: new Date(Date.now() + 60000),
+        },
       ];
-      
+
       // Apply filters (simplified)
-      let filteredAnalyses = mockAnalyses;
-      
+      const filteredAnalyses = mockAnalyses;
+
       // Apply pagination
       const startIndex = (Number(page) - 1) * Number(limit);
       const endIndex = startIndex + Number(limit);
       const paginatedAnalyses = filteredAnalyses.slice(startIndex, endIndex);
-      
+
       res.json({
         success: true,
         data: {
@@ -278,22 +288,25 @@ export class BiasDetectionController {
             currentPage: Number(page),
             pageSize: Number(limit),
             hasNextPage: endIndex < filteredAnalyses.length,
-            hasPreviousPage: startIndex > 0
-          }
-        }
+            hasPreviousPage: startIndex > 0,
+          },
+        },
       });
-      
     } catch (error) {
       this.logger.error('Failed to list bias analyses', { error, userId: req.user?.id });
       next(error);
     }
   }
-  
+
   /**
    * Get bias detection dashboard data
    * GET /api/bias-detection/dashboard
    */
-  async getBiasDashboard(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  async getBiasDashboard(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const { user } = req;
       const {
@@ -302,9 +315,9 @@ export class BiasDetectionController {
         timeRange,
         includeAlerts = true,
         includeRemediation = true,
-        widgetTypes
+        widgetTypes,
       } = req.query as unknown as BiasDashboardRequest;
-      
+
       // Generate dashboard data (simplified implementation)
       const dashboardData = {
         overview: {
@@ -312,13 +325,13 @@ export class BiasDetectionController {
           activeAlerts: 8,
           criticalIssues: 2,
           complianceScore: 78,
-          trendDirection: 'IMPROVING'
+          trendDirection: 'IMPROVING',
         },
         protectedCharacteristics: {
           gender: { biasDetected: true, severity: 'MODERATE', analyses: 5 },
           age: { biasDetected: false, severity: 'NONE', analyses: 3 },
           ethnicity: { biasDetected: true, severity: 'HIGH', analyses: 7 },
-          disability: { biasDetected: false, severity: 'NONE', analyses: 2 }
+          disability: { biasDetected: false, severity: 'NONE', analyses: 2 },
         },
         adverseImpact: {
           overallRatio: 0.72,
@@ -326,9 +339,9 @@ export class BiasDetectionController {
             gender: 0.68,
             age: 0.85,
             ethnicity: 0.61,
-            disability: 0.92
+            disability: 0.92,
           },
-          trend: 'IMPROVING'
+          trend: 'IMPROVING',
         },
         temporalTrends: {
           lastSixMonths: [
@@ -337,43 +350,47 @@ export class BiasDetectionController {
             { month: 'Mar 2024', biasScore: 0.75 },
             { month: 'Apr 2024', biasScore: 0.73 },
             { month: 'May 2024', biasScore: 0.71 },
-            { month: 'Jun 2024', biasScore: 0.72 }
-          ]
+            { month: 'Jun 2024', biasScore: 0.72 },
+          ],
         },
         mlFairness: {
           overallScore: 82,
           demographicParity: 0.89,
           equalizedOdds: 0.85,
           calibration: 0.91,
-          grade: 'B'
+          grade: 'B',
         },
-        activeAlerts: includeAlerts ? [
-          {
-            id: 'alert_001',
-            severity: 'HIGH',
-            characteristic: 'GENDER',
-            context: 'ASSESSMENT_SCORING',
-            timestamp: new Date(),
-            isActive: true
-          },
-          {
-            id: 'alert_002',
-            severity: 'MODERATE',
-            characteristic: 'ETHNICITY',
-            context: 'CANDIDATE_RANKING',
-            timestamp: new Date(),
-            isActive: true
-          }
-        ] : [],
-        remediationProgress: includeRemediation ? {
-          totalRecommendations: 12,
-          implemented: 5,
-          inProgress: 4,
-          pending: 3,
-          overallEffectiveness: 0.67
-        } : undefined
+        activeAlerts: includeAlerts
+          ? [
+              {
+                id: 'alert_001',
+                severity: 'HIGH',
+                characteristic: 'GENDER',
+                context: 'ASSESSMENT_SCORING',
+                timestamp: new Date(),
+                isActive: true,
+              },
+              {
+                id: 'alert_002',
+                severity: 'MODERATE',
+                characteristic: 'ETHNICITY',
+                context: 'CANDIDATE_RANKING',
+                timestamp: new Date(),
+                isActive: true,
+              },
+            ]
+          : [],
+        remediationProgress: includeRemediation
+          ? {
+              totalRecommendations: 12,
+              implemented: 5,
+              inProgress: 4,
+              pending: 3,
+              overallEffectiveness: 0.67,
+            }
+          : undefined,
       };
-      
+
       const response: BiasDashboardResponse = {
         dashboard: {
           id: 'default_dashboard',
@@ -388,33 +405,32 @@ export class BiasDetectionController {
           defaultCharacteristics: [
             ProtectedCharacteristic.GENDER,
             ProtectedCharacteristic.AGE,
-            ProtectedCharacteristic.ETHNICITY
+            ProtectedCharacteristic.ETHNICITY,
           ],
           defaultTimeRange: {
             startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
             endDate: new Date(),
-            period: 'MONTH'
+            period: 'MONTH',
           },
           autoRefreshInterval: 300,
-          alertIntegration: true
+          alertIntegration: true,
         },
         data: dashboardData,
         alerts: dashboardData.activeAlerts as unknown as BiasAlert[],
         lastUpdated: new Date(),
-        nextUpdate: new Date(Date.now() + 300000)
+        nextUpdate: new Date(Date.now() + 300000),
       };
-      
+
       res.json({
         success: true,
-        data: response
+        data: response,
       });
-      
     } catch (error) {
       this.logger.error('Failed to get bias dashboard', { error, userId: req.user?.id });
       next(error);
     }
   }
-  
+
   /**
    * Get bias alerts with filtering
    * GET /api/bias-detection/alerts
@@ -430,9 +446,9 @@ export class BiasDetectionController {
         dateFrom,
         dateTo,
         page = 1,
-        limit = 20
+        limit = 20,
       } = req.query as BiasAlertQueryParams;
-      
+
       // Generate mock alerts data
       const mockAlerts: BiasAlert[] = [
         {
@@ -441,7 +457,8 @@ export class BiasDetectionController {
           severity: BiasSeverity.HIGH,
           type: 'THRESHOLD_EXCEEDED',
           title: 'Gender Bias Detected in Technical Assessments',
-          description: 'Statistical bias detected between male and female candidates in technical assessment scoring',
+          description:
+            'Statistical bias detected between male and female candidates in technical assessment scoring',
           affectedGroups: [],
           context: BiasContext.ASSESSMENT_SCORING,
           metric: 'OVERALL_SCORE' as any,
@@ -451,7 +468,7 @@ export class BiasDetectionController {
           analysisId: 'analysis_001',
           recommendations: [],
           escalationLevel: 1,
-          notifiedUsers: []
+          notifiedUsers: [],
         },
         {
           id: 'alert_002',
@@ -469,28 +486,26 @@ export class BiasDetectionController {
           analysisId: 'analysis_002',
           recommendations: [],
           escalationLevel: 1,
-          notifiedUsers: []
-        }
+          notifiedUsers: [],
+        },
       ];
-      
+
       // Apply filters
       let filteredAlerts = mockAlerts;
-      
+
       if (severity?.length) {
-        filteredAlerts = filteredAlerts.filter(alert => 
-          severity.includes(alert.severity)
-        );
+        filteredAlerts = filteredAlerts.filter(alert => severity.includes(alert.severity));
       }
-      
+
       if (characteristics?.length) {
         // In a real implementation, this would filter by affected characteristics
       }
-      
+
       // Apply pagination
       const startIndex = (Number(page) - 1) * Number(limit);
       const endIndex = startIndex + Number(limit);
       const paginatedAlerts = filteredAlerts.slice(startIndex, endIndex);
-      
+
       res.json({
         success: true,
         data: {
@@ -499,47 +514,50 @@ export class BiasDetectionController {
             totalItems: filteredAlerts.length,
             totalPages: Math.ceil(filteredAlerts.length / Number(limit)),
             currentPage: Number(page),
-            pageSize: Number(limit)
+            pageSize: Number(limit),
           },
           summary: {
             totalAlerts: filteredAlerts.length,
             criticalAlerts: filteredAlerts.filter(a => a.severity === BiasSeverity.CRITICAL).length,
             highAlerts: filteredAlerts.filter(a => a.severity === BiasSeverity.HIGH).length,
-            activeAlerts: filteredAlerts.filter(a => a.isActive).length
-          }
-        }
+            activeAlerts: filteredAlerts.filter(a => a.isActive).length,
+          },
+        },
       });
-      
     } catch (error) {
       this.logger.error('Failed to get bias alerts', { error, userId: req.user?.id });
       next(error);
     }
   }
-  
+
   /**
    * Acknowledge bias alert
    * POST /api/bias-detection/alerts/:alertId/acknowledge
    */
-  async acknowledgeBiasAlert(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  async acknowledgeBiasAlert(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const { alertId } = req.params;
       const { user } = req;
       const { notes } = req.body;
-      
+
       if (!alertId) {
         res.status(400).json({
-          error: 'Alert ID is required'
+          error: 'Alert ID is required',
         });
         return;
       }
-      
+
       // In production, this would update the alert in the database
       this.logger.info('Bias alert acknowledged', {
         alertId,
         acknowledgedBy: user.id,
-        notes
+        notes,
       });
-      
+
       res.json({
         success: true,
         message: 'Alert acknowledged successfully',
@@ -547,21 +565,24 @@ export class BiasDetectionController {
           alertId,
           acknowledgedBy: user.id,
           acknowledgedAt: new Date(),
-          notes
-        }
+          notes,
+        },
       });
-      
     } catch (error) {
       this.logger.error('Failed to acknowledge bias alert', { error, userId: req.user?.id });
       next(error);
     }
   }
-  
+
   /**
    * Get remediation recommendations
    * GET /api/bias-detection/recommendations
    */
-  async getRemediationRecommendations(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  async getRemediationRecommendations(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const { user } = req;
       const {
@@ -570,9 +591,9 @@ export class BiasDetectionController {
         strategy,
         assignedTo,
         page = 1,
-        limit = 20
+        limit = 20,
       } = req.query as RemediationQueryParams;
-      
+
       // Generate mock recommendations
       const mockRecommendations: RemediationRecommendation[] = [
         {
@@ -582,7 +603,8 @@ export class BiasDetectionController {
           strategy: 'BIAS_CORRECTION' as any,
           priority: 'HIGH',
           title: 'Implement Bias Correction in Technical Assessments',
-          description: 'Apply statistical bias correction techniques to technical assessment scoring',
+          description:
+            'Apply statistical bias correction techniques to technical assessment scoring',
           rationale: 'High severity bias detected with adverse impact ratio of 0.68',
           implementationSteps: [
             {
@@ -591,47 +613,47 @@ export class BiasDetectionController {
               description: 'Analyze historical assessment data for bias patterns',
               estimatedEffort: '2 weeks',
               requiredResources: ['Data Analyst', 'ML Engineer'],
-              timeline: 'Week 1-2'
-            }
+              timeline: 'Week 1-2',
+            },
           ],
           expectedImpact: {
             biasReduction: 40,
             timeToImpact: '3-4 months',
             riskLevel: 'MEDIUM',
-            sideEffects: ['Temporary increase in review complexity']
+            sideEffects: ['Temporary increase in review complexity'],
           },
           successMetrics: [
             {
               metric: 'Adverse Impact Ratio',
               currentValue: 0.68,
               targetValue: 0.8,
-              measurementMethod: 'Statistical calculation'
-            }
+              measurementMethod: 'Statistical calculation',
+            },
           ],
-          status: 'PROPOSED'
-        }
+          status: 'PROPOSED',
+        },
       ];
-      
+
       // Apply filters and pagination
       let filteredRecommendations = mockRecommendations;
-      
+
       if (status?.length) {
-        filteredRecommendations = filteredRecommendations.filter(rec => 
+        filteredRecommendations = filteredRecommendations.filter(rec =>
           status.includes(rec.status)
         );
       }
-      
+
       if (priority?.length) {
-        filteredRecommendations = filteredRecommendations.filter(rec => 
+        filteredRecommendations = filteredRecommendations.filter(rec =>
           priority.includes(rec.priority)
         );
       }
-      
+
       // Apply pagination
       const startIndex = (Number(page) - 1) * Number(limit);
       const endIndex = startIndex + Number(limit);
       const paginatedRecommendations = filteredRecommendations.slice(startIndex, endIndex);
-      
+
       res.json({
         success: true,
         data: {
@@ -640,58 +662,64 @@ export class BiasDetectionController {
             totalItems: filteredRecommendations.length,
             totalPages: Math.ceil(filteredRecommendations.length / Number(limit)),
             currentPage: Number(page),
-            pageSize: Number(limit)
+            pageSize: Number(limit),
           },
           summary: {
             totalRecommendations: filteredRecommendations.length,
             criticalPriority: filteredRecommendations.filter(r => r.priority === 'CRITICAL').length,
             highPriority: filteredRecommendations.filter(r => r.priority === 'HIGH').length,
             inProgress: filteredRecommendations.filter(r => r.status === 'IN_PROGRESS').length,
-            completed: filteredRecommendations.filter(r => r.status === 'COMPLETED').length
-          }
-        }
+            completed: filteredRecommendations.filter(r => r.status === 'COMPLETED').length,
+          },
+        },
       });
-      
     } catch (error) {
-      this.logger.error('Failed to get remediation recommendations', { error, userId: req.user?.id });
+      this.logger.error('Failed to get remediation recommendations', {
+        error,
+        userId: req.user?.id,
+      });
       next(error);
     }
   }
-  
+
   /**
    * Update remediation recommendation status
    * PUT /api/bias-detection/recommendations/:recommendationId/status
    */
-  async updateRemediationStatus(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  async updateRemediationStatus(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const { recommendationId } = req.params;
       const { user } = req;
       const { status, notes, assignedTo } = req.body;
-      
+
       if (!recommendationId || !status) {
         res.status(400).json({
-          error: 'Recommendation ID and status are required'
+          error: 'Recommendation ID and status are required',
         });
         return;
       }
-      
+
       const validStatuses = ['PROPOSED', 'APPROVED', 'IN_PROGRESS', 'COMPLETED', 'REJECTED'];
       if (!validStatuses.includes(status)) {
         res.status(400).json({
-          error: 'Invalid status value'
+          error: 'Invalid status value',
         });
         return;
       }
-      
+
       // In production, this would update the recommendation in the database
       this.logger.info('Remediation status updated', {
         recommendationId,
         status,
         updatedBy: user.id,
         assignedTo,
-        notes
+        notes,
       });
-      
+
       res.json({
         success: true,
         message: 'Remediation status updated successfully',
@@ -701,21 +729,24 @@ export class BiasDetectionController {
           updatedBy: user.id,
           updatedAt: new Date(),
           assignedTo,
-          notes
-        }
+          notes,
+        },
       });
-      
     } catch (error) {
       this.logger.error('Failed to update remediation status', { error, userId: req.user?.id });
       next(error);
     }
   }
-  
+
   /**
    * Generate bias detection report
    * POST /api/bias-detection/reports
    */
-  async generateBiasReport(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  async generateBiasReport(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const { user } = req;
       const {
@@ -725,57 +756,60 @@ export class BiasDetectionController {
         contexts,
         includeRemediation = true,
         complianceFrameworks,
-        format = ReportFormat.PDF
+        format = ReportFormat.PDF,
       } = req.body as BiasReportRequest;
-      
+
       if (!reportType || !timeRange) {
         res.status(400).json({
-          error: 'Report type and time range are required'
+          error: 'Report type and time range are required',
         });
         return;
       }
-      
+
       // Generate report
       const report = await this.biasDetectionService.generateBiasDetectionReport(
         user.organizationId,
         reportType,
         timeRange
       );
-      
+
       const reportResponse: BiasReportResponse = {
         reportId: report.id,
         status: 'READY',
         report,
         downloadUrl: `/api/bias-detection/reports/${report.id}/download`,
-        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours
       };
-      
+
       this.logger.info('Bias detection report generated', {
         reportId: report.id,
         reportType,
         userId: user.id,
-        organizationId: user.organizationId
+        organizationId: user.organizationId,
       });
-      
+
       res.status(201).json({
         success: true,
-        data: reportResponse
+        data: reportResponse,
       });
-      
     } catch (error) {
       this.logger.error('Failed to generate bias report', { error, userId: req.user?.id });
       next(error);
     }
   }
-  
+
   /**
    * Get bias detection configuration
    * GET /api/bias-detection/configuration
    */
-  async getBiasConfiguration(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  async getBiasConfiguration(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const { user } = req;
-      
+
       // Mock configuration - in production, this would be retrieved from database
       const configuration: BiasDetectionConfiguration = {
         id: 'config_001',
@@ -785,29 +819,26 @@ export class BiasDetectionController {
         enabledCharacteristics: [
           ProtectedCharacteristic.GENDER,
           ProtectedCharacteristic.AGE,
-          ProtectedCharacteristic.ETHNICITY
+          ProtectedCharacteristic.ETHNICITY,
         ],
-        enabledContexts: [
-          BiasContext.ASSESSMENT_SCORING,
-          BiasContext.CANDIDATE_RANKING
-        ],
+        enabledContexts: [BiasContext.ASSESSMENT_SCORING, BiasContext.CANDIDATE_RANKING],
         enabledAlgorithms: [
           BiasDetectionAlgorithm.T_TEST,
           BiasDetectionAlgorithm.CHI_SQUARE_TEST,
-          BiasDetectionAlgorithm.ADVERSE_IMPACT_RATIO
+          BiasDetectionAlgorithm.ADVERSE_IMPACT_RATIO,
         ],
         statisticalThresholds: {
           significanceLevel: 0.05,
           effectSizeThreshold: 0.2,
           adverseImpactThreshold: 0.8,
-          sampleSizeRequirement: 30
+          sampleSizeRequirement: 30,
         },
         alertThresholds: {
           [BiasSeverity.LOW]: 0.8,
           [BiasSeverity.MODERATE]: 0.7,
           [BiasSeverity.HIGH]: 0.6,
           [BiasSeverity.CRITICAL]: 0.5,
-          [BiasSeverity.NONE]: 1.0
+          [BiasSeverity.NONE]: 1.0,
         },
         alertFrequency: 'DAILY',
         notificationChannels: ['EMAIL', 'DASHBOARD'],
@@ -822,113 +853,133 @@ export class BiasDetectionController {
         createdAt: new Date(),
         updatedBy: user.id,
         updatedAt: new Date(),
-        isActive: true
+        isActive: true,
       };
-      
+
       res.json({
         success: true,
-        data: configuration
+        data: configuration,
       });
-      
     } catch (error) {
       this.logger.error('Failed to get bias configuration', { error, userId: req.user?.id });
       next(error);
     }
   }
-  
+
   /**
    * Get system health metrics
    * GET /api/bias-detection/health
    */
-  async getSystemHealth(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  async getSystemHealth(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const healthMetrics = this.biasDetectionService.getSystemHealth();
-      
+
       res.json({
         success: true,
         data: {
           ...healthMetrics,
           timestamp: new Date(),
-          status: healthMetrics.systemUptime > 99 ? 'HEALTHY' : 'DEGRADED'
-        }
+          status: healthMetrics.systemUptime > 99 ? 'HEALTHY' : 'DEGRADED',
+        },
       });
-      
     } catch (error) {
       this.logger.error('Failed to get system health', { error, userId: req.user?.id });
       next(error);
     }
   }
-  
+
   /**
    * Get available protected characteristics
    * GET /api/bias-detection/characteristics
    */
-  async getProtectedCharacteristics(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  async getProtectedCharacteristics(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const characteristics = Object.values(ProtectedCharacteristic).map(char => ({
         value: char,
-        label: char.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
-        description: this.getCharacteristicDescription(char)
+        label: char
+          .replace(/_/g, ' ')
+          .toLowerCase()
+          .replace(/\b\w/g, l => l.toUpperCase()),
+        description: this.getCharacteristicDescription(char),
       }));
-      
+
       res.json({
         success: true,
-        data: characteristics
+        data: characteristics,
       });
-      
     } catch (error) {
       this.logger.error('Failed to get protected characteristics', { error });
       next(error);
     }
   }
-  
+
   /**
    * Get available bias contexts
    * GET /api/bias-detection/contexts
    */
-  async getBiasContexts(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  async getBiasContexts(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const contexts = Object.values(BiasContext).map(context => ({
         value: context,
-        label: context.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
-        description: this.getContextDescription(context)
+        label: context
+          .replace(/_/g, ' ')
+          .toLowerCase()
+          .replace(/\b\w/g, l => l.toUpperCase()),
+        description: this.getContextDescription(context),
       }));
-      
+
       res.json({
         success: true,
-        data: contexts
+        data: contexts,
       });
-      
     } catch (error) {
       this.logger.error('Failed to get bias contexts', { error });
       next(error);
     }
   }
-  
+
   /**
    * Get available detection algorithms
    * GET /api/bias-detection/algorithms
    */
-  async getDetectionAlgorithms(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  async getDetectionAlgorithms(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const algorithms = Object.values(BiasDetectionAlgorithm).map(algorithm => ({
         value: algorithm,
-        label: algorithm.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()),
+        label: algorithm
+          .replace(/_/g, ' ')
+          .toLowerCase()
+          .replace(/\b\w/g, l => l.toUpperCase()),
         description: this.getAlgorithmDescription(algorithm),
-        category: this.getAlgorithmCategory(algorithm)
+        category: this.getAlgorithmCategory(algorithm),
       }));
-      
+
       res.json({
         success: true,
-        data: algorithms
+        data: algorithms,
       });
-      
     } catch (error) {
       this.logger.error('Failed to get detection algorithms', { error });
       next(error);
     }
   }
-  
+
   // Helper methods for descriptions
   private getCharacteristicDescription(characteristic: ProtectedCharacteristic): string {
     const descriptions = {
@@ -946,12 +997,12 @@ export class BiasDetectionController {
       [ProtectedCharacteristic.GEOGRAPHIC_LOCATION]: 'Geographic location and regional differences',
       [ProtectedCharacteristic.LANGUAGE_PROFICIENCY]: 'Language skills and proficiency levels',
       [ProtectedCharacteristic.PARENTAL_STATUS]: 'Parental and family status',
-      [ProtectedCharacteristic.MARITAL_STATUS]: 'Marital and relationship status'
+      [ProtectedCharacteristic.MARITAL_STATUS]: 'Marital and relationship status',
     };
-    
+
     return descriptions[characteristic] || 'Protected characteristic requiring bias monitoring';
   }
-  
+
   private getContextDescription(context: BiasContext): string {
     const descriptions = {
       [BiasContext.ASSESSMENT_SCORING]: 'Scoring and evaluation of candidate assessments',
@@ -962,12 +1013,12 @@ export class BiasDetectionController {
       [BiasContext.FEEDBACK_GENERATION]: 'Generation of candidate feedback',
       [BiasContext.PROCTORING_DECISIONS]: 'Proctoring and monitoring decisions',
       [BiasContext.SYSTEM_RECOMMENDATIONS]: 'AI-generated recommendations',
-      [BiasContext.OVERALL_HIRING_PROCESS]: 'Complete hiring process evaluation'
+      [BiasContext.OVERALL_HIRING_PROCESS]: 'Complete hiring process evaluation',
     };
-    
+
     return descriptions[context] || 'Context where bias detection is applied';
   }
-  
+
   private getAlgorithmDescription(algorithm: BiasDetectionAlgorithm): string {
     const descriptions = {
       [BiasDetectionAlgorithm.CHI_SQUARE_TEST]: 'Tests independence between categorical variables',
@@ -980,45 +1031,54 @@ export class BiasDetectionController {
       [BiasDetectionAlgorithm.EQUALIZED_ODDS]: 'Ensures equal TPR and FPR across groups',
       [BiasDetectionAlgorithm.EQUALIZED_OPPORTUNITY]: 'Ensures equal TPR across groups',
       [BiasDetectionAlgorithm.CALIBRATION]: 'Measures prediction calibration across groups',
-      [BiasDetectionAlgorithm.INDIVIDUAL_FAIRNESS]: 'Ensures similar individuals get similar outcomes',
-      [BiasDetectionAlgorithm.COUNTERFACTUAL_FAIRNESS]: 'Uses counterfactual reasoning for fairness',
+      [BiasDetectionAlgorithm.INDIVIDUAL_FAIRNESS]:
+        'Ensures similar individuals get similar outcomes',
+      [BiasDetectionAlgorithm.COUNTERFACTUAL_FAIRNESS]:
+        'Uses counterfactual reasoning for fairness',
       [BiasDetectionAlgorithm.CAUSAL_FAIRNESS]: 'Addresses causal relationships in bias',
-      [BiasDetectionAlgorithm.INTERSECTIONAL_ANALYSIS]: 'Analyzes multiple protected characteristics',
-      [BiasDetectionAlgorithm.MULTI_DIMENSIONAL_FAIRNESS]: 'Multi-dimensional fairness assessment'
+      [BiasDetectionAlgorithm.INTERSECTIONAL_ANALYSIS]:
+        'Analyzes multiple protected characteristics',
+      [BiasDetectionAlgorithm.MULTI_DIMENSIONAL_FAIRNESS]: 'Multi-dimensional fairness assessment',
     };
-    
+
     return descriptions[algorithm] || 'Statistical algorithm for bias detection';
   }
-  
+
   private getAlgorithmCategory(algorithm: BiasDetectionAlgorithm): string {
-    if ([
-      BiasDetectionAlgorithm.CHI_SQUARE_TEST,
-      BiasDetectionAlgorithm.FISHERS_EXACT_TEST,
-      BiasDetectionAlgorithm.T_TEST,
-      BiasDetectionAlgorithm.ANOVA,
-      BiasDetectionAlgorithm.KOLMOGOROV_SMIRNOV
-    ].includes(algorithm)) {
+    if (
+      [
+        BiasDetectionAlgorithm.CHI_SQUARE_TEST,
+        BiasDetectionAlgorithm.FISHERS_EXACT_TEST,
+        BiasDetectionAlgorithm.T_TEST,
+        BiasDetectionAlgorithm.ANOVA,
+        BiasDetectionAlgorithm.KOLMOGOROV_SMIRNOV,
+      ].includes(algorithm)
+    ) {
       return 'Statistical Tests';
     }
-    
-    if ([
-      BiasDetectionAlgorithm.ADVERSE_IMPACT_RATIO,
-      BiasDetectionAlgorithm.DEMOGRAPHIC_PARITY,
-      BiasDetectionAlgorithm.EQUALIZED_ODDS,
-      BiasDetectionAlgorithm.EQUALIZED_OPPORTUNITY,
-      BiasDetectionAlgorithm.CALIBRATION
-    ].includes(algorithm)) {
+
+    if (
+      [
+        BiasDetectionAlgorithm.ADVERSE_IMPACT_RATIO,
+        BiasDetectionAlgorithm.DEMOGRAPHIC_PARITY,
+        BiasDetectionAlgorithm.EQUALIZED_ODDS,
+        BiasDetectionAlgorithm.EQUALIZED_OPPORTUNITY,
+        BiasDetectionAlgorithm.CALIBRATION,
+      ].includes(algorithm)
+    ) {
       return 'Fairness Metrics';
     }
-    
-    if ([
-      BiasDetectionAlgorithm.INDIVIDUAL_FAIRNESS,
-      BiasDetectionAlgorithm.COUNTERFACTUAL_FAIRNESS,
-      BiasDetectionAlgorithm.CAUSAL_FAIRNESS
-    ].includes(algorithm)) {
+
+    if (
+      [
+        BiasDetectionAlgorithm.INDIVIDUAL_FAIRNESS,
+        BiasDetectionAlgorithm.COUNTERFACTUAL_FAIRNESS,
+        BiasDetectionAlgorithm.CAUSAL_FAIRNESS,
+      ].includes(algorithm)
+    ) {
       return 'Advanced Fairness';
     }
-    
+
     return 'Specialized Analysis';
   }
 }

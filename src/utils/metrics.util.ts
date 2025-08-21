@@ -218,7 +218,7 @@ export const metrics = {
 // Middleware to automatically track HTTP metrics
 export const metricsMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const start = Date.now();
-  
+
   // Track request start
   const route = req.route?.path || req.path;
   const userType = (req as any).user?.role || 'anonymous';
@@ -226,15 +226,11 @@ export const metricsMiddleware = (req: Request, res: Response, next: NextFunctio
   res.on('finish', () => {
     const duration = (Date.now() - start) / 1000;
     const statusCode = res.statusCode.toString();
-    
+
     // Record metrics
-    metrics.httpRequestDuration
-      .labels(req.method, route, statusCode, userType)
-      .observe(duration);
-    
-    metrics.httpRequestsTotal
-      .labels(req.method, route, statusCode, userType)
-      .inc();
+    metrics.httpRequestDuration.labels(req.method, route, statusCode, userType).observe(duration);
+
+    metrics.httpRequestsTotal.labels(req.method, route, statusCode, userType).inc();
   });
 
   next();
@@ -243,7 +239,7 @@ export const metricsMiddleware = (req: Request, res: Response, next: NextFunctio
 // Custom metric tracking functions
 export const trackAuthAttempt = (type: string, result: string, userType: string = 'unknown') => {
   metrics.authAttempts.labels(type, result, userType).inc();
-  
+
   if (result === 'failure') {
     metrics.authFailures.labels(type, 'invalid_credentials', userType).inc();
   }
@@ -354,10 +350,10 @@ export const getMetrics = async (_req: Request, res: Response) => {
 export const getHealthMetrics = async (_req: Request, res: Response) => {
   try {
     const memUsage = process.memoryUsage();
-    
+
     // Update system metrics
     updateSystemMetrics(memUsage.heapUsed, 0); // CPU calculation would need more complex implementation
-    
+
     res.json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
@@ -370,9 +366,9 @@ export const getHealthMetrics = async (_req: Request, res: Response) => {
       metrics_endpoint: '/metrics',
     });
   } catch (error) {
-    res.status(500).json({ 
-      status: 'unhealthy', 
-      error: 'Failed to get health metrics' 
+    res.status(500).json({
+      status: 'unhealthy',
+      error: 'Failed to get health metrics',
     });
   }
 };

@@ -1,7 +1,7 @@
 /**
  * Analytics Routes Integration
  * Epic 5: Analytics Engine Service - Integration between routes and simplified service
- * 
+ *
  * Creates analytics routes compatible with our simplified analytics service
  */
 
@@ -18,10 +18,7 @@ import { EventType, EventCategory, EventSeverity, EventSource } from '../types/a
 /**
  * Create Analytics Routes with Simplified Service Integration
  */
-export function createAnalyticsRoutes(
-  prisma: PrismaClient,
-  redis: RedisService
-): Router {
+export function createAnalyticsRoutes(prisma: PrismaClient, redis: RedisService): Router {
   const router = Router();
   const logger = Logger.getInstance();
 
@@ -38,8 +35,8 @@ export function createAnalyticsRoutes(
     message: {
       success: false,
       message: 'Rate limit exceeded for analytics API',
-      code: 'ANALYTICS_RATE_LIMIT'
-    }
+      code: 'ANALYTICS_RATE_LIMIT',
+    },
   });
   router.use(rateLimiter);
 
@@ -57,7 +54,7 @@ export function createAnalyticsRoutes(
       if (!eventData.type) {
         return res.status(400).json({
           success: false,
-          error: 'Event type is required'
+          error: 'Event type is required',
         });
       }
 
@@ -66,7 +63,7 @@ export function createAnalyticsRoutes(
         return res.status(400).json({
           success: false,
           error: 'Invalid event type',
-          validTypes: Object.values(EventType)
+          validTypes: Object.values(EventType),
         });
       }
 
@@ -87,8 +84,8 @@ export function createAnalyticsRoutes(
           version: '1.0.0',
           environment: process.env.NODE_ENV || 'development',
           userAgent: req.get('User-Agent'),
-          ipAddress: req.ip
-        } as EventSource
+          ipAddress: req.ip,
+        } as EventSource,
       };
 
       // Collect event using simplified analytics service
@@ -97,13 +94,13 @@ export function createAnalyticsRoutes(
       logger.info('Analytics event collected', {
         eventId: event.id,
         eventType: event.type,
-        userId: event.userId
+        userId: event.userId,
       });
 
       return res.status(201).json({
         success: true,
         eventId: event.id,
-        message: 'Event collected successfully'
+        message: 'Event collected successfully',
       });
     } catch (error) {
       logger.error('Failed to collect analytics event', error as Error);
@@ -111,7 +108,7 @@ export function createAnalyticsRoutes(
       return res.status(500).json({
         success: false,
         error: 'Failed to collect event',
-        details: (error as Error).message
+        details: (error as Error).message,
       });
     }
   });
@@ -127,7 +124,7 @@ export function createAnalyticsRoutes(
       if (!Array.isArray(eventDataArray) || eventDataArray.length === 0) {
         return res.status(400).json({
           success: false,
-          error: 'Events must be a non-empty array'
+          error: 'Events must be a non-empty array',
         });
       }
 
@@ -148,8 +145,8 @@ export function createAnalyticsRoutes(
           version: '1.0.0',
           environment: process.env.NODE_ENV || 'development',
           userAgent: req.get('User-Agent'),
-          ipAddress: req.ip
-        } as EventSource
+          ipAddress: req.ip,
+        } as EventSource,
       }));
 
       // Collect events
@@ -158,14 +155,14 @@ export function createAnalyticsRoutes(
       logger.info('Batch analytics events collected', {
         total: events.length,
         processed: result.processed,
-        errors: result.errors.length
+        errors: result.errors.length,
       });
 
       return res.status(200).json({
         success: result.success,
         processed: result.processed,
         total: events.length,
-        errors: result.errors
+        errors: result.errors,
       });
     } catch (error) {
       logger.error('Failed to collect batch events', error as Error);
@@ -173,7 +170,7 @@ export function createAnalyticsRoutes(
       return res.status(500).json({
         success: false,
         error: 'Failed to collect batch events',
-        details: (error as Error).message
+        details: (error as Error).message,
       });
     }
   });
@@ -193,29 +190,31 @@ export function createAnalyticsRoutes(
       if ((req as any).user?.id !== userId && !(req as any).user?.roles?.includes('admin')) {
         return res.status(403).json({
           success: false,
-          error: 'Access denied'
+          error: 'Access denied',
         });
       }
 
-      const timeRange = start && stop ? {
-        start: start as string,
-        stop: stop as string
-      } : undefined;
+      const timeRange =
+        start && stop
+          ? {
+              start: start as string,
+              stop: stop as string,
+            }
+          : undefined;
 
       const metrics = await analyticsService.getPerformanceMetrics(userId, timeRange);
 
       return res.status(200).json({
         success: true,
-        data: metrics
+        data: metrics,
       });
-
     } catch (error) {
       logger.error('Failed to get performance metrics', error as Error);
 
       return res.status(500).json({
         success: false,
         error: 'Failed to retrieve performance metrics',
-        details: (error as Error).message
+        details: (error as Error).message,
       });
     }
   });
@@ -231,14 +230,14 @@ export function createAnalyticsRoutes(
       if (!queryData.measurement) {
         return res.status(400).json({
           success: false,
-          error: 'Measurement is required'
+          error: 'Measurement is required',
         });
       }
 
       if (!queryData.start || !queryData.stop) {
         return res.status(400).json({
           success: false,
-          error: 'Time range with start and stop is required'
+          error: 'Time range with start and stop is required',
         });
       }
 
@@ -247,16 +246,15 @@ export function createAnalyticsRoutes(
       return res.status(200).json({
         success: true,
         data: data,
-        count: data.length
+        count: data.length,
       });
-
     } catch (error) {
       logger.error('Failed to query time series data', error as Error);
 
       return res.status(500).json({
         success: false,
         error: 'Failed to query data',
-        details: (error as Error).message
+        details: (error as Error).message,
       });
     }
   });
@@ -274,16 +272,15 @@ export function createAnalyticsRoutes(
 
       return res.status(200).json({
         success: true,
-        data: metrics
+        data: metrics,
       });
-
     } catch (error) {
       logger.error('Failed to get dashboard metrics', error as Error);
 
       return res.status(500).json({
         success: false,
         error: 'Failed to retrieve dashboard metrics',
-        details: (error as Error).message
+        details: (error as Error).message,
       });
     }
   });
@@ -300,9 +297,9 @@ export function createAnalyticsRoutes(
       res.writeHead(200, {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
+        Connection: 'keep-alive',
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Cache-Control'
+        'Access-Control-Allow-Headers': 'Cache-Control',
       });
 
       // Send initial data and set up periodic updates
@@ -325,24 +322,25 @@ export function createAnalyticsRoutes(
           req.on('close', () => {
             clearInterval(intervalId);
             logger.info('Analytics stream disconnected', {
-              userId: (req as any).user?.id
+              userId: (req as any).user?.id,
             });
           });
         } catch (streamError) {
           logger.error('Failed to initialize analytics stream', streamError as Error);
-          res.write(`event: error\ndata: ${JSON.stringify({error: 'Stream initialization failed'})}\n\n`);
+          res.write(
+            `event: error\ndata: ${JSON.stringify({ error: 'Stream initialization failed' })}\n\n`
+          );
         }
       })();
-      
+
       // This satisfies TypeScript's return requirement for SSE endpoints
       return;
-
     } catch (error) {
       logger.error('Failed to initialize analytics stream', error as Error);
       return res.status(500).json({
         success: false,
         error: 'Failed to initialize stream',
-        details: (error as Error).message
+        details: (error as Error).message,
       });
     }
   });
@@ -361,7 +359,7 @@ export function createAnalyticsRoutes(
         success: true,
         status: 'healthy',
         timestamp: new Date().toISOString(),
-        details: health
+        details: health,
       });
     } catch (error) {
       logger.error('Analytics health check failed', error as Error);
@@ -370,7 +368,7 @@ export function createAnalyticsRoutes(
         success: false,
         status: 'unhealthy',
         timestamp: new Date().toISOString(),
-        error: (error as Error).message
+        error: (error as Error).message,
       });
     }
   });
@@ -384,12 +382,12 @@ export function createAnalyticsRoutes(
       const eventTypes = Object.values(EventType).map(type => ({
         type,
         description: getEventTypeDescription(type),
-        category: getEventTypeCategory(type)
+        category: getEventTypeCategory(type),
       }));
 
       return res.status(200).json({
         success: true,
-        data: eventTypes
+        data: eventTypes,
       });
     } catch (error) {
       logger.error('Failed to get event types', error as Error);
@@ -397,7 +395,7 @@ export function createAnalyticsRoutes(
       return res.status(500).json({
         success: false,
         error: 'Failed to retrieve event types',
-        details: (error as Error).message
+        details: (error as Error).message,
       });
     }
   });
@@ -441,7 +439,7 @@ function getEventTypeDescription(type: EventType): string {
     [EventType.SESSION_ENDED]: 'User session ends',
     [EventType.CONNECTION_LOST]: 'Network connection lost',
     [EventType.CONNECTION_RESTORED]: 'Network connection restored',
-    [EventType.ERROR_OCCURRED]: 'System error occurred'
+    [EventType.ERROR_OCCURRED]: 'System error occurred',
   };
 
   return descriptions[type] || 'Unknown event type';
@@ -451,14 +449,25 @@ function getEventTypeDescription(type: EventType): string {
  * Get event type category
  */
 function getEventTypeCategory(type: EventType): EventCategory {
-  if (type.toString().startsWith('ASSESSMENT_')) return EventCategory.ASSESSMENT;
-  if (type.toString().startsWith('QUESTION_')) return EventCategory.QUESTION;
-  if (type.toString().startsWith('CODE_')) return EventCategory.CODE_EXECUTION;
-  if (type.toString().startsWith('VIOLATION_') || 
-      type.toString().includes('FACE') || 
-      type === EventType.SUSPICIOUS_ACTIVITY) return EventCategory.PROCTORING;
-  if (type.toString().startsWith('SESSION_') || 
-      type.toString().includes('CONNECTION')) return EventCategory.SYSTEM;
+  if (type.toString().startsWith('ASSESSMENT_')) {
+    return EventCategory.ASSESSMENT;
+  }
+  if (type.toString().startsWith('QUESTION_')) {
+    return EventCategory.QUESTION;
+  }
+  if (type.toString().startsWith('CODE_')) {
+    return EventCategory.CODE_EXECUTION;
+  }
+  if (
+    type.toString().startsWith('VIOLATION_') ||
+    type.toString().includes('FACE') ||
+    type === EventType.SUSPICIOUS_ACTIVITY
+  ) {
+    return EventCategory.PROCTORING;
+  }
+  if (type.toString().startsWith('SESSION_') || type.toString().includes('CONNECTION')) {
+    return EventCategory.SYSTEM;
+  }
   return EventCategory.SYSTEM;
 }
 

@@ -1,7 +1,7 @@
 /**
  * Notification Service Implementation
  * AI-native technical hiring platform - Epic 6: Notification Service
- * 
+ *
  * Core notification service handling multi-channel delivery:
  * - Email notifications via SendGrid
  * - SMS notifications via Twilio
@@ -57,7 +57,7 @@ import {
   ConsentType,
   NotificationRule,
   NotificationRecipient,
-  NotificationContent
+  NotificationContent,
 } from '@/types/notification.types';
 
 export class NotificationService {
@@ -93,10 +93,7 @@ export class NotificationService {
 
       // Initialize SMS providers
       if (this.config.providers.sms.twilio) {
-        const twilioProvider = new TwilioProvider(
-          this.config.providers.sms.twilio,
-          this.logger
-        );
+        const twilioProvider = new TwilioProvider(this.config.providers.sms.twilio, this.logger);
         this.smsProviders.set('twilio', twilioProvider);
       }
 
@@ -115,16 +112,13 @@ export class NotificationService {
       this.logger.info('Notification providers initialized successfully', {
         emailProviders: Array.from(this.emailProviders.keys()),
         smsProviders: Array.from(this.smsProviders.keys()),
-        pushProviders: Array.from(this.pushProviders.keys())
+        pushProviders: Array.from(this.pushProviders.keys()),
       });
     } catch (error) {
       this.logger.error('Failed to initialize notification providers', { error });
-      throw new NotificationError(
-        'Provider initialization failed',
-        'PROVIDER_INIT_ERROR',
-        500,
-        { error: error instanceof Error ? error.message : 'Unknown error' }
-      );
+      throw new NotificationError('Provider initialization failed', 'PROVIDER_INIT_ERROR', 500, {
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
   }
 
@@ -162,12 +156,18 @@ export class NotificationService {
       );
 
       // Queue for delivery
-      await this.queueNotificationDelivery(notification.id, validRecipients, request.channels, content, request.priority);
+      await this.queueNotificationDelivery(
+        notification.id,
+        validRecipients,
+        request.channels,
+        content,
+        request.priority
+      );
 
       this.logger.info('Notification queued for delivery', {
         notificationId: notification.id,
         recipientCount: validRecipients.length,
-        channels: request.channels
+        channels: request.channels,
       });
 
       return notification;
@@ -205,7 +205,7 @@ export class NotificationService {
               notificationId,
               channel,
               recipient: recipient.id,
-              error
+              error,
             });
 
             // Create failed delivery record
@@ -218,7 +218,7 @@ export class NotificationService {
               attempts: 1,
               lastAttempt: new Date(),
               errorMessage: error instanceof Error ? error.message : 'Unknown error',
-              metadata: {}
+              metadata: {},
             };
             deliveries.push(failedDelivery);
           }
@@ -235,7 +235,7 @@ export class NotificationService {
         notificationId,
         totalDeliveries: deliveries.length,
         successful: deliveries.filter(d => d.status === DeliveryStatus.DELIVERED).length,
-        failed: deliveries.filter(d => d.status === DeliveryStatus.FAILED).length
+        failed: deliveries.filter(d => d.status === DeliveryStatus.FAILED).length,
       });
     } catch (error) {
       this.logger.error('Failed to process delivery queue', { notificationId, error });
@@ -260,7 +260,7 @@ export class NotificationService {
       channel,
       status: DeliveryStatus.PENDING,
       attempts: 0,
-      metadata: {}
+      metadata: {},
     };
 
     try {
@@ -307,16 +307,27 @@ export class NotificationService {
   /**
    * Send email notification
    */
-  private async sendEmail(recipient: NotificationRecipient, content: NotificationContent): Promise<EmailSendResponse> {
+  private async sendEmail(
+    recipient: NotificationRecipient,
+    content: NotificationContent
+  ): Promise<EmailSendResponse> {
     if (!recipient.email) {
-      throw new DeliveryError('Recipient email not provided', NotificationChannel.EMAIL, 'validation');
+      throw new DeliveryError(
+        'Recipient email not provided',
+        NotificationChannel.EMAIL,
+        'validation'
+      );
     }
 
     const primaryProvider = this.config.providers.email.primary;
     const provider = this.emailProviders.get(primaryProvider);
-    
+
     if (!provider) {
-      throw new DeliveryError(`Email provider not configured: ${primaryProvider}`, NotificationChannel.EMAIL, primaryProvider);
+      throw new DeliveryError(
+        `Email provider not configured: ${primaryProvider}`,
+        NotificationChannel.EMAIL,
+        primaryProvider
+      );
     }
 
     const request: EmailSendRequest = {
@@ -328,8 +339,8 @@ export class NotificationService {
       attachments: content.attachments,
       metadata: {
         recipientId: recipient.id,
-        notificationType: content.metadata?.type
-      }
+        notificationType: content.metadata?.type,
+      },
     };
 
     return await provider.send(request);
@@ -338,16 +349,27 @@ export class NotificationService {
   /**
    * Send SMS notification
    */
-  private async sendSMS(recipient: NotificationRecipient, content: NotificationContent): Promise<SMSSendResponse> {
+  private async sendSMS(
+    recipient: NotificationRecipient,
+    content: NotificationContent
+  ): Promise<SMSSendResponse> {
     if (!recipient.phoneNumber) {
-      throw new DeliveryError('Recipient phone number not provided', NotificationChannel.SMS, 'validation');
+      throw new DeliveryError(
+        'Recipient phone number not provided',
+        NotificationChannel.SMS,
+        'validation'
+      );
     }
 
     const primaryProvider = this.config.providers.sms.primary;
     const provider = this.smsProviders.get(primaryProvider);
-    
+
     if (!provider) {
-      throw new DeliveryError(`SMS provider not configured: ${primaryProvider}`, NotificationChannel.SMS, primaryProvider);
+      throw new DeliveryError(
+        `SMS provider not configured: ${primaryProvider}`,
+        NotificationChannel.SMS,
+        primaryProvider
+      );
     }
 
     const request: SMSSendRequest = {
@@ -356,8 +378,8 @@ export class NotificationService {
       body: content.body,
       metadata: {
         recipientId: recipient.id,
-        notificationType: content.metadata?.type
-      }
+        notificationType: content.metadata?.type,
+      },
     };
 
     return await provider.send(request);
@@ -366,9 +388,16 @@ export class NotificationService {
   /**
    * Send push notification
    */
-  private async sendPush(recipient: NotificationRecipient, content: NotificationContent): Promise<PushSendResponse> {
+  private async sendPush(
+    recipient: NotificationRecipient,
+    content: NotificationContent
+  ): Promise<PushSendResponse> {
     if (!recipient.pushEndpoint) {
-      throw new DeliveryError('Recipient push endpoint not provided', NotificationChannel.PUSH, 'validation');
+      throw new DeliveryError(
+        'Recipient push endpoint not provided',
+        NotificationChannel.PUSH,
+        'validation'
+      );
     }
 
     const provider = this.pushProviders.get('webpush');
@@ -381,7 +410,7 @@ export class NotificationService {
       title: content.title || content.subject || 'Notification',
       body: content.body,
       actions: content.actions,
-      data: content.metadata
+      data: content.metadata,
     };
 
     return await provider.send(request);
@@ -390,9 +419,16 @@ export class NotificationService {
   /**
    * Send webhook notification
    */
-  private async sendWebhook(recipient: NotificationRecipient, content: NotificationContent): Promise<WebhookSendResponse> {
+  private async sendWebhook(
+    recipient: NotificationRecipient,
+    content: NotificationContent
+  ): Promise<WebhookSendResponse> {
     if (!recipient.webhookUrl) {
-      throw new DeliveryError('Recipient webhook URL not provided', NotificationChannel.WEBHOOK, 'validation');
+      throw new DeliveryError(
+        'Recipient webhook URL not provided',
+        NotificationChannel.WEBHOOK,
+        'validation'
+      );
     }
 
     const request: WebhookSendRequest = {
@@ -401,16 +437,20 @@ export class NotificationService {
       body: {
         recipient: recipient.id,
         content: content,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
       headers: {
         'Content-Type': 'application/json',
-        'User-Agent': 'Dessai-Notification-Service/1.0'
-      }
+        'User-Agent': 'Dessai-Notification-Service/1.0',
+      },
     };
 
     if (!this.webhookProvider) {
-      throw new DeliveryError('Webhook provider not initialized', NotificationChannel.WEBHOOK, 'configuration');
+      throw new DeliveryError(
+        'Webhook provider not initialized',
+        NotificationChannel.WEBHOOK,
+        'configuration'
+      );
     }
     return await this.webhookProvider.send(request);
   }
@@ -431,32 +471,38 @@ export class NotificationService {
       const defaultPreferences: NotificationPreferences = {
         userId,
         channels: {
-          [NotificationChannel.EMAIL]: true,
-          [NotificationChannel.SMS]: false,
-          [NotificationChannel.PUSH]: true,
-          [NotificationChannel.WEBHOOK]: false,
-          [NotificationChannel.IN_APP]: true,
-          [NotificationChannel.SLACK]: false,
-          [NotificationChannel.TEAMS]: false,
-          [NotificationChannel.DISCORD]: false
+          [NotificationChannel.EMAIL]: { enabled: true, priority: 0.8 },
+          [NotificationChannel.SMS]: { enabled: false, priority: 0.9 },
+          [NotificationChannel.PUSH]: { enabled: true, priority: 0.7 },
+          [NotificationChannel.WEBHOOK]: { enabled: false, priority: 0.5 },
+          [NotificationChannel.IN_APP]: { enabled: true, priority: 0.6 },
+          [NotificationChannel.SLACK]: { enabled: false, priority: 0.6 },
+          [NotificationChannel.TEAMS]: { enabled: false, priority: 0.6 },
+          [NotificationChannel.DISCORD]: { enabled: false, priority: 0.5 },
         },
-        types: Object.values(NotificationType).reduce((acc, type) => {
-          acc[type] = true;
-          return acc;
-        }, {} as Record<NotificationType, boolean>),
-        frequency: Object.values(NotificationType).reduce((acc, type) => {
-          acc[type] = FrequencyLimit.IMMEDIATE;
-          return acc;
-        }, {} as Record<NotificationType, FrequencyLimit>),
+        types: Object.values(NotificationType).reduce(
+          (acc, type) => {
+            acc[type] = { enabled: true, frequency: 'immediate' };
+            return acc;
+          },
+          {} as Record<NotificationType, { enabled: boolean; frequency: string }>
+        ),
+        frequency: Object.values(NotificationType).reduce(
+          (acc, type) => {
+            acc[type] = FrequencyLimit.IMMEDIATE;
+            return acc;
+          },
+          {} as Record<NotificationType, FrequencyLimit>
+        ),
         consent: {
           [ConsentType.TRANSACTIONAL]: { granted: true, timestamp: new Date(), source: 'system' },
           [ConsentType.SYSTEM]: { granted: true, timestamp: new Date(), source: 'system' },
           [ConsentType.SECURITY]: { granted: true, timestamp: new Date(), source: 'system' },
           [ConsentType.MARKETING]: { granted: false, timestamp: new Date(), source: 'system' },
-          [ConsentType.ANALYTICS]: { granted: false, timestamp: new Date(), source: 'system' }
+          [ConsentType.ANALYTICS]: { granted: false, timestamp: new Date(), source: 'system' },
         },
         locale: 'en-US',
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       // Cache for 1 hour
@@ -479,7 +525,7 @@ export class NotificationService {
       const updatedPreferences: NotificationPreferences = {
         ...currentPreferences,
         ...request,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       // Save to cache
@@ -515,13 +561,19 @@ export class NotificationService {
       // Update preferences based on unsubscribe request
       if (request.types) {
         for (const type of request.types) {
-          preferences.types[type] = false;
+          preferences.types[type] = {
+            enabled: false,
+            frequency: preferences.types[type].frequency,
+          };
         }
       }
 
       if (request.channels) {
         for (const channel of request.channels) {
-          preferences.channels[channel] = false;
+          preferences.channels[channel] = {
+            enabled: false,
+            priority: preferences.channels[channel].priority,
+          };
         }
       }
 
@@ -530,21 +582,21 @@ export class NotificationService {
         preferences.consent[ConsentType.MARKETING] = {
           granted: false,
           timestamp: new Date(),
-          source: 'unsubscribe'
+          source: 'unsubscribe',
         };
       }
 
       await this.updateUserPreferences({
         userId,
         channels: preferences.channels,
-        types: preferences.types
+        types: preferences.types,
       });
 
       this.logger.info('User unsubscribed successfully', {
         userId,
         types: request.types,
         channels: request.channels,
-        reason: request.reason
+        reason: request.reason,
       });
     } catch (error) {
       this.logger.error('Failed to handle unsubscribe', { request, error });
@@ -563,7 +615,7 @@ export class NotificationService {
 
       // Build filters
       const filters: any = {
-        organizationId: request.organizationId
+        organizationId: request.organizationId,
       };
 
       if (request.types?.length) {
@@ -584,13 +636,17 @@ export class NotificationService {
 
       if (request.startDate || request.endDate) {
         filters.createdAt = {};
-        if (request.startDate) filters.createdAt.gte = request.startDate;
-        if (request.endDate) filters.createdAt.lte = request.endDate;
+        if (request.startDate) {
+          filters.createdAt.gte = request.startDate;
+        }
+        if (request.endDate) {
+          filters.createdAt.lte = request.endDate;
+        }
       }
 
       if (request.recipientId) {
         filters.recipients = {
-          some: { id: request.recipientId }
+          some: { id: request.recipientId },
         };
       }
 
@@ -604,7 +660,7 @@ export class NotificationService {
           page,
           pageSize,
           totalItems: totalCount,
-          totalPages: Math.ceil(totalCount / pageSize)
+          totalPages: Math.ceil(totalCount / pageSize),
         },
         filters: {
           applied: request,
@@ -612,9 +668,9 @@ export class NotificationService {
             types: Object.values(NotificationType),
             channels: Object.values(NotificationChannel),
             status: Object.values(DeliveryStatus),
-            priority: Object.values(NotificationPriority)
-          }
-        }
+            priority: Object.values(NotificationPriority),
+          },
+        },
       };
     } catch (error) {
       this.logger.error('Failed to get notifications', { request, error });
@@ -625,7 +681,11 @@ export class NotificationService {
   /**
    * Get notification analytics
    */
-  async getAnalytics(organizationId: string, startDate: Date, endDate: Date): Promise<NotificationAnalytics> {
+  async getAnalytics(
+    organizationId: string,
+    startDate: Date,
+    endDate: Date
+  ): Promise<NotificationAnalytics> {
     try {
       // This would typically query the database for analytics data
       // For now, returning a mock structure
@@ -638,21 +698,21 @@ export class NotificationService {
           totalDeliveries: 0,
           totalCost: 0,
           averageDeliveryTime: 0,
-          successRate: 0
+          successRate: 0,
         },
         byChannel: {} as any,
         byType: {} as any,
         byPriority: {} as any,
         trends: {
           daily: [],
-          hourly: []
+          hourly: [],
         },
         topFailureReasons: [],
         deliveryPerformance: {
           p50: 0,
           p95: 0,
-          p99: 0
-        }
+          p99: 0,
+        },
       };
 
       return analytics;
@@ -706,7 +766,7 @@ export class NotificationService {
           if (!hasConsent) {
             this.logger.debug('Recipient filtered by consent', {
               recipientId: recipient.id,
-              type
+              type,
             });
             continue;
           }
@@ -715,7 +775,7 @@ export class NotificationService {
           if (!preferences.types[type]) {
             this.logger.debug('Recipient filtered by type preference', {
               recipientId: recipient.id,
-              type
+              type,
             });
             continue;
           }
@@ -725,7 +785,7 @@ export class NotificationService {
           if (enabledChannels.length === 0) {
             this.logger.debug('Recipient filtered by channel preferences', {
               recipientId: recipient.id,
-              channels
+              channels,
             });
             continue;
           }
@@ -734,7 +794,7 @@ export class NotificationService {
         } catch (error) {
           this.logger.warn('Failed to check recipient preferences', {
             recipientId: recipient.id,
-            error
+            error,
           });
           // Include recipient if preferences check fails (fail open)
           validRecipients.push(recipient);
@@ -759,7 +819,7 @@ export class NotificationService {
       [NotificationType.ASSESSMENT_RESULTS]: ConsentType.TRANSACTIONAL,
       [NotificationType.SECURITY_ALERT]: ConsentType.SECURITY,
       [NotificationType.SYSTEM_MAINTENANCE]: ConsentType.SYSTEM,
-      [NotificationType.BIAS_ALERT]: ConsentType.ANALYTICS
+      [NotificationType.BIAS_ALERT]: ConsentType.ANALYTICS,
     };
 
     const consentType = consentMapping[type] || ConsentType.TRANSACTIONAL;
@@ -769,10 +829,15 @@ export class NotificationService {
   /**
    * Check rate limits
    */
-  private async checkRateLimits(organizationId: string, channels: NotificationChannel[]): Promise<void> {
+  private async checkRateLimits(
+    organizationId: string,
+    channels: NotificationChannel[]
+  ): Promise<void> {
     for (const channel of channels) {
       const limits = this.config.rateLimits.perChannel[channel];
-      if (!limits) continue;
+      if (!limits) {
+        continue;
+      }
 
       const key = `rate_limit:${organizationId}:${channel}`;
       const now = Date.now();
@@ -783,7 +848,11 @@ export class NotificationService {
       if (limits.maxPerMinute) {
         const minuteKey = `${key}:minute:${minute}`;
         const minuteCount = await this.redis.get(minuteKey);
-        if (minuteCount && typeof minuteCount === 'string' && parseInt(minuteCount) >= limits.maxPerMinute) {
+        if (
+          minuteCount &&
+          typeof minuteCount === 'string' &&
+          parseInt(minuteCount) >= limits.maxPerMinute
+        ) {
           throw new RateLimitError(
             `Rate limit exceeded for ${channel}: ${limits.maxPerMinute}/minute`,
             channel,
@@ -796,7 +865,11 @@ export class NotificationService {
       if (limits.maxPerHour) {
         const hourKey = `${key}:hour:${hour}`;
         const hourCount = await this.redis.get(hourKey);
-        if (hourCount && typeof hourCount === 'string' && parseInt(hourCount) >= limits.maxPerHour) {
+        if (
+          hourCount &&
+          typeof hourCount === 'string' &&
+          parseInt(hourCount) >= limits.maxPerHour
+        ) {
           throw new RateLimitError(
             `Rate limit exceeded for ${channel}: ${limits.maxPerHour}/hour`,
             channel,
@@ -809,14 +882,16 @@ export class NotificationService {
       if (limits.maxPerMinute) {
         const minuteKey = `${key}:minute:${minute}`;
         const currentCount = await this.redis.get(minuteKey);
-        const newCount = (currentCount && typeof currentCount === 'string' ? parseInt(currentCount) : 0) + 1;
+        const newCount =
+          (currentCount && typeof currentCount === 'string' ? parseInt(currentCount) : 0) + 1;
         await this.redis.set(minuteKey, newCount.toString(), 60);
       }
 
       if (limits.maxPerHour) {
         const hourKey = `${key}:hour:${hour}`;
         const currentCount = await this.redis.get(hourKey);
-        const newCount = (currentCount && typeof currentCount === 'string' ? parseInt(currentCount) : 0) + 1;
+        const newCount =
+          (currentCount && typeof currentCount === 'string' ? parseInt(currentCount) : 0) + 1;
         await this.redis.set(hourKey, newCount.toString(), 3600);
       }
     }
@@ -859,10 +934,14 @@ export class NotificationService {
       channels,
       content,
       priority,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
-    await this.redis.set(`notification_queue:${queueName}:${Date.now()}`, JSON.stringify(job), 3600);
+    await this.redis.set(
+      `notification_queue:${queueName}:${Date.now()}`,
+      JSON.stringify(job),
+      3600
+    );
   }
 
   /**
@@ -872,7 +951,9 @@ export class NotificationService {
     return `ntf_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  private async createNotificationRecord(request: CreateNotificationRequest): Promise<NotificationRecord> {
+  private async createNotificationRecord(
+    request: CreateNotificationRequest
+  ): Promise<NotificationRecord> {
     const id = this.generateId();
     const now = new Date();
 
@@ -883,7 +964,7 @@ export class NotificationService {
       priority: request.priority,
       status: DeliveryStatus.PENDING,
       recipients: request.recipients,
-      content: request.content || {} as NotificationContent,
+      content: request.content || ({} as NotificationContent),
       templateId: request.templateId || undefined,
       variables: request.variables,
       schedule: request.schedule,
@@ -896,13 +977,13 @@ export class NotificationService {
         bouncedCount: 0,
         deliveryRate: 0,
         bounceRate: 0,
-        cost: 0
+        cost: 0,
       },
       organizationId: request.organizationId,
       createdBy: request.createdBy,
       createdAt: now,
       updatedAt: now,
-      metadata: request.metadata
+      metadata: request.metadata,
     };
   }
 
@@ -915,11 +996,17 @@ export class NotificationService {
     // TODO: Implement database update
   }
 
-  private async updateNotificationDeliveries(id: string, deliveries: NotificationDelivery[]): Promise<void> {
+  private async updateNotificationDeliveries(
+    id: string,
+    deliveries: NotificationDelivery[]
+  ): Promise<void> {
     // TODO: Implement database update
   }
 
-  private async updateNotificationMetrics(id: string, deliveries: NotificationDelivery[]): Promise<void> {
+  private async updateNotificationMetrics(
+    id: string,
+    deliveries: NotificationDelivery[]
+  ): Promise<void> {
     const metrics = this.calculateNotificationMetrics(deliveries);
     // TODO: Implement database update
   }
@@ -939,7 +1026,7 @@ export class NotificationService {
       bouncedCount,
       deliveryRate: sentCount > 0 ? (deliveredCount / sentCount) * 100 : 0,
       bounceRate: sentCount > 0 ? (bouncedCount / sentCount) * 100 : 0,
-      cost: deliveries.reduce((sum, d) => sum + (d.cost || 0), 0)
+      cost: deliveries.reduce((sum, d) => sum + (d.cost || 0), 0),
     };
   }
 
@@ -953,10 +1040,13 @@ export class NotificationService {
     throw new TemplateError('Template not found', templateId);
   }
 
-  private renderTemplate(template: NotificationTemplate, variables: Record<string, any>): NotificationContent {
+  private renderTemplate(
+    template: NotificationTemplate,
+    variables: Record<string, any>
+  ): NotificationContent {
     // Simple template rendering - in production, use a proper template engine
     let renderedContent = template.content;
-    
+
     for (const [key, value] of Object.entries(variables)) {
       const placeholder = `{{${key}}}`;
       renderedContent = renderedContent.replace(new RegExp(placeholder, 'g'), String(value));
@@ -967,8 +1057,8 @@ export class NotificationService {
       body: renderedContent,
       metadata: {
         templateId: template.id,
-        templateVersion: template.version
-      }
+        templateVersion: template.version,
+      },
     };
   }
 
@@ -982,7 +1072,10 @@ export class NotificationService {
 class SendGridProvider implements EmailProvider {
   name = 'sendgrid';
 
-  constructor(private config: any, private logger: Logger) {}
+  constructor(
+    private config: any,
+    private logger: Logger
+  ) {}
 
   async send(request: EmailSendRequest): Promise<EmailSendResponse> {
     // TODO: Implement SendGrid integration
@@ -991,7 +1084,7 @@ class SendGridProvider implements EmailProvider {
       messageId: `sg_${Date.now()}`,
       status: DeliveryStatus.DELIVERED,
       providerResponse: { mock: true },
-      cost: 0.001
+      cost: 0.001,
     };
   }
 
@@ -1007,7 +1100,10 @@ class SendGridProvider implements EmailProvider {
 class TwilioProvider implements SMSProvider {
   name = 'twilio';
 
-  constructor(private config: any, private logger: Logger) {}
+  constructor(
+    private config: any,
+    private logger: Logger
+  ) {}
 
   async send(request: SMSSendRequest): Promise<SMSSendResponse> {
     // TODO: Implement Twilio integration
@@ -1016,7 +1112,7 @@ class TwilioProvider implements SMSProvider {
       messageId: `tw_${Date.now()}`,
       status: DeliveryStatus.DELIVERED,
       providerResponse: { mock: true },
-      cost: 0.05
+      cost: 0.05,
     };
   }
 
@@ -1032,7 +1128,10 @@ class TwilioProvider implements SMSProvider {
 class WebPushProvider implements PushProvider {
   name = 'webpush';
 
-  constructor(private config: any, private logger: Logger) {}
+  constructor(
+    private config: any,
+    private logger: Logger
+  ) {}
 
   async send(request: PushSendRequest): Promise<PushSendResponse> {
     // TODO: Implement Web Push integration
@@ -1040,7 +1139,7 @@ class WebPushProvider implements PushProvider {
     return {
       messageId: `wp_${Date.now()}`,
       status: DeliveryStatus.DELIVERED,
-      providerResponse: { mock: true }
+      providerResponse: { mock: true },
     };
   }
 
@@ -1065,7 +1164,7 @@ class GenericWebhookProvider implements WebhookProvider {
       messageId: `wh_${Date.now()}`,
       status: DeliveryStatus.DELIVERED,
       statusCode: 200,
-      responseTime: 150
+      responseTime: 150,
     };
   }
 

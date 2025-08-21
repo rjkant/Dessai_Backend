@@ -16,12 +16,12 @@ export class CollaborationWebSocketServer {
 
   constructor(server: HTTPServer) {
     this.collaborationController = new CollaborationController();
-    
+
     // Create WebSocket server
     this.wss = new WebSocketServer({
       server,
       path: '/ws/collaboration',
-      verifyClient: this.verifyClient.bind(this)
+      verifyClient: this.verifyClient.bind(this),
     });
 
     this.setupEventHandlers();
@@ -62,7 +62,7 @@ export class CollaborationWebSocketServer {
   private setupEventHandlers(): void {
     this.wss.on('connection', (ws: WebSocket, req: any) => {
       const userId = req.userId;
-      
+
       if (!userId) {
         ws.close(1008, 'Authentication required');
         return;
@@ -105,14 +105,16 @@ export class CollaborationWebSocketServer {
   private async handleMessage(ws: WebSocket, userId: string, data: Buffer): Promise<void> {
     try {
       const message = JSON.parse(data.toString());
-      
+
       // Validate message format
       if (!message.type || !message.sessionId) {
-        ws.send(JSON.stringify({
-          type: 'error',
-          error: 'Invalid message format: type and sessionId required',
-          timestamp: new Date()
-        }));
+        ws.send(
+          JSON.stringify({
+            type: 'error',
+            error: 'Invalid message format: type and sessionId required',
+            timestamp: new Date(),
+          })
+        );
         return;
       }
 
@@ -121,40 +123,46 @@ export class CollaborationWebSocketServer {
         case 'join_session':
           await this.handleJoinSession(ws, userId, message);
           break;
-        
+
         case 'leave_session':
           await this.handleLeaveSession(ws, userId, message);
           break;
-        
+
         case 'code_change':
           await this.handleCodeChange(ws, userId, message);
           break;
-        
+
         case 'cursor_update':
           await this.handleCursorUpdate(ws, userId, message);
           break;
-        
+
         case 'ping':
-          ws.send(JSON.stringify({
-            type: 'pong',
-            timestamp: new Date()
-          }));
+          ws.send(
+            JSON.stringify({
+              type: 'pong',
+              timestamp: new Date(),
+            })
+          );
           break;
-        
+
         default:
-          ws.send(JSON.stringify({
-            type: 'error',
-            error: `Unknown message type: ${message.type}`,
-            timestamp: new Date()
-          }));
+          ws.send(
+            JSON.stringify({
+              type: 'error',
+              error: `Unknown message type: ${message.type}`,
+              timestamp: new Date(),
+            })
+          );
       }
     } catch (error) {
       console.error('Error handling WebSocket message:', error);
-      ws.send(JSON.stringify({
-        type: 'error',
-        error: 'Failed to process message',
-        timestamp: new Date()
-      }));
+      ws.send(
+        JSON.stringify({
+          type: 'error',
+          error: 'Failed to process message',
+          timestamp: new Date(),
+        })
+      );
     }
   }
 
@@ -164,36 +172,43 @@ export class CollaborationWebSocketServer {
   private async handleJoinSession(ws: WebSocket, userId: string, message: any): Promise<void> {
     try {
       const { sessionId, role, userName } = message;
-      
+
       // This would integrate with the collaboration service
       // For now, send acknowledgment
-      ws.send(JSON.stringify({
-        type: 'session_joined',
-        sessionId,
-        userId,
-        role: role || 'participant',
-        userName: userName || `User ${userId}`,
-        timestamp: new Date()
-      }));
-
-      // Broadcast to other participants
-      this.broadcastToSession(sessionId, {
-        type: 'participant_joined',
-        sessionId,
-        participant: {
+      ws.send(
+        JSON.stringify({
+          type: 'session_joined',
+          sessionId,
           userId,
           role: role || 'participant',
           userName: userName || `User ${userId}`,
-          joinedAt: new Date()
-        }
-      }, userId);
+          timestamp: new Date(),
+        })
+      );
 
+      // Broadcast to other participants
+      this.broadcastToSession(
+        sessionId,
+        {
+          type: 'participant_joined',
+          sessionId,
+          participant: {
+            userId,
+            role: role || 'participant',
+            userName: userName || `User ${userId}`,
+            joinedAt: new Date(),
+          },
+        },
+        userId
+      );
     } catch (error) {
-      ws.send(JSON.stringify({
-        type: 'error',
-        error: 'Failed to join session',
-        timestamp: new Date()
-      }));
+      ws.send(
+        JSON.stringify({
+          type: 'error',
+          error: 'Failed to join session',
+          timestamp: new Date(),
+        })
+      );
     }
   }
 
@@ -203,28 +218,35 @@ export class CollaborationWebSocketServer {
   private async handleLeaveSession(ws: WebSocket, userId: string, message: any): Promise<void> {
     try {
       const { sessionId } = message;
-      
-      ws.send(JSON.stringify({
-        type: 'session_left',
-        sessionId,
-        userId,
-        timestamp: new Date()
-      }));
+
+      ws.send(
+        JSON.stringify({
+          type: 'session_left',
+          sessionId,
+          userId,
+          timestamp: new Date(),
+        })
+      );
 
       // Broadcast to other participants
-      this.broadcastToSession(sessionId, {
-        type: 'participant_left',
+      this.broadcastToSession(
         sessionId,
-        userId,
-        timestamp: new Date()
-      }, userId);
-
+        {
+          type: 'participant_left',
+          sessionId,
+          userId,
+          timestamp: new Date(),
+        },
+        userId
+      );
     } catch (error) {
-      ws.send(JSON.stringify({
-        type: 'error',
-        error: 'Failed to leave session',
-        timestamp: new Date()
-      }));
+      ws.send(
+        JSON.stringify({
+          type: 'error',
+          error: 'Failed to leave session',
+          timestamp: new Date(),
+        })
+      );
     }
   }
 
@@ -234,14 +256,16 @@ export class CollaborationWebSocketServer {
   private async handleCodeChange(ws: WebSocket, userId: string, message: any): Promise<void> {
     try {
       const { sessionId, operation, position, content, length } = message;
-      
+
       // Validate code change data
       if (!operation || position === undefined || content === undefined) {
-        ws.send(JSON.stringify({
-          type: 'error',
-          error: 'Invalid code change: operation, position, and content required',
-          timestamp: new Date()
-        }));
+        ws.send(
+          JSON.stringify({
+            type: 'error',
+            error: 'Invalid code change: operation, position, and content required',
+            timestamp: new Date(),
+          })
+        );
         return;
       }
 
@@ -256,16 +280,17 @@ export class CollaborationWebSocketServer {
           position,
           content,
           length,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       });
-
     } catch (error) {
-      ws.send(JSON.stringify({
-        type: 'error',
-        error: 'Failed to process code change',
-        timestamp: new Date()
-      }));
+      ws.send(
+        JSON.stringify({
+          type: 'error',
+          error: 'Failed to process code change',
+          timestamp: new Date(),
+        })
+      );
     }
   }
 
@@ -275,36 +300,43 @@ export class CollaborationWebSocketServer {
   private async handleCursorUpdate(ws: WebSocket, userId: string, message: any): Promise<void> {
     try {
       const { sessionId, line, column, selection } = message;
-      
+
       // Validate cursor data
       if (line === undefined || column === undefined) {
-        ws.send(JSON.stringify({
-          type: 'error',
-          error: 'Invalid cursor update: line and column required',
-          timestamp: new Date()
-        }));
+        ws.send(
+          JSON.stringify({
+            type: 'error',
+            error: 'Invalid cursor update: line and column required',
+            timestamp: new Date(),
+          })
+        );
         return;
       }
 
       // Broadcast cursor update to all session participants except sender
-      this.broadcastToSession(sessionId, {
-        type: 'cursor_updated',
+      this.broadcastToSession(
         sessionId,
-        cursor: {
-          userId,
-          line,
-          column,
-          selection,
-          timestamp: new Date()
-        }
-      }, userId);
-
+        {
+          type: 'cursor_updated',
+          sessionId,
+          cursor: {
+            userId,
+            line,
+            column,
+            selection,
+            timestamp: new Date(),
+          },
+        },
+        userId
+      );
     } catch (error) {
-      ws.send(JSON.stringify({
-        type: 'error',
-        error: 'Failed to process cursor update',
-        timestamp: new Date()
-      }));
+      ws.send(
+        JSON.stringify({
+          type: 'error',
+          error: 'Failed to process cursor update',
+          timestamp: new Date(),
+        })
+      );
     }
   }
 
@@ -314,7 +346,7 @@ export class CollaborationWebSocketServer {
   private handleDisconnection(userId: string, code: number, reason: string): void {
     console.log(`WebSocket disconnected: User ${userId}, Code: ${code}, Reason: ${reason}`);
     this.connections.delete(userId);
-    
+
     // TODO: Notify collaboration service about disconnection
     // This would clean up any active sessions for this user
   }
@@ -326,11 +358,11 @@ export class CollaborationWebSocketServer {
     // In a real implementation, this would:
     // 1. Get all participants for the session from the collaboration service
     // 2. Send the message to all connected participants except the excluded user
-    
+
     // For now, this is a placeholder implementation
     const messageStr = JSON.stringify({
       ...message,
-      timestamp: message.timestamp || new Date()
+      timestamp: message.timestamp || new Date(),
     });
 
     // Broadcast to all connections (would be filtered by session in production)
@@ -347,10 +379,12 @@ export class CollaborationWebSocketServer {
   public sendToUser(userId: string, message: any): boolean {
     const ws = this.connections.get(userId);
     if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({
-        ...message,
-        timestamp: message.timestamp || new Date()
-      }));
+      ws.send(
+        JSON.stringify({
+          ...message,
+          timestamp: message.timestamp || new Date(),
+        })
+      );
       return true;
     }
     return false;
@@ -388,12 +422,12 @@ export class CollaborationWebSocketServer {
    */
   public shutdown(): void {
     console.log('Shutting down collaboration WebSocket server...');
-    
+
     // Close all connections
-    this.connections.forEach((ws) => {
+    this.connections.forEach(ws => {
       ws.close(1001, 'Server shutdown');
     });
-    
+
     this.connections.clear();
     this.wss.close();
     console.log('Collaboration WebSocket server shutdown complete');

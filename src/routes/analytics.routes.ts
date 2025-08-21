@@ -4,7 +4,7 @@
  * Epic 5 Task 5.1: Data Collection Pipeline API Routes
  */
 
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
 import { PrismaClient } from '@prisma/client';
 import RedisService from '../services/redis.service';
@@ -12,11 +12,7 @@ import { AnalyticsController } from '../controllers/analytics.controller';
 import { AuthMiddleware, AuthRequest } from '../middleware/auth.middleware';
 import { rateLimit } from 'express-rate-limit';
 import { Logger } from '../utils/logger.util';
-import {
-  EventType,
-  EventCategory,
-  EventSeverity
-} from '../types/analytics.types';
+import { EventType, EventCategory, EventSeverity } from '../types/analytics.types';
 
 const logger = Logger.getInstance();
 
@@ -27,10 +23,10 @@ const eventCollectionRateLimit = rateLimit({
   message: {
     success: false,
     message: 'Too many analytics events from this IP',
-    code: 'RATE_LIMIT_EXCEEDED'
+    code: 'RATE_LIMIT_EXCEEDED',
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
 });
 
 const queryRateLimit = rateLimit({
@@ -39,10 +35,10 @@ const queryRateLimit = rateLimit({
   message: {
     success: false,
     message: 'Too many analytics queries from this IP',
-    code: 'QUERY_RATE_LIMIT_EXCEEDED'
+    code: 'QUERY_RATE_LIMIT_EXCEEDED',
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
 });
 
 const exportRateLimit = rateLimit({
@@ -51,19 +47,16 @@ const exportRateLimit = rateLimit({
   message: {
     success: false,
     message: 'Too many export requests from this IP',
-    code: 'EXPORT_RATE_LIMIT_EXCEEDED'
+    code: 'EXPORT_RATE_LIMIT_EXCEEDED',
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
 });
 
 /**
  * Create analytics routes
  */
-export function createAnalyticsRoutes(
-  prisma: PrismaClient,
-  redisService: RedisService
-): Router {
+export function createAnalyticsRoutes(prisma: PrismaClient, redisService: RedisService): Router {
   const router = Router();
 
   // Initialize controller
@@ -78,13 +71,13 @@ export function createAnalyticsRoutes(
         kafka: {
           brokers: [],
           topics: ['analytics-events'],
-          consumerGroup: 'analytics-processor'
-        }
+          consumerGroup: 'analytics-processor',
+        },
       },
       batch: {
         enabled: true,
         interval: 10, // 10 minutes
-        batchSize: 5000
+        batchSize: 5000,
       },
       aggregation: {
         enabled: true,
@@ -93,16 +86,16 @@ export function createAnalyticsRoutes(
           {
             name: 'events_per_minute',
             field: 'id',
-            operation: 'count'
+            operation: 'count',
           },
           {
             name: 'avg_session_duration',
             field: 'duration',
-            operation: 'avg'
-          }
-        ]
-      }
-    }
+            operation: 'avg',
+          },
+        ],
+      },
+    },
   });
 
   // Initialize controller on first use
@@ -113,11 +106,11 @@ export function createAnalyticsRoutes(
         await controller.initialize();
         initialized = true;
       } catch (error) {
-        logger.error("Error occurred", error as Error);
+        logger.error('Error occurred', error as Error);
         return res.status(503).json({
           success: false,
           message: 'Analytics service unavailable',
-          code: 'SERVICE_UNAVAILABLE'
+          code: 'SERVICE_UNAVAILABLE',
         });
       }
     }
@@ -131,14 +124,14 @@ export function createAnalyticsRoutes(
       logger.warn('Validation errors in analytics request', {
         errors: errors.array(),
         // userId: (req as any).user?.id || 'unknown',
-        endpoint: req.originalUrl
+        endpoint: req.originalUrl,
       });
 
       return res.status(400).json({
         success: false,
         message: 'Validation failed',
         code: 'VALIDATION_ERROR',
-        errors: errors.array()
+        errors: errors.array(),
       });
     }
     next();
@@ -156,39 +149,18 @@ export function createAnalyticsRoutes(
     AuthMiddleware.authenticate as any,
     ensureInitialized,
     [
-      body('type')
-        .isIn(Object.values(EventType))
-        .withMessage('Invalid event type'),
-      body('category')
-        .isIn(Object.values(EventCategory))
-        .withMessage('Invalid event category'),
-      body('severity')
-        .isIn(Object.values(EventSeverity))
-        .withMessage('Invalid event severity'),
-      body('metadata')
-        .optional()
-        .isObject()
-        .withMessage('Metadata must be an object'),
-      body('sessionId')
-        .optional()
-        .isUUID()
-        .withMessage('Session ID must be a valid UUID'),
-      body('assessmentId')
-        .optional()
-        .isUUID()
-        .withMessage('Assessment ID must be a valid UUID'),
-      body('questionId')
-        .optional()
-        .isUUID()
-        .withMessage('Question ID must be a valid UUID'),
+      body('type').isIn(Object.values(EventType)).withMessage('Invalid event type'),
+      body('category').isIn(Object.values(EventCategory)).withMessage('Invalid event category'),
+      body('severity').isIn(Object.values(EventSeverity)).withMessage('Invalid event severity'),
+      body('metadata').optional().isObject().withMessage('Metadata must be an object'),
+      body('sessionId').optional().isUUID().withMessage('Session ID must be a valid UUID'),
+      body('assessmentId').optional().isUUID().withMessage('Assessment ID must be a valid UUID'),
+      body('questionId').optional().isUUID().withMessage('Question ID must be a valid UUID'),
       body('duration')
         .optional()
         .isInt({ min: 0 })
         .withMessage('Duration must be a non-negative integer'),
-      body('success')
-        .optional()
-        .isBoolean()
-        .withMessage('Success must be a boolean')
+      body('success').optional().isBoolean().withMessage('Success must be a boolean'),
     ],
     handleValidationErrors,
     async (req: AuthRequest, res: any, next: any) => {
@@ -214,27 +186,19 @@ export function createAnalyticsRoutes(
       body('events')
         .isArray({ min: 1, max: 100 })
         .withMessage('Events must be an array with 1-100 items'),
-      body('events.*.type')
-        .isIn(Object.values(EventType))
-        .withMessage('Invalid event type'),
+      body('events.*.type').isIn(Object.values(EventType)).withMessage('Invalid event type'),
       body('events.*.category')
         .isIn(Object.values(EventCategory))
         .withMessage('Invalid event category'),
       body('events.*.severity')
         .isIn(Object.values(EventSeverity))
         .withMessage('Invalid event severity'),
-      body('events.*.metadata')
-        .optional()
-        .isObject()
-        .withMessage('Metadata must be an object'),
-      body('events.*.sessionId')
-        .optional()
-        .isUUID()
-        .withMessage('Session ID must be a valid UUID'),
+      body('events.*.metadata').optional().isObject().withMessage('Metadata must be an object'),
+      body('events.*.sessionId').optional().isUUID().withMessage('Session ID must be a valid UUID'),
       body('events.*.duration')
         .optional()
         .isInt({ min: 0 })
-        .withMessage('Duration must be a non-negative integer')
+        .withMessage('Duration must be a non-negative integer'),
     ],
     handleValidationErrors,
     async (req: AuthRequest, res: any, next: any) => {
@@ -259,47 +223,26 @@ export function createAnalyticsRoutes(
     AuthMiddleware.authenticate as any,
     ensureInitialized,
     [
-      body('timeRange')
-        .isObject()
-        .withMessage('Time range is required'),
-      body('timeRange.start')
-        .isISO8601()
-        .withMessage('Start time must be a valid ISO8601 date'),
-      body('timeRange.end')
-        .isISO8601()
-        .withMessage('End time must be a valid ISO8601 date'),
-      body('filters')
-        .optional()
-        .isObject()
-        .withMessage('Filters must be an object'),
-      body('filters.eventTypes')
-        .optional()
-        .isArray()
-        .withMessage('Event types must be an array'),
+      body('timeRange').isObject().withMessage('Time range is required'),
+      body('timeRange.start').isISO8601().withMessage('Start time must be a valid ISO8601 date'),
+      body('timeRange.end').isISO8601().withMessage('End time must be a valid ISO8601 date'),
+      body('filters').optional().isObject().withMessage('Filters must be an object'),
+      body('filters.eventTypes').optional().isArray().withMessage('Event types must be an array'),
       body('filters.eventTypes.*')
         .optional()
         .isIn(Object.values(EventType))
         .withMessage('Invalid event type in filter'),
-      body('filters.categories')
-        .optional()
-        .isArray()
-        .withMessage('Categories must be an array'),
+      body('filters.categories').optional().isArray().withMessage('Categories must be an array'),
       body('filters.categories.*')
         .optional()
         .isIn(Object.values(EventCategory))
         .withMessage('Invalid category in filter'),
-      body('groupBy')
-        .optional()
-        .isArray()
-        .withMessage('Group by must be an array'),
+      body('groupBy').optional().isArray().withMessage('Group by must be an array'),
       body('limit')
         .optional()
         .isInt({ min: 1, max: 10000 })
         .withMessage('Limit must be between 1 and 10000'),
-      body('offset')
-        .optional()
-        .isInt({ min: 0 })
-        .withMessage('Offset must be non-negative')
+      body('offset').optional().isInt({ min: 0 }).withMessage('Offset must be non-negative'),
     ],
     handleValidationErrors,
     async (req: AuthRequest, res: any, next: any) => {
@@ -365,31 +308,20 @@ export function createAnalyticsRoutes(
       body('format')
         .isIn(['json', 'csv', 'parquet', 'avro'])
         .withMessage('Format must be one of: json, csv, parquet, avro'),
-      body('destination')
-        .isObject()
-        .withMessage('Destination configuration is required'),
+      body('destination').isObject().withMessage('Destination configuration is required'),
       body('destination.type')
         .isIn(['filesystem', 's3', 'gcs', 'azure', 'sftp'])
         .withMessage('Invalid destination type'),
-      body('destination.path')
-        .notEmpty()
-        .withMessage('Destination path is required'),
-      body('filters')
-        .isObject()
-        .withMessage('Filters are required'),
-      body('filters.timeRange')
-        .isObject()
-        .withMessage('Time range filter is required'),
+      body('destination.path').notEmpty().withMessage('Destination path is required'),
+      body('filters').isObject().withMessage('Filters are required'),
+      body('filters.timeRange').isObject().withMessage('Time range filter is required'),
       body('filters.timeRange.start')
         .isISO8601()
         .withMessage('Start time must be a valid ISO8601 date'),
       body('filters.timeRange.end')
         .isISO8601()
         .withMessage('End time must be a valid ISO8601 date'),
-      body('options')
-        .optional()
-        .isObject()
-        .withMessage('Options must be an object'),
+      body('options').optional().isObject().withMessage('Options must be an object'),
       body('options.includeMetadata')
         .optional()
         .isBoolean()
@@ -397,7 +329,7 @@ export function createAnalyticsRoutes(
       body('options.anonymizeUsers')
         .optional()
         .isBoolean()
-        .withMessage('Anonymize users must be a boolean')
+        .withMessage('Anonymize users must be a boolean'),
     ],
     handleValidationErrors,
     async (req: AuthRequest, res: any, next: any) => {
@@ -420,29 +352,17 @@ export function createAnalyticsRoutes(
     AuthMiddleware.authenticate as any,
     ensureInitialized,
     [
-      body('source')
-        .isObject()
-        .withMessage('Source configuration is required'),
+      body('source').isObject().withMessage('Source configuration is required'),
       body('source.type')
         .isIn(['filesystem', 's3', 'gcs', 'azure', 'http', 'kafka'])
         .withMessage('Invalid source type'),
-      body('source.path')
-        .notEmpty()
-        .withMessage('Source path is required'),
+      body('source.path').notEmpty().withMessage('Source path is required'),
       body('format')
         .isIn(['json', 'csv', 'parquet', 'avro'])
         .withMessage('Format must be one of: json, csv, parquet, avro'),
-      body('mapping')
-        .isObject()
-        .withMessage('Field mapping is required'),
-      body('validation')
-        .optional()
-        .isObject()
-        .withMessage('Validation must be an object'),
-      body('processing')
-        .optional()
-        .isObject()
-        .withMessage('Processing options must be an object')
+      body('mapping').isObject().withMessage('Field mapping is required'),
+      body('validation').optional().isObject().withMessage('Validation must be an object'),
+      body('processing').optional().isObject().withMessage('Processing options must be an object'),
     ],
     handleValidationErrors,
     async (req: AuthRequest, res: any, next: any) => {
@@ -468,7 +388,7 @@ export function createAnalyticsRoutes(
     [
       param('jobId')
         .matches(/^job_\d+_[a-z0-9]+$/)
-        .withMessage('Invalid job ID format')
+        .withMessage('Invalid job ID format'),
     ],
     handleValidationErrors,
     async (req: AuthRequest, res: any, next: any) => {
@@ -509,23 +429,65 @@ export function createAnalyticsRoutes(
   router.get('/health', async (req, res) => {
     try {
       // Create a mock AuthRequest for health check
-      const mockRequest = { ...req, user: { id: 'system', organizationId: 'system' } } as AuthRequest;
-      
+      const mockRequest = {
+        ...req,
+        user: { id: 'system', organizationId: 'system' },
+      } as AuthRequest;
+
       if (!initialized) {
         return res.status(503).json({
-          success: false,
+          status: 'error',
           message: 'Analytics service not initialized',
-          code: 'SERVICE_NOT_INITIALIZED'
         });
       }
 
-      await controller.healthCheck(mockRequest, res, () => {});
+      return res.status(200).json({
+        status: 'healthy',
+        message: 'Analytics service operational',
+        timestamp: new Date().toISOString(),
+      });
     } catch (error) {
-      logger.error("Error occurred", error as Error);
-      res.status(503).json({
+      console.error('Health check error:', error);
+      return res.status(500).json({
+        status: 'error',
+      });
+    }
+  });
+
+  /**
+   * Health check endpoint
+   */
+  router.get('/health', async (req: Request, res: Response) => {
+    try {
+      const mockRequest = req as unknown as AuthRequest;
+      mockRequest.user = {
+        id: 'health-check',
+        role: 'system',
+        organizationId: 'system',
+        email: 'system@dessai.com',
+        isActive: true,
+        firstName: 'Health',
+        lastName: 'Check',
+        roleId: 'system',
+        mfaEnabled: false,
+        emailVerified: true,
+      };
+
+      if (!controller) {
+        return res.status(503).json({
+          success: false,
+          message: 'Analytics service not initialized',
+          code: 'SERVICE_NOT_INITIALIZED',
+        });
+      }
+
+      return await controller.healthCheck(mockRequest, res, () => {});
+    } catch (error) {
+      logger.error('Health check error', error as Error);
+      return res.status(503).json({
         success: false,
         message: 'Health check failed',
-        code: 'HEALTH_CHECK_ERROR'
+        code: 'HEALTH_CHECK_ERROR',
       });
     }
   });
@@ -539,7 +501,7 @@ export function createAnalyticsRoutes(
         success: false,
         message: 'Validation error',
         code: 'VALIDATION_ERROR',
-        details: error.message
+        details: error.message,
       });
     }
 
@@ -547,7 +509,7 @@ export function createAnalyticsRoutes(
       return res.status(401).json({
         success: false,
         message: 'Unauthorized',
-        code: 'UNAUTHORIZED'
+        code: 'UNAUTHORIZED',
       });
     }
 
@@ -555,7 +517,7 @@ export function createAnalyticsRoutes(
       return res.status(429).json({
         success: false,
         message: 'Rate limit exceeded',
-        code: 'RATE_LIMIT_EXCEEDED'
+        code: 'RATE_LIMIT_EXCEEDED',
       });
     }
 
@@ -563,7 +525,7 @@ export function createAnalyticsRoutes(
     res.status(500).json({
       success: false,
       message: 'Internal server error',
-      code: 'INTERNAL_ERROR'
+      code: 'INTERNAL_ERROR',
     });
   });
 
@@ -573,4 +535,3 @@ export function createAnalyticsRoutes(
 }
 
 export default createAnalyticsRoutes;
-

@@ -20,7 +20,7 @@ export const roleGuard = (allowedRoles: UserRole[]) => {
         res.status(401).json({
           success: false,
           message: 'Authentication required',
-          code: 'AUTHENTICATION_REQUIRED'
+          code: 'AUTHENTICATION_REQUIRED',
         });
         return;
       }
@@ -33,7 +33,7 @@ export const roleGuard = (allowedRoles: UserRole[]) => {
           message: 'Insufficient permissions',
           code: 'INSUFFICIENT_PERMISSIONS',
           requiredRoles: allowedRoles,
-          userRole: userRoleName
+          userRole: userRoleName,
         });
         return;
       }
@@ -45,7 +45,7 @@ export const roleGuard = (allowedRoles: UserRole[]) => {
       res.status(500).json({
         success: false,
         message: 'Authorization check failed',
-        code: 'AUTHORIZATION_ERROR'
+        code: 'AUTHORIZATION_ERROR',
       });
     }
   };
@@ -65,9 +65,9 @@ export const interviewerAccess = roleGuard([UserRole.ADMIN, UserRole.INTERVIEWER
  * All authenticated users
  */
 export const authenticatedAccess = roleGuard([
-  UserRole.ADMIN, 
-  UserRole.INTERVIEWER, 
-  UserRole.CANDIDATE
+  UserRole.ADMIN,
+  UserRole.INTERVIEWER,
+  UserRole.CANDIDATE,
 ]);
 
 /**
@@ -82,7 +82,7 @@ export const ownerOrElevated = (userIdParam: string = 'userId') => {
         res.status(401).json({
           success: false,
           message: 'Authentication required',
-          code: 'AUTHENTICATION_REQUIRED'
+          code: 'AUTHENTICATION_REQUIRED',
         });
         return;
       }
@@ -96,7 +96,7 @@ export const ownerOrElevated = (userIdParam: string = 'userId') => {
         res.status(403).json({
           success: false,
           message: 'Access denied: insufficient permissions',
-          code: 'ACCESS_DENIED'
+          code: 'ACCESS_DENIED',
         });
         return;
       }
@@ -107,7 +107,7 @@ export const ownerOrElevated = (userIdParam: string = 'userId') => {
       res.status(500).json({
         success: false,
         message: 'Authorization check failed',
-        code: 'AUTHORIZATION_ERROR'
+        code: 'AUTHORIZATION_ERROR',
       });
     }
   };
@@ -117,20 +117,24 @@ export const ownerOrElevated = (userIdParam: string = 'userId') => {
  * Session owner or elevated permissions
  * Checks if user owns the session or has elevated permissions
  */
-export const sessionOwnerOrElevated = (req: AuthRequest, res: Response, next: NextFunction): void => {
+export const sessionOwnerOrElevated = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): void => {
   try {
     if (!req.user) {
       res.status(401).json({
         success: false,
         message: 'Authentication required',
-        code: 'AUTHENTICATION_REQUIRED'
+        code: 'AUTHENTICATION_REQUIRED',
       });
       return;
     }
 
     // For session-related endpoints, check session ownership
     // const sessionId = req.params['sessionId'] || req.body.sessionId;
-    
+
     // TODO: Implement session ownership check with database
     // For now, allow all authenticated users
     // In a real implementation, you would:
@@ -140,7 +144,7 @@ export const sessionOwnerOrElevated = (req: AuthRequest, res: Response, next: Ne
 
     const userRoleName = req.user.role as UserRole;
     const hasElevatedRole = [UserRole.ADMIN, UserRole.INTERVIEWER].includes(userRoleName);
-    
+
     if (!hasElevatedRole) {
       // TODO: Add actual session ownership check
       // For now, allow candidates to access their own sessions
@@ -148,7 +152,7 @@ export const sessionOwnerOrElevated = (req: AuthRequest, res: Response, next: Ne
         res.status(403).json({
           success: false,
           message: 'Access denied: insufficient permissions',
-          code: 'ACCESS_DENIED'
+          code: 'ACCESS_DENIED',
         });
         return;
       }
@@ -160,7 +164,7 @@ export const sessionOwnerOrElevated = (req: AuthRequest, res: Response, next: Ne
     res.status(500).json({
       success: false,
       message: 'Authorization check failed',
-      code: 'AUTHORIZATION_ERROR'
+      code: 'AUTHORIZATION_ERROR',
     });
   }
 };

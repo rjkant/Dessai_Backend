@@ -10,7 +10,12 @@ import RedisService from './redis.service';
 import { Logger } from '../utils/logger.utils';
 
 const logger = new Logger('WebRTCMediaService');
-import { WebRTCError, WebRTCSessionError, WebRTCMediaError, WebRTCRecordingError } from '../utils/webrtc-error.utils';
+import {
+  WebRTCError,
+  WebRTCSessionError,
+  WebRTCMediaError,
+  WebRTCRecordingError,
+} from '../utils/webrtc-error.utils';
 import {
   WebRTCSession,
   MediaStreamConfig,
@@ -27,7 +32,7 @@ import {
   WebRTCErrorCode,
   StreamQualityMetrics,
   QualityMetrics,
-  ProctoringServiceOptions
+  ProctoringServiceOptions,
 } from '../types/proctoring.types';
 
 interface WebRTCPeerConnection {
@@ -64,9 +69,9 @@ export class WebRTCMediaService extends EventEmitter {
    */
   async createSession(request: CreateWebRTCSessionRequest): Promise<CreateWebRTCSessionResponse> {
     try {
-      logger.info('Creating WebRTC session', { 
-        sessionId: request.sessionId, 
-        userId: request.userId 
+      logger.info('Creating WebRTC session', {
+        sessionId: request.sessionId,
+        userId: request.userId,
       });
 
       // Validate prerequisites
@@ -74,7 +79,7 @@ export class WebRTCMediaService extends EventEmitter {
 
       // Create session configuration
       const sessionConfig = this.buildSessionConfig(request);
-      
+
       // Initialize WebRTC session
       const session: WebRTCSession = {
         id: `webrtc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -87,14 +92,14 @@ export class WebRTCMediaService extends EventEmitter {
           iceServers: this.options.iceServers || this.getDefaultIceServers(),
           iceTransportPolicy: 'all',
           bundlePolicy: 'balanced',
-          rtcpMuxPolicy: 'require'
+          rtcpMuxPolicy: 'require',
         },
         signaling: {
           server: this.options.signalingServer,
           protocol: 'websocket',
           authentication: true,
           encryption: true,
-          heartbeat: 30
+          heartbeat: 30,
         },
         metadata: {
           ...(request.assessmentId && { assessmentId: request.assessmentId }),
@@ -106,11 +111,11 @@ export class WebRTCMediaService extends EventEmitter {
             microphone: 'unknown',
             screen: 'unknown',
             notifications: 'unknown',
-            geolocation: 'unknown'
-          }
+            geolocation: 'unknown',
+          },
         },
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       // Store session
@@ -127,29 +132,28 @@ export class WebRTCMediaService extends EventEmitter {
         userId: session.userId,
         timestamp: new Date(),
         data: { sessionConfig },
-        severity: EventSeverity.INFO
+        severity: EventSeverity.INFO,
       });
 
       const response: CreateWebRTCSessionResponse = {
         session,
         iceServers: session.peerConnection.iceServers,
         signalingServer: session.signaling.server,
-        token: sessionToken
+        token: sessionToken,
       };
 
-      logger.info('WebRTC session created successfully', { 
+      logger.info('WebRTC session created successfully', {
         sessionId: session.id,
-        userId: request.userId 
+        userId: request.userId,
       });
 
       return response;
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.error('Failed to create WebRTC session', { 
+      logger.error('Failed to create WebRTC session', {
         error: errorMessage,
         sessionId: request.sessionId,
-        userId: request.userId
+        userId: request.userId,
       });
 
       throw new WebRTCError(
@@ -165,7 +169,7 @@ export class WebRTCMediaService extends EventEmitter {
    * Initialize media streams for a session
    */
   async initializeMediaStreams(
-    sessionId: string, 
+    sessionId: string,
     streamConfigs: MediaStreamConfig[]
   ): Promise<MediaStreamInfo[]> {
     try {
@@ -174,9 +178,9 @@ export class WebRTCMediaService extends EventEmitter {
         throw new Error(`Session not found: ${sessionId}`);
       }
 
-      logger.info('Initializing media streams', { 
-        sessionId, 
-        streamCount: streamConfigs.length 
+      logger.info('Initializing media streams', {
+        sessionId,
+        streamCount: streamConfigs.length,
       });
 
       const mediaStreams: MediaStreamInfo[] = [];
@@ -193,17 +197,16 @@ export class WebRTCMediaService extends EventEmitter {
 
       await this.persistSession(session);
 
-      logger.info('Media streams initialized', { 
-        sessionId, 
-        streamCount: mediaStreams.length 
+      logger.info('Media streams initialized', {
+        sessionId,
+        streamCount: mediaStreams.length,
       });
 
       return mediaStreams;
-
     } catch (error) {
-      logger.error('Failed to initialize media streams', { 
+      logger.error('Failed to initialize media streams', {
         error: (error as Error).message,
-        sessionId 
+        sessionId,
       });
 
       throw new WebRTCError(
@@ -234,7 +237,7 @@ export class WebRTCMediaService extends EventEmitter {
 
       // Create recording configuration
       const recordingConfig = this.buildRecordingConfig(session, stream);
-      
+
       // Start recording (placeholder for actual MediaRecorder implementation)
       const recorder = await this.createMediaRecorder(stream, recordingConfig);
       this.streamRecorders.set(streamId, recorder);
@@ -243,7 +246,7 @@ export class WebRTCMediaService extends EventEmitter {
       stream.metadata = {
         ...stream.metadata,
         codec: recordingConfig.codecs.video,
-        bitRate: recordingConfig.bitRate.video
+        bitRate: recordingConfig.bitRate.video,
       };
 
       // Emit recording started event
@@ -253,16 +256,15 @@ export class WebRTCMediaService extends EventEmitter {
         userId: session.userId,
         timestamp: new Date(),
         data: { streamId, recordingConfig },
-        severity: EventSeverity.INFO
+        severity: EventSeverity.INFO,
       });
 
       logger.info('Stream recording started', { sessionId, streamId });
-
     } catch (error) {
-      logger.error('Failed to start recording', { 
+      logger.error('Failed to start recording', {
         error: (error as Error).message,
         sessionId,
-        streamId 
+        streamId,
       });
 
       throw new WebRTCError(
@@ -297,7 +299,9 @@ export class WebRTCMediaService extends EventEmitter {
         if (stream) {
           stream.recordingPath = recordingPath;
           stream.endTime = new Date();
-          stream.duration = Math.floor((stream.endTime.getTime() - stream.startTime.getTime()) / 1000);
+          stream.duration = Math.floor(
+            (stream.endTime.getTime() - stream.startTime.getTime()) / 1000
+          );
         }
       }
 
@@ -308,18 +312,17 @@ export class WebRTCMediaService extends EventEmitter {
         userId: session?.userId || 'unknown',
         timestamp: new Date(),
         data: { streamId, recordingPath },
-        severity: EventSeverity.INFO
+        severity: EventSeverity.INFO,
       });
 
       logger.info('Stream recording stopped', { sessionId, streamId, recordingPath });
 
       return recordingPath;
-
     } catch (error) {
-      logger.error('Failed to stop recording', { 
+      logger.error('Failed to stop recording', {
         error: (error as Error).message,
         sessionId,
-        streamId 
+        streamId,
       });
 
       throw new WebRTCError(
@@ -344,7 +347,7 @@ export class WebRTCMediaService extends EventEmitter {
    */
   async getUserSessions(userId: string): Promise<WebRTCSession[]> {
     const userSessions: WebRTCSession[] = [];
-    
+
     for (const session of this.sessions.values()) {
       if (session.userId === userId && session.status !== SessionStatus.COMPLETED) {
         userSessions.push(session);
@@ -394,18 +397,17 @@ export class WebRTCMediaService extends EventEmitter {
         userId: session.userId,
         timestamp: new Date(),
         data: { reason },
-        severity: EventSeverity.INFO
+        severity: EventSeverity.INFO,
       });
 
       // Remove from active sessions
       this.sessions.delete(sessionId);
 
       logger.info('WebRTC session ended successfully', { sessionId });
-
     } catch (error) {
-      logger.error('Failed to end WebRTC session', { 
+      logger.error('Failed to end WebRTC session', {
         error: (error as Error).message,
-        sessionId 
+        sessionId,
       });
 
       throw new WebRTCError(
@@ -435,11 +437,10 @@ export class WebRTCMediaService extends EventEmitter {
       }
 
       return metrics;
-
     } catch (error) {
-      logger.error('Failed to get session metrics', { 
+      logger.error('Failed to get session metrics', {
         error: (error as Error).message,
-        sessionId 
+        sessionId,
       });
 
       throw new WebRTCError(
@@ -467,7 +468,7 @@ export class WebRTCMediaService extends EventEmitter {
     // Check if user exists and has permissions
     const user = await this.prisma.user.findUnique({
       where: { id: request.userId },
-      include: { role: true }
+      include: { role: true },
     });
 
     if (!user || !user.isActive) {
@@ -495,13 +496,13 @@ export class WebRTCMediaService extends EventEmitter {
           width: { min: 320, ideal: 1280, max: 1920 },
           height: { min: 240, ideal: 720, max: 1080 },
           frameRate: { min: 15, ideal: 30, max: 30 },
-          facingMode: 'user'
+          facingMode: 'user',
         },
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true
-        }
+          autoGainControl: true,
+        },
       },
       quality: request.settings?.quality || StreamQuality.MEDIUM,
       recording: {
@@ -509,17 +510,17 @@ export class WebRTCMediaService extends EventEmitter {
         format: 'webm',
         codecs: {
           video: 'vp8',
-          audio: 'opus'
+          audio: 'opus',
         },
         bitRate: {
           video: 1000,
-          audio: 128
+          audio: 128,
         },
         storage: this.options.storageConfig,
         retention: {
           duration: 30,
-          autoDelete: true
-        }
+          autoDelete: true,
+        },
       },
       monitoring: {
         faceDetection: request.settings?.enableMonitoring || false,
@@ -532,16 +533,16 @@ export class WebRTCMediaService extends EventEmitter {
           noFaceDetected: 10,
           lookAwayDuration: 30,
           audioAnomalies: 5,
-          suspiciousActivity: 3
-        }
-      }
+          suspiciousActivity: 3,
+        },
+      },
     };
 
     return { ...defaultConfig, ...request.config };
   }
 
   private async createMediaStream(
-    session: WebRTCSession, 
+    session: WebRTCSession,
     config: MediaStreamConfig
   ): Promise<MediaStreamInfo> {
     const streamInfo: MediaStreamInfo = {
@@ -554,8 +555,8 @@ export class WebRTCMediaService extends EventEmitter {
         resolution: this.getResolutionString(config.constraints.video),
         frameRate: this.getFrameRate(config.constraints.video),
         bitRate: config.recording.bitRate.video,
-        codec: config.recording.codecs.video
-      }
+        codec: config.recording.codecs.video,
+      },
     };
 
     // Simulate stream creation (in real implementation, this would interact with WebRTC APIs)
@@ -569,7 +570,7 @@ export class WebRTCMediaService extends EventEmitter {
       userId: session.userId,
       timestamp: new Date(),
       data: { streamId: streamInfo.id, config },
-      severity: EventSeverity.INFO
+      severity: EventSeverity.INFO,
     });
 
     return streamInfo;
@@ -579,30 +580,30 @@ export class WebRTCMediaService extends EventEmitter {
     return {
       codecs: {
         video: 'vp8' as const,
-        audio: 'opus' as const
+        audio: 'opus' as const,
       },
       bitRate: {
         video: 1000,
-        audio: 128
+        audio: 128,
       },
       format: 'webm' as const,
-      storage: this.options.storageConfig
+      storage: this.options.storageConfig,
     };
   }
 
   private async createMediaRecorder(stream: MediaStreamInfo, config: any): Promise<any> {
     // Placeholder for MediaRecorder implementation
     // In real implementation, this would create a MediaRecorder instance
-    logger.info('Creating media recorder', { 
-      streamId: stream.id, 
-      codec: config.codecs.video 
+    logger.info('Creating media recorder', {
+      streamId: stream.id,
+      codec: config.codecs.video,
     });
 
     return {
       streamId: stream.id,
       config,
       isRecording: true,
-      startTime: new Date()
+      startTime: new Date(),
     };
   }
 
@@ -610,16 +611,19 @@ export class WebRTCMediaService extends EventEmitter {
     // Placeholder for stopping MediaRecorder and saving file
     // In real implementation, this would stop recording and return file path
     const recordingPath = `recordings/${streamId}_${Date.now()}.webm`;
-    
-    logger.info('Media recorder stopped', { 
-      streamId, 
-      recordingPath 
+
+    logger.info('Media recorder stopped', {
+      streamId,
+      recordingPath,
     });
 
     return recordingPath;
   }
 
-  private async collectStreamMetrics(sessionId: string, stream: MediaStreamInfo): Promise<StreamQualityMetrics> {
+  private async collectStreamMetrics(
+    sessionId: string,
+    stream: MediaStreamInfo
+  ): Promise<StreamQualityMetrics> {
     // Placeholder for collecting real-time stream metrics
     // In real implementation, this would collect actual WebRTC statistics
     const metrics: QualityMetrics = {
@@ -630,22 +634,22 @@ export class WebRTCMediaService extends EventEmitter {
         framesDropped: Math.floor(Math.random() * 5),
         framesCorrupted: 0,
         jitter: Math.random() * 10,
-        latency: 50 + Math.random() * 100
+        latency: 50 + Math.random() * 100,
       },
       network: {
         bandwidth: 5000 + Math.random() * 5000,
         packetLoss: Math.random() * 2,
         rtt: 20 + Math.random() * 80,
         jitter: Math.random() * 20,
-        connectionType: 'wifi'
-      }
+        connectionType: 'wifi',
+      },
     };
 
     return {
       sessionId,
       streamId: stream.id,
       timestamp: new Date(),
-      metrics
+      metrics,
     };
   }
 
@@ -653,15 +657,15 @@ export class WebRTCMediaService extends EventEmitter {
     try {
       // Store session data in Redis for quick access
       await this.redisService.set(
-        `webrtc:session:${session.id}`, 
-        JSON.stringify(session), 
+        `webrtc:session:${session.id}`,
+        JSON.stringify(session),
         3600 // 1 hour TTL
       );
 
       // Store session summary in database
       await this.prisma.assessmentSession.upsert({
-        where: { 
-          sessionToken: session.id 
+        where: {
+          sessionToken: session.id,
         },
         create: {
           sessionToken: session.id,
@@ -669,19 +673,18 @@ export class WebRTCMediaService extends EventEmitter {
           userId: session.userId,
           status: session.status,
           metadata: session.metadata as any,
-          startedAt: session.createdAt
+          startedAt: session.createdAt,
         },
         update: {
           status: session.status,
           metadata: session.metadata as any,
-          updatedAt: session.updatedAt
-        }
+          updatedAt: session.updatedAt,
+        },
       });
-
     } catch (error) {
-      logger.error('Failed to persist session', { 
+      logger.error('Failed to persist session', {
         error: (error as Error).message,
-        sessionId: session.id 
+        sessionId: session.id,
       });
     }
   }
@@ -692,7 +695,7 @@ export class WebRTCMediaService extends EventEmitter {
       sessionId: session.id,
       userId: session.userId,
       organizationId: session.organizationId,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     // In real implementation, this would use JWT or similar
@@ -702,7 +705,7 @@ export class WebRTCMediaService extends EventEmitter {
   private async getOrganizationId(userId: string): Promise<string> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { organizationId: true }
+      select: { organizationId: true },
     });
 
     return user?.organizationId || '';
@@ -718,7 +721,7 @@ export class WebRTCMediaService extends EventEmitter {
       colorDepth: 24,
       pixelRatio: 1,
       timezone: 'UTC',
-      language: 'en-US'
+      language: 'en-US',
     };
   }
 
@@ -729,13 +732,13 @@ export class WebRTCMediaService extends EventEmitter {
         effectiveType: '4g',
         downlink: 10,
         rtt: 50,
-        saveData: false
+        saveData: false,
       },
       bandwidth: {
         download: 100,
         upload: 20,
-        ping: 30
-      }
+        ping: 30,
+      },
     };
   }
 
@@ -750,21 +753,18 @@ export class WebRTCMediaService extends EventEmitter {
         getUserMedia: true,
         getDisplayMedia: true,
         mediaRecorder: true,
-        dataChannel: true
+        dataChannel: true,
       },
       mediaDevices: {
         videoInputs: [],
         audioInputs: [],
-        audioOutputs: []
-      }
+        audioOutputs: [],
+      },
     };
   }
 
   private getDefaultIceServers(): any[] {
-    return [
-      { urls: 'stun:stun.l.google.com:19302' },
-      { urls: 'stun:stun1.l.google.com:19302' }
-    ];
+    return [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }];
   }
 
   private getResolutionString(videoConstraints: any): string {
@@ -813,9 +813,9 @@ export class WebRTCMediaService extends EventEmitter {
           // Process quality metrics and emit warnings if needed
           this.processQualityMetrics(session, metrics);
         } catch (error) {
-          logger.error('Failed to monitor session quality', { 
+          logger.error('Failed to monitor session quality', {
             error: (error as Error).message,
-            sessionId: session.id 
+            sessionId: session.id,
           });
         }
       }
@@ -830,12 +830,12 @@ export class WebRTCMediaService extends EventEmitter {
           sessionId: session.sessionId,
           userId: session.userId,
           timestamp: new Date(),
-          data: { 
-            streamId: metric.streamId, 
+          data: {
+            streamId: metric.streamId,
             issue: 'high_packet_loss',
-            value: metric.metrics.network.packetLoss 
+            value: metric.metrics.network.packetLoss,
           },
-          severity: EventSeverity.WARNING
+          severity: EventSeverity.WARNING,
         });
       }
     }
@@ -843,10 +843,10 @@ export class WebRTCMediaService extends EventEmitter {
 
   private emitEvent(event: WebRTCEvent): void {
     this.emit('webrtc-event', event);
-    logger.info('WebRTC event emitted', { 
-      type: event.type, 
+    logger.info('WebRTC event emitted', {
+      type: event.type,
       sessionId: event.sessionId,
-      severity: event.severity 
+      severity: event.severity,
     });
   }
 
@@ -878,4 +878,3 @@ export class WebRTCMediaService extends EventEmitter {
     logger.info('WebRTC Media Service cleanup completed');
   }
 }
-

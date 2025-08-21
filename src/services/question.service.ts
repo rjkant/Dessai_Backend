@@ -2,7 +2,7 @@
  * Question Service
  * TASK-CG-006: Question Management System
  * Persona: Senior Software Engineer
- * 
+ *
  * Core business logic for question management operations,
  * supporting CRUD operations, search, and basic analytics.
  */
@@ -47,16 +47,16 @@ export class QuestionService {
       if (!data.title || data.title.trim().length < 3) {
         throw new Error('Title must be at least 3 characters long');
       }
-      
+
       if (!data.type || !Object.values(QuestionType).includes(data.type)) {
         throw new Error('Valid question type is required');
       }
-      
+
       if (!data.difficulty || !Object.values(QuestionDifficulty).includes(data.difficulty)) {
         throw new Error('Valid difficulty level is required');
       }
 
-      const result = await this.prisma.$transaction(async (tx) => {
+      const result = await this.prisma.$transaction(async tx => {
         // Create the question
         const question = await tx.question.create({
           data: {
@@ -81,7 +81,11 @@ export class QuestionService {
 
       return this.formatQuestionResponse(result);
     } catch (error) {
-      throw this.handleError('Failed to create question', error as Error, QuestionErrorCode.UNKNOWN_ERROR);
+      throw this.handleError(
+        'Failed to create question',
+        error as Error,
+        QuestionErrorCode.UNKNOWN_ERROR
+      );
     }
   }
 
@@ -135,7 +139,11 @@ export class QuestionService {
 
       return formattedQuestion;
     } catch (error) {
-      throw this.handleError('Failed to get question', error as Error, QuestionErrorCode.UNKNOWN_ERROR);
+      throw this.handleError(
+        'Failed to get question',
+        error as Error,
+        QuestionErrorCode.UNKNOWN_ERROR
+      );
     }
   }
 
@@ -159,7 +167,9 @@ export class QuestionService {
       }
 
       // Check access permissions
-      const metadata = existingQuestion.metadata ? JSON.parse(existingQuestion.metadata as string) : {};
+      const metadata = existingQuestion.metadata
+        ? JSON.parse(existingQuestion.metadata as string)
+        : {};
       if (metadata.organizationId !== organizationId) {
         throw new Error('Question not found or access denied');
       }
@@ -169,19 +179,35 @@ export class QuestionService {
         throw new Error('Title must be at least 3 characters long');
       }
 
-      const result = await this.prisma.$transaction(async (tx) => {
+      const result = await this.prisma.$transaction(async tx => {
         const updateData: any = {};
-        
-        if (data.title) updateData.title = data.title.trim();
-        if (data.description !== undefined) updateData.description = data.description.trim();
-        if (data.type) updateData.type = data.type;
-        if (data.difficulty) updateData.difficulty = data.difficulty;
-        if (data.tags) updateData.tags = data.tags;
-        if (data.content) updateData.content = data.content;
-        if (data.isActive !== undefined) updateData.isActive = data.isActive;
+
+        if (data.title) {
+          updateData.title = data.title.trim();
+        }
+        if (data.description !== undefined) {
+          updateData.description = data.description.trim();
+        }
+        if (data.type) {
+          updateData.type = data.type;
+        }
+        if (data.difficulty) {
+          updateData.difficulty = data.difficulty;
+        }
+        if (data.tags) {
+          updateData.tags = data.tags;
+        }
+        if (data.content) {
+          updateData.content = data.content;
+        }
+        if (data.isActive !== undefined) {
+          updateData.isActive = data.isActive;
+        }
 
         // Update metadata
-        const currentMetadata = existingQuestion.metadata ? JSON.parse(existingQuestion.metadata as string) : {};
+        const currentMetadata = existingQuestion.metadata
+          ? JSON.parse(existingQuestion.metadata as string)
+          : {};
         updateData.metadata = JSON.stringify({
           ...currentMetadata,
           ...data.metadata,
@@ -200,7 +226,11 @@ export class QuestionService {
 
       return this.formatQuestionResponse(result);
     } catch (error) {
-      throw this.handleError('Failed to update question', error as Error, QuestionErrorCode.UNKNOWN_ERROR);
+      throw this.handleError(
+        'Failed to update question',
+        error as Error,
+        QuestionErrorCode.UNKNOWN_ERROR
+      );
     }
   }
 
@@ -241,14 +271,14 @@ export class QuestionService {
       const activeAssessments = question.assessments.filter(
         a => a.assessment.status === 'ACTIVE' || a.assessment.status === 'DRAFT'
       );
-      
+
       if (activeAssessments.length > 0 && !force) {
         throw new Error(
           `Cannot delete question: used in ${activeAssessments.length} active assessments. Use force=true to override.`
         );
       }
 
-      await this.prisma.$transaction(async (tx) => {
+      await this.prisma.$transaction(async tx => {
         // Remove from assessments first
         await tx.assessmentQuestion.deleteMany({
           where: { questionId },
@@ -260,7 +290,11 @@ export class QuestionService {
         });
       });
     } catch (error) {
-      throw this.handleError('Failed to delete question', error as Error, QuestionErrorCode.UNKNOWN_ERROR);
+      throw this.handleError(
+        'Failed to delete question',
+        error as Error,
+        QuestionErrorCode.UNKNOWN_ERROR
+      );
     }
   }
 
@@ -293,17 +327,23 @@ export class QuestionService {
           // Active status
           { isActive },
           // Text search
-          ...(query ? [{
-            OR: [
-              { title: { contains: query, mode: 'insensitive' as Prisma.QueryMode } },
-              { description: { contains: query, mode: 'insensitive' as Prisma.QueryMode } },
-              { tags: { hasSome: [query] } },
-            ],
-          }] : []),
+          ...(query
+            ? [
+                {
+                  OR: [
+                    { title: { contains: query, mode: 'insensitive' as Prisma.QueryMode } },
+                    { description: { contains: query, mode: 'insensitive' as Prisma.QueryMode } },
+                    { tags: { hasSome: [query] } },
+                  ],
+                },
+              ]
+            : []),
           // Type filter
           ...(type ? [{ type: Array.isArray(type) ? { in: type } : type }] : []),
           // Difficulty filter
-          ...(difficulty ? [{ difficulty: Array.isArray(difficulty) ? { in: difficulty } : difficulty }] : []),
+          ...(difficulty
+            ? [{ difficulty: Array.isArray(difficulty) ? { in: difficulty } : difficulty }]
+            : []),
           // Tags filter
           ...(tags?.length ? [{ tags: { hasSome: tags } }] : []),
           // Date filters
@@ -362,7 +402,11 @@ export class QuestionService {
         },
       };
     } catch (error) {
-      throw this.handleError('Failed to search questions', error as Error, QuestionErrorCode.UNKNOWN_ERROR);
+      throw this.handleError(
+        'Failed to search questions',
+        error as Error,
+        QuestionErrorCode.UNKNOWN_ERROR
+      );
     }
   }
 
@@ -422,7 +466,11 @@ export class QuestionService {
       results.success = results.failedCount === 0;
       return results;
     } catch (error) {
-      throw this.handleError('Failed to perform bulk operation', error as Error, QuestionErrorCode.UNKNOWN_ERROR);
+      throw this.handleError(
+        'Failed to perform bulk operation',
+        error as Error,
+        QuestionErrorCode.UNKNOWN_ERROR
+      );
     }
   }
 
@@ -464,7 +512,11 @@ export class QuestionService {
         performanceByDemographic: [],
       };
     } catch (error) {
-      throw this.handleError('Failed to get question analytics', error as Error, QuestionErrorCode.UNKNOWN_ERROR);
+      throw this.handleError(
+        'Failed to get question analytics',
+        error as Error,
+        QuestionErrorCode.UNKNOWN_ERROR
+      );
     }
   }
 
@@ -477,7 +529,7 @@ export class QuestionService {
    */
   private formatQuestionResponse(question: any): QuestionResponse {
     const usageCount = question.assessments?.length || 0;
-    const metadata = question.metadata as any || {};
+    const metadata = (question.metadata as any) || {};
 
     const response: QuestionResponse = {
       id: question.id,
@@ -512,7 +564,10 @@ export class QuestionService {
   /**
    * Build order by clause for queries
    */
-  private buildOrderBy(sortBy: string, sortOrder: 'asc' | 'desc'): Prisma.QuestionOrderByWithRelationInput {
+  private buildOrderBy(
+    sortBy: string,
+    sortOrder: 'asc' | 'desc'
+  ): Prisma.QuestionOrderByWithRelationInput {
     const orderBy: Record<string, 'asc' | 'desc'> = {};
     orderBy[sortBy] = sortOrder;
     return orderBy;
@@ -534,11 +589,7 @@ export class QuestionService {
   /**
    * Process individual bulk action
    */
-  private async processBulkAction(
-    action: string,
-    questionId: string,
-    data: any
-  ): Promise<void> {
+  private async processBulkAction(action: string, questionId: string, data: any): Promise<void> {
     switch (action) {
       case 'DELETE':
         await this.prisma.question.delete({ where: { id: questionId } });

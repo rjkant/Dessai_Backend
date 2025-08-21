@@ -1,10 +1,10 @@
 /**
  * Performance Analytics Types
- * 
+ *
  * Comprehensive type definitions for candidate performance analytics,
  * assessment metrics, comparative analysis, trend analysis, and performance
  * prediction models in the analytics engine service.
- * 
+ *
  * @author Senior Software Engineer
  * @version Epic 5 Task 5.2: Performance Analytics
  */
@@ -20,36 +20,36 @@ export enum PerformanceMetricType {
   TEST_COVERAGE = 'TEST_COVERAGE',
   CODE_COMPLEXITY = 'CODE_COMPLEXITY',
   SOLUTION_ELEGANCE = 'SOLUTION_ELEGANCE',
-  
+
   // Execution Metrics
   EXECUTION_TIME = 'EXECUTION_TIME',
   MEMORY_USAGE = 'MEMORY_USAGE',
   ALGORITHM_EFFICIENCY = 'ALGORITHM_EFFICIENCY',
   RUNTIME_PERFORMANCE = 'RUNTIME_PERFORMANCE',
-  
+
   // Problem Solving Metrics
   PROBLEM_UNDERSTANDING = 'PROBLEM_UNDERSTANDING',
   SOLUTION_APPROACH = 'SOLUTION_APPROACH',
   DEBUGGING_SKILLS = 'DEBUGGING_SKILLS',
   EDGE_CASE_HANDLING = 'EDGE_CASE_HANDLING',
-  
+
   // Time Management Metrics
   TIME_TO_FIRST_SOLUTION = 'TIME_TO_FIRST_SOLUTION',
   COMPLETION_RATE = 'COMPLETION_RATE',
   TIME_EFFICIENCY = 'TIME_EFFICIENCY',
   PACING_CONSISTENCY = 'PACING_CONSISTENCY',
-  
+
   // Behavioral Metrics
   COLLABORATION_SKILLS = 'COLLABORATION_SKILLS',
   COMMUNICATION_CLARITY = 'COMMUNICATION_CLARITY',
   STRESS_HANDLING = 'STRESS_HANDLING',
   ADAPTABILITY = 'ADAPTABILITY',
-  
+
   // Assessment Specific
   OVERALL_SCORE = 'OVERALL_SCORE',
   DIFFICULTY_PROGRESSION = 'DIFFICULTY_PROGRESSION',
   CONSISTENCY = 'CONSISTENCY',
-  IMPROVEMENT_RATE = 'IMPROVEMENT_RATE'
+  IMPROVEMENT_RATE = 'IMPROVEMENT_RATE',
 }
 
 /**
@@ -67,7 +67,7 @@ export enum MetricAggregationType {
   PERCENTILE_90 = 'PERCENTILE_90',
   PERCENTILE_95 = 'PERCENTILE_95',
   STANDARD_DEVIATION = 'STANDARD_DEVIATION',
-  VARIANCE = 'VARIANCE'
+  VARIANCE = 'VARIANCE',
 }
 
 /**
@@ -80,7 +80,7 @@ export enum AnalysisPeriod {
   MONTHLY = 'MONTHLY',
   QUARTERLY = 'QUARTERLY',
   YEARLY = 'YEARLY',
-  CUSTOM = 'CUSTOM'
+  CUSTOM = 'CUSTOM',
 }
 
 /**
@@ -93,18 +93,18 @@ export interface PerformanceMetric {
   normalizedValue: number; // 0-1 scale
   percentile: number; // Compared to peer group
   timestamp: Date;
-  
+
   // Context
   candidateId: string;
   assessmentId: string;
   questionId?: string;
   sessionId?: string;
-  
+
   // Metadata
   metadata: Record<string, any>;
   tags: string[];
   confidence: number; // Metric reliability score
-  
+
   // Benchmarking
   benchmarkGroup: string; // e.g., 'mid-level-js', 'senior-python'
   industryPercentile: number;
@@ -122,7 +122,7 @@ export interface AggregatedMetrics {
   period: AnalysisPeriod;
   startDate: Date;
   endDate: Date;
-  
+
   // Statistical measures
   mean: number;
   median: number;
@@ -130,13 +130,13 @@ export interface AggregatedMetrics {
   variance: number;
   min: number;
   max: number;
-  
+
   // Percentiles
   percentile25: number;
   percentile75: number;
   percentile90: number;
   percentile95: number;
-  
+
   // Trend indicators
   trend: TrendDirection;
   trendStrength: number; // 0-1
@@ -152,41 +152,41 @@ export interface AggregatedMetrics {
 export interface CandidatePerformanceProfile {
   candidateId: string;
   organizationId: string;
-  
+
   // Core metrics
   overallScore: number;
   overallPercentile: number;
   skillLevel: SkillLevel;
-  
+
   // Category scores
   technicalSkills: number;
   problemSolving: number;
   codeQuality: number;
   timeManagement: number;
   communication: number;
-  
+
   // Performance trends
   performanceTrend: TrendDirection;
   improvementRate: number;
   consistencyScore: number;
-  
+
   // Comparative analysis
   peerComparison: PeerComparison;
   industryComparison: IndustryComparison;
   historicalComparison: HistoricalComparison;
-  
+
   // Detailed metrics
   metrics: PerformanceMetric[];
   aggregatedMetrics: AggregatedMetrics[];
-  
+
   // Strengths and weaknesses
   strengths: SkillStrength[];
   weaknesses: SkillWeakness[];
   recommendations: PerformanceRecommendation[];
-  
+
   // Assessment history
   assessmentHistory: AssessmentPerformanceSummary[];
-  
+
   // Metadata
   lastUpdated: Date;
   dataQuality: number; // 0-1 based on sample size and consistency
@@ -202,7 +202,7 @@ export enum SkillLevel {
   MID_LEVEL = 'MID_LEVEL',
   SENIOR = 'SENIOR',
   EXPERT = 'EXPERT',
-  MASTER = 'MASTER'
+  MASTER = 'MASTER',
 }
 
 /**
@@ -213,7 +213,7 @@ export enum TrendDirection {
   DECLINING = 'DECLINING',
   STABLE = 'STABLE',
   IMPROVING = 'IMPROVING',
-  STRONGLY_IMPROVING = 'STRONGLY_IMPROVING'
+  STRONGLY_IMPROVING = 'STRONGLY_IMPROVING',
 }
 
 /**
@@ -247,7 +247,7 @@ export enum WeaknessImpact {
   LOW = 'LOW',
   MEDIUM = 'MEDIUM',
   HIGH = 'HIGH',
-  CRITICAL = 'CRITICAL'
+  CRITICAL = 'CRITICAL',
 }
 
 /**
@@ -274,7 +274,7 @@ export enum RecommendationType {
   LEARNING_PATH = 'LEARNING_PATH',
   ASSESSMENT_STRATEGY = 'ASSESSMENT_STRATEGY',
   TIME_MANAGEMENT = 'TIME_MANAGEMENT',
-  TECHNICAL_IMPROVEMENT = 'TECHNICAL_IMPROVEMENT'
+  TECHNICAL_IMPROVEMENT = 'TECHNICAL_IMPROVEMENT',
 }
 
 /**
@@ -284,7 +284,7 @@ export enum RecommendationPriority {
   LOW = 'LOW',
   MEDIUM = 'MEDIUM',
   HIGH = 'HIGH',
-  URGENT = 'URGENT'
+  URGENT = 'URGENT',
 }
 
 /**
@@ -308,7 +308,7 @@ export enum ResourceType {
   COURSE = 'COURSE',
   BOOK = 'BOOK',
   VIDEO = 'VIDEO',
-  ARTICLE = 'ARTICLE'
+  ARTICLE = 'ARTICLE',
 }
 
 // ===== COMPARATIVE ANALYSIS =====
@@ -320,18 +320,18 @@ export interface PeerComparison {
   peerGroupId: string;
   peerGroupName: string;
   peerGroupSize: number;
-  
+
   // Ranking within peer group
   overallRank: number;
   overallPercentile: number;
-  
+
   // Category rankings
   categoryRankings: CategoryRanking[];
-  
+
   // Performance gaps
   strengthGaps: PerformanceGap[];
   weaknessGaps: PerformanceGap[];
-  
+
   // Comparative insights
   insights: ComparisonInsight[];
 }
@@ -343,11 +343,11 @@ export interface IndustryComparison {
   industryId: string;
   industryName: string;
   sampleSize: number;
-  
+
   // Industry percentiles
   overallIndustryPercentile: number;
   categoryPercentiles: CategoryPercentile[];
-  
+
   // Market positioning
   marketPosition: MarketPosition;
   competitiveAdvantages: string[];
@@ -359,15 +359,15 @@ export interface IndustryComparison {
  */
 export interface HistoricalComparison {
   comparisonPeriod: AnalysisPeriod;
-  
+
   // Performance changes
   overallChange: PerformanceChange;
   categoryChanges: CategoryChange[];
-  
+
   // Trend analysis
   performanceTrends: TrendAnalysis[];
   milestones: PerformanceMilestone[];
-  
+
   // Predictions
   projectedPerformance: PerformanceProjection;
 }
@@ -403,7 +403,7 @@ export enum GapSignificance {
   MINOR = 'MINOR',
   MODERATE = 'MODERATE',
   SIGNIFICANT = 'SIGNIFICANT',
-  CRITICAL = 'CRITICAL'
+  CRITICAL = 'CRITICAL',
 }
 
 /**
@@ -427,7 +427,7 @@ export enum InsightType {
   OPPORTUNITY_DETECTION = 'OPPORTUNITY_DETECTION',
   RISK_ASSESSMENT = 'RISK_ASSESSMENT',
   PATTERN_RECOGNITION = 'PATTERN_RECOGNITION',
-  ANOMALY_DETECTION = 'ANOMALY_DETECTION'
+  ANOMALY_DETECTION = 'ANOMALY_DETECTION',
 }
 
 // ===== TREND ANALYSIS =====
@@ -439,31 +439,31 @@ export interface TrendAnalysis {
   metricType: PerformanceMetricType;
   period: AnalysisPeriod;
   dataPoints: TrendDataPoint[];
-  
+
   // Trend characteristics
   direction: TrendDirection;
   strength: number; // 0-1
   consistency: number; // 0-1
   volatility: number; // 0-1
-  
+
   // Statistical measures
   correlation: number; // with time
   rSquared: number; // trend line fit
   slope: number;
   interceptValue: number;
-  
+
   // Trend predictions
   shortTermPrediction: TrendPrediction;
   longTermPrediction: TrendPrediction;
-  
+
   // Seasonal patterns
   seasonalityDetected: boolean;
   seasonalPatterns: SeasonalPattern[];
-  
+
   // Anomalies
   anomalies: TrendAnomaly[];
   outliers: TrendOutlier[];
-  
+
   // Insights
   trendInsights: TrendInsight[];
   recommendations: TrendRecommendation[];
@@ -530,7 +530,7 @@ export enum SeasonalityType {
   WEEKLY = 'WEEKLY',
   MONTHLY = 'MONTHLY',
   QUARTERLY = 'QUARTERLY',
-  YEARLY = 'YEARLY'
+  YEARLY = 'YEARLY',
 }
 
 /**
@@ -553,7 +553,7 @@ export enum AnomalySeverity {
   MINOR = 'MINOR',
   MODERATE = 'MODERATE',
   MAJOR = 'MAJOR',
-  CRITICAL = 'CRITICAL'
+  CRITICAL = 'CRITICAL',
 }
 
 // ===== ASSESSMENT ANALYTICS =====
@@ -565,32 +565,32 @@ export interface AssessmentPerformanceSummary {
   assessmentId: string;
   assessmentTitle: string;
   completedAt: Date;
-  
+
   // Scores
   overallScore: number;
   overallPercentile: number;
   categoryScores: CategoryScore[];
-  
+
   // Time metrics
   totalTime: number;
   averageTimePerQuestion: number;
   timeEfficiency: number;
-  
+
   // Completion metrics
   completionRate: number;
   questionsAttempted: number;
   questionsCompleted: number;
-  
+
   // Quality metrics
   codeQualityScore: number;
   solutionElegance: number;
   testCoverageAchieved: number;
-  
+
   // Behavioral insights
   stressIndicators: StressIndicator[];
   engagementLevel: number;
   focusMetrics: FocusMetrics;
-  
+
   // Comparative context
   cohortPerformance: CohortPerformance;
   difficultyRating: number;
@@ -628,7 +628,7 @@ export enum StressIndicatorType {
   FREQUENT_DELETIONS = 'FREQUENT_DELETIONS',
   TAB_SWITCHING = 'TAB_SWITCHING',
   CAMERA_MOVEMENT = 'CAMERA_MOVEMENT',
-  AUDIO_STRESS_MARKERS = 'AUDIO_STRESS_MARKERS'
+  AUDIO_STRESS_MARKERS = 'AUDIO_STRESS_MARKERS',
 }
 
 /**
@@ -677,20 +677,20 @@ export interface DashboardConfig {
   name: string;
   description: string;
   organizationId: string;
-  
+
   // Layout and widgets
   layout: DashboardLayout;
   widgets: DashboardWidget[];
-  
+
   // Filters and settings
   defaultFilters: DashboardFilter[];
   refreshInterval: number;
   autoRefresh: boolean;
-  
+
   // Access control
   visibility: DashboardVisibility;
   allowedRoles: string[];
-  
+
   // Metadata
   createdBy: string;
   createdAt: Date;
@@ -746,7 +746,7 @@ export enum WidgetType {
   TREEMAP = 'TREEMAP',
   RADAR_CHART = 'RADAR_CHART',
   FUNNEL_CHART = 'FUNNEL_CHART',
-  WATERFALL_CHART = 'WATERFALL_CHART'
+  WATERFALL_CHART = 'WATERFALL_CHART',
 }
 
 /**
@@ -781,16 +781,16 @@ export interface PerformancePredictionModel {
   modelName: string;
   modelType: PredictionModelType;
   version: string;
-  
+
   // Model parameters
   algorithm: MLAlgorithm;
   features: ModelFeature[];
   hyperparameters: Record<string, any>;
-  
+
   // Training data
   trainingDataSize: number;
   trainingPeriod: DateRange;
-  
+
   // Model performance
   accuracy: number;
   precision: number;
@@ -798,20 +798,20 @@ export interface PerformancePredictionModel {
   f1Score: number;
   rmse: number;
   mae: number;
-  
+
   // Validation metrics
   crossValidationScore: number;
   validationDataSize: number;
-  
+
   // Deployment info
   deployedAt: Date;
   lastRetrained: Date;
   nextRetrainingScheduled: Date;
-  
+
   // Usage stats
   predictionCount: number;
   averageLatency: number;
-  
+
   // Model monitoring
   driftDetected: boolean;
   performanceDegradation: number;
@@ -827,7 +827,7 @@ export enum PredictionModelType {
   SUCCESS_PROBABILITY = 'SUCCESS_PROBABILITY',
   IMPROVEMENT_RATE = 'IMPROVEMENT_RATE',
   HIRING_RECOMMENDATION = 'HIRING_RECOMMENDATION',
-  RISK_ASSESSMENT = 'RISK_ASSESSMENT'
+  RISK_ASSESSMENT = 'RISK_ASSESSMENT',
 }
 
 /**
@@ -841,7 +841,7 @@ export enum MLAlgorithm {
   SVM = 'SVM',
   LSTM = 'LSTM',
   TRANSFORMER = 'TRANSFORMER',
-  ENSEMBLE = 'ENSEMBLE'
+  ENSEMBLE = 'ENSEMBLE',
 }
 
 /**
@@ -865,7 +865,7 @@ export enum FeatureType {
   BINARY = 'BINARY',
   TEMPORAL = 'TEMPORAL',
   TEXT = 'TEXT',
-  DERIVED = 'DERIVED'
+  DERIVED = 'DERIVED',
 }
 
 /**
@@ -885,7 +885,7 @@ export enum TransformationType {
   LOG_TRANSFORM = 'LOG_TRANSFORM',
   POLYNOMIAL = 'POLYNOMIAL',
   BINNING = 'BINNING',
-  ENCODING = 'ENCODING'
+  ENCODING = 'ENCODING',
 }
 
 /**
@@ -896,18 +896,18 @@ export interface PerformancePrediction {
   candidateId: string;
   modelId: string;
   timestamp: Date;
-  
+
   // Predictions
   predictedScore: number;
   confidenceInterval: ConfidenceInterval;
   probability: number;
-  
+
   // Feature contributions
   featureContributions: FeatureContribution[];
-  
+
   // Explanations
   explanation: PredictionExplanation;
-  
+
   // Validation
   actualOutcome?: number;
   predictionAccuracy?: number;
@@ -966,7 +966,7 @@ export enum ChangeSignificance {
   MINOR = 'MINOR',
   MODERATE = 'MODERATE',
   SIGNIFICANT = 'SIGNIFICANT',
-  MAJOR = 'MAJOR'
+  MAJOR = 'MAJOR',
 }
 
 /**
@@ -997,7 +997,7 @@ export enum MarketPosition {
   THIRD_QUARTILE = 'THIRD_QUARTILE',
   TOP_QUARTILE = 'TOP_QUARTILE',
   TOP_DECILE = 'TOP_DECILE',
-  TOP_PERCENTILE = 'TOP_PERCENTILE'
+  TOP_PERCENTILE = 'TOP_PERCENTILE',
 }
 
 /**
@@ -1022,7 +1022,7 @@ export enum MilestoneType {
   DECLINE = 'DECLINE',
   RECOVERY = 'RECOVERY',
   GOAL_ACHIEVEMENT = 'GOAL_ACHIEVEMENT',
-  REGRESSION = 'REGRESSION'
+  REGRESSION = 'REGRESSION',
 }
 
 /**
@@ -1106,7 +1106,7 @@ export enum DashboardVisibility {
   PUBLIC = 'PUBLIC',
   ORGANIZATION = 'ORGANIZATION',
   TEAM = 'TEAM',
-  PRIVATE = 'PRIVATE'
+  PRIVATE = 'PRIVATE',
 }
 
 /**
@@ -1134,7 +1134,7 @@ export enum FilterOperator {
   CONTAINS = 'CONTAINS',
   STARTS_WITH = 'STARTS_WITH',
   ENDS_WITH = 'ENDS_WITH',
-  BETWEEN = 'BETWEEN'
+  BETWEEN = 'BETWEEN',
 }
 
 /**
@@ -1166,7 +1166,7 @@ export enum InteractionTrigger {
   DOUBLE_CLICK = 'DOUBLE_CLICK',
   HOVER = 'HOVER',
   SELECTION = 'SELECTION',
-  DRILL_DOWN = 'DRILL_DOWN'
+  DRILL_DOWN = 'DRILL_DOWN',
 }
 
 /**
@@ -1178,7 +1178,7 @@ export enum InteractionAction {
   ZOOM = 'ZOOM',
   HIGHLIGHT = 'HIGHLIGHT',
   TOOLTIP = 'TOOLTIP',
-  MODAL = 'MODAL'
+  MODAL = 'MODAL',
 }
 
 /**
@@ -1200,7 +1200,7 @@ export enum AnnotationType {
   TREND_LINE = 'TREND_LINE',
   THRESHOLD_LINE = 'THRESHOLD_LINE',
   REGION_HIGHLIGHT = 'REGION_HIGHLIGHT',
-  CALLOUT = 'CALLOUT'
+  CALLOUT = 'CALLOUT',
 }
 
 /**
@@ -1224,7 +1224,7 @@ export enum AnchorPoint {
   CENTER_RIGHT = 'CENTER_RIGHT',
   BOTTOM_LEFT = 'BOTTOM_LEFT',
   BOTTOM_CENTER = 'BOTTOM_CENTER',
-  BOTTOM_RIGHT = 'BOTTOM_RIGHT'
+  BOTTOM_RIGHT = 'BOTTOM_RIGHT',
 }
 
 /**
@@ -1258,7 +1258,7 @@ export enum DataSourceType {
   API_ENDPOINT = 'API_ENDPOINT',
   COMPUTED_METRIC = 'COMPUTED_METRIC',
   REAL_TIME_STREAM = 'REAL_TIME_STREAM',
-  CACHED_RESULT = 'CACHED_RESULT'
+  CACHED_RESULT = 'CACHED_RESULT',
 }
 
 // ===== SERVICE CONFIGURATION =====
@@ -1271,30 +1271,30 @@ export interface PerformanceAnalyticsConfig {
   metricCalculationInterval: number; // minutes
   batchProcessingSize: number;
   enableRealTimeCalculation: boolean;
-  
+
   // Benchmarking
   benchmarkUpdateInterval: number; // hours
   minimumSampleSizeForBenchmark: number;
   industryBenchmarkSources: string[];
-  
+
   // Prediction models
   enablePredictionModels: boolean;
   modelRetrainingInterval: number; // days
   minimumDataPointsForPrediction: number;
-  
+
   // Caching
   enableMetricCaching: boolean;
   cacheExpirationTime: number; // minutes
-  
+
   // Data retention
   rawDataRetentionDays: number;
   aggregatedDataRetentionDays: number;
-  
+
   // Thresholds
   anomalyDetectionThreshold: number; // z-score
   significanceTestThreshold: number; // p-value
   minimumTrendDataPoints: number;
-  
+
   // Performance
   maxConcurrentCalculations: number;
   calculationTimeoutSeconds: number;
@@ -1329,5 +1329,5 @@ export default {
   InteractionAction,
   AnnotationType,
   AnchorPoint,
-  DataSourceType
+  DataSourceType,
 };

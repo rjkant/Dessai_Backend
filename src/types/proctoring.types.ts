@@ -54,14 +54,14 @@ export enum MediaStreamType {
   VIDEO = 'video',
   AUDIO = 'audio',
   SCREEN = 'screen',
-  COMBINED = 'combined'
+  COMBINED = 'combined',
 }
 
 export enum StreamQuality {
-  LOW = 'low',       // 320x240, 15fps
+  LOW = 'low', // 320x240, 15fps
   MEDIUM = 'medium', // 640x480, 30fps
-  HIGH = 'high',     // 1280x720, 30fps
-  HD = 'hd'          // 1920x1080, 30fps
+  HIGH = 'high', // 1280x720, 30fps
+  HD = 'hd', // 1920x1080, 30fps
 }
 
 export interface MediaStreamConstraints {
@@ -160,7 +160,7 @@ export enum SessionStatus {
   PAUSED = 'paused',
   DISCONNECTED = 'disconnected',
   COMPLETED = 'completed',
-  FAILED = 'failed'
+  FAILED = 'failed',
 }
 
 export interface MediaStreamInfo {
@@ -180,7 +180,7 @@ export enum StreamStatus {
   ACTIVE = 'active',
   PAUSED = 'paused',
   STOPPED = 'stopped',
-  ERROR = 'error'
+  ERROR = 'error',
 }
 
 export interface StreamMetadata {
@@ -247,8 +247,8 @@ export interface NetworkConnection {
 
 export interface BandwidthInfo {
   download: number; // Mbps
-  upload: number;   // Mbps
-  ping: number;     // ms
+  upload: number; // Mbps
+  ping: number; // ms
 }
 
 export interface GeolocationInfo {
@@ -315,14 +315,14 @@ export enum WebRTCEventType {
   QUALITY_CHANGED = 'quality_changed',
   BANDWIDTH_CHANGED = 'bandwidth_changed',
   RECORDING_STARTED = 'recording_started',
-  RECORDING_STOPPED = 'recording_stopped'
+  RECORDING_STOPPED = 'recording_stopped',
 }
 
 export enum EventSeverity {
   INFO = 'info',
   WARNING = 'warning',
   ERROR = 'error',
-  CRITICAL = 'critical'
+  CRITICAL = 'critical',
 }
 
 // API Request/Response Types
@@ -346,10 +346,10 @@ export interface SessionSettings {
 
 export enum MonitoringLevel {
   NONE = 'none',
-  BASIC = 'basic',     // Face detection only
+  BASIC = 'basic', // Face detection only
   STANDARD = 'standard', // Face + gaze tracking
   ADVANCED = 'advanced', // All AI monitoring
-  STRICT = 'strict'    // Maximum security
+  STRICT = 'strict', // Maximum security
 }
 
 export interface CreateWebRTCSessionResponse {
@@ -374,7 +374,7 @@ export enum SignalingMessageType {
   ICE_CANDIDATE = 'ice-candidate',
   BYE = 'bye',
   HEARTBEAT = 'heartbeat',
-  ERROR = 'error'
+  ERROR = 'error',
 }
 
 // Quality Monitoring Types
@@ -438,7 +438,7 @@ export enum WebRTCErrorCode {
   RECORDING_ERROR = 'RECORDING_ERROR',
   BANDWIDTH_ERROR = 'BANDWIDTH_ERROR',
   BROWSER_NOT_SUPPORTED = 'BROWSER_NOT_SUPPORTED',
-  INTERNAL_ERROR = 'INTERNAL_ERROR'
+  INTERNAL_ERROR = 'INTERNAL_ERROR',
 }
 
 // Utility Types

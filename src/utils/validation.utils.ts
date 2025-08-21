@@ -2,7 +2,7 @@
  * Validation Utilities
  * TASK-CG-005: Assessment Management Core
  * Persona: Senior Software Engineer
- * 
+ *
  * Common validation utilities for user input and business logic.
  */
 

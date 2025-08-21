@@ -1,11 +1,17 @@
-import { PrismaClient, Assessment, AssessmentStatus, AssessmentType, Question } from '@prisma/client';
+import {
+  PrismaClient,
+  Assessment,
+  AssessmentStatus,
+  AssessmentType,
+  Question,
+} from '@prisma/client';
 import {
   CreateAssessmentRequest,
   UpdateAssessmentRequest,
   AssessmentWithDetails,
   AssessmentSearchCriteria,
   AssessmentError,
-  AssessmentErrorCode
+  AssessmentErrorCode,
 } from '../types/assessment.types';
 
 // Simple utility functions
@@ -15,7 +21,13 @@ function generateSessionId(): string {
 
 function log(level: 'info' | 'error', message: string, meta?: any): void {
   const timestamp = new Date().toISOString();
-  const logObject = { timestamp, level, context: 'AssessmentService', message, ...(meta && { meta }) };
+  const logObject = {
+    timestamp,
+    level,
+    context: 'AssessmentService',
+    message,
+    ...(meta && { meta }),
+  };
   if (level === 'error') {
     console.error(JSON.stringify(logObject));
   } else {
@@ -41,11 +53,11 @@ export class AssessmentService {
       log('info', 'Creating assessment', {
         title: data.title,
         type: data.type,
-        organizationId
+        organizationId,
       });
 
       // Create assessment with transaction
-      const assessment = await this.prisma.$transaction(async (tx) => {
+      const assessment = await this.prisma.$transaction(async tx => {
         // Create the assessment
         const newAssessment = await tx.assessment.create({
           data: {
@@ -80,9 +92,9 @@ export class AssessmentService {
         return newAssessment;
       });
 
-      log('info', 'Assessment created successfully', { 
+      log('info', 'Assessment created successfully', {
         assessmentId: assessment.id,
-        title: assessment.title
+        title: assessment.title,
       });
 
       return assessment;
@@ -105,31 +117,33 @@ export class AssessmentService {
     includeDetails = false
   ): Promise<AssessmentWithDetails | Assessment | null> {
     try {
-      const includeOptions = includeDetails ? {
-        organization: {
-          select: { id: true, name: true, slug: true }
-        },
-        questions: {
-          include: { question: true },
-          orderBy: { order: 'asc' as const }
-        },
-        participations: {
-          include: {
-            user: {
-              select: { id: true, firstName: true, lastName: true, email: true }
-            }
+      const includeOptions = includeDetails
+        ? {
+            organization: {
+              select: { id: true, name: true, slug: true },
+            },
+            questions: {
+              include: { question: true },
+              orderBy: { order: 'asc' as const },
+            },
+            participations: {
+              include: {
+                user: {
+                  select: { id: true, firstName: true, lastName: true, email: true },
+                },
+              },
+            },
+            _count: {
+              select: { participations: true, questions: true },
+            },
           }
-        },
-        _count: {
-          select: { participations: true, questions: true }
-        }
-      } : undefined;
+        : undefined;
 
       const query: any = {
         where: {
           id,
-          ...(organizationId && { organizationId })
-        }
+          ...(organizationId && { organizationId }),
+        },
       };
 
       if (includeOptions) {
@@ -163,26 +177,40 @@ export class AssessmentService {
   ): Promise<Assessment> {
     try {
       const updateData: any = {};
-      
-      if (data.title !== undefined) updateData.title = data.title;
-      if (data.description !== undefined) updateData.description = data.description || null;
-      if (data.timeLimit !== undefined) updateData.timeLimit = data.timeLimit || null;
-      if (data.scheduledAt !== undefined) updateData.scheduledAt = data.scheduledAt || null;
-      if (data.startsAt !== undefined) updateData.startsAt = data.startsAt || null;
-      if (data.endsAt !== undefined) updateData.endsAt = data.endsAt || null;
-      if (data.settings !== undefined) updateData.settings = JSON.stringify(data.settings || {});
+
+      if (data.title !== undefined) {
+        updateData.title = data.title;
+      }
+      if (data.description !== undefined) {
+        updateData.description = data.description || null;
+      }
+      if (data.timeLimit !== undefined) {
+        updateData.timeLimit = data.timeLimit || null;
+      }
+      if (data.scheduledAt !== undefined) {
+        updateData.scheduledAt = data.scheduledAt || null;
+      }
+      if (data.startsAt !== undefined) {
+        updateData.startsAt = data.startsAt || null;
+      }
+      if (data.endsAt !== undefined) {
+        updateData.endsAt = data.endsAt || null;
+      }
+      if (data.settings !== undefined) {
+        updateData.settings = JSON.stringify(data.settings || {});
+      }
 
       const assessment = await this.prisma.assessment.update({
         where: {
           id,
-          organizationId
+          organizationId,
         },
         data: updateData,
       });
 
-      log('info', 'Assessment updated successfully', { 
+      log('info', 'Assessment updated successfully', {
         assessmentId: id,
-        fieldsUpdated: Object.keys(updateData)
+        fieldsUpdated: Object.keys(updateData),
       });
 
       return assessment;
@@ -199,15 +227,12 @@ export class AssessmentService {
   /**
    * Delete assessment
    */
-  async deleteAssessment(
-    id: string,
-    organizationId: string
-  ): Promise<void> {
+  async deleteAssessment(id: string, organizationId: string): Promise<void> {
     try {
-      await this.prisma.$transaction(async (tx) => {
+      await this.prisma.$transaction(async tx => {
         // Check if assessment exists and belongs to organization
         const assessment = await tx.assessment.findFirst({
-          where: { id, organizationId }
+          where: { id, organizationId },
         });
 
         if (!assessment) {
@@ -219,17 +244,17 @@ export class AssessmentService {
 
         // Delete assessment questions
         await tx.assessmentQuestion.deleteMany({
-          where: { assessmentId: id }
+          where: { assessmentId: id },
         });
 
         // Delete participations
         await tx.assessmentParticipation.deleteMany({
-          where: { assessmentId: id }
+          where: { assessmentId: id },
         });
 
         // Delete the assessment
         await tx.assessment.delete({
-          where: { id }
+          where: { id },
         });
       });
 
@@ -269,13 +294,16 @@ export class AssessmentService {
       if (criteria.dateRange) {
         where.createdAt = {
           gte: criteria.dateRange.from,
-          lte: criteria.dateRange.to
+          lte: criteria.dateRange.to,
         };
-      }      const assessments = await this.prisma.assessment.findMany({
+      }
+      const assessments = await this.prisma.assessment.findMany({
         where,
-        orderBy: criteria.sortBy ? {
-          [criteria.sortBy]: criteria.sortOrder || 'desc'
-        } : { createdAt: 'desc' },
+        orderBy: criteria.sortBy
+          ? {
+              [criteria.sortBy]: criteria.sortOrder || 'desc',
+            }
+          : { createdAt: 'desc' },
         take: criteria.pagination?.pageSize || 50,
         skip: ((criteria.pagination?.page || 1) - 1) * (criteria.pagination?.pageSize || 50),
       });
@@ -300,10 +328,10 @@ export class AssessmentService {
     organizationId: string
   ): Promise<void> {
     try {
-      await this.prisma.$transaction(async (tx) => {
+      await this.prisma.$transaction(async tx => {
         // Verify assessment exists and belongs to organization
         const assessment = await tx.assessment.findFirst({
-          where: { id: assessmentId, organizationId }
+          where: { id: assessmentId, organizationId },
         });
 
         if (!assessment) {
@@ -329,7 +357,7 @@ export class AssessmentService {
 
       log('info', 'Questions added to assessment', {
         assessmentId,
-        questionCount: data.questionIds.length
+        questionCount: data.questionIds.length,
       });
     } catch (error) {
       log('error', 'Failed to add questions to assessment', { assessmentId, error });
@@ -354,8 +382,8 @@ export class AssessmentService {
         where: {
           assessmentId,
           questionId,
-          assessment: { organizationId }
-        }
+          assessment: { organizationId },
+        },
       });
 
       log('info', 'Question removed from assessment', { assessmentId, questionId });
@@ -363,7 +391,7 @@ export class AssessmentService {
       log('error', 'Failed to remove question from assessment', {
         assessmentId,
         questionId,
-        error
+        error,
       });
       throw new AssessmentError(
         AssessmentErrorCode.VALIDATION_ERROR,
@@ -376,24 +404,21 @@ export class AssessmentService {
   /**
    * Publish assessment
    */
-  async publishAssessment(
-    id: string,
-    organizationId: string
-  ): Promise<Assessment> {
+  async publishAssessment(id: string, organizationId: string): Promise<Assessment> {
     try {
       const assessment = await this.prisma.assessment.update({
         where: {
           id,
           organizationId,
-          status: AssessmentStatus.DRAFT
+          status: AssessmentStatus.DRAFT,
         },
         data: {
-          status: AssessmentStatus.ACTIVE
+          status: AssessmentStatus.ACTIVE,
         },
       });
 
-      log('info', 'Assessment published', { 
-        assessmentId: id
+      log('info', 'Assessment published', {
+        assessmentId: id,
       });
 
       return assessment;
@@ -410,16 +435,13 @@ export class AssessmentService {
   /**
    * Activate assessment
    */
-  async activateAssessment(
-    id: string,
-    organizationId: string
-  ): Promise<Assessment> {
+  async activateAssessment(id: string, organizationId: string): Promise<Assessment> {
     try {
       const assessment = await this.prisma.assessment.update({
         where: {
           id,
           organizationId,
-          status: AssessmentStatus.ACTIVE
+          status: AssessmentStatus.ACTIVE,
         },
         data: {
           status: AssessmentStatus.ACTIVE,
@@ -442,16 +464,13 @@ export class AssessmentService {
   /**
    * Complete assessment
    */
-  async completeAssessment(
-    id: string,
-    organizationId: string
-  ): Promise<Assessment> {
+  async completeAssessment(id: string, organizationId: string): Promise<Assessment> {
     try {
       const assessment = await this.prisma.assessment.update({
         where: {
           id,
           organizationId,
-          status: AssessmentStatus.ACTIVE
+          status: AssessmentStatus.ACTIVE,
         },
         data: {
           status: AssessmentStatus.COMPLETED,
@@ -478,9 +497,10 @@ export class AssessmentService {
   /**
    * Start assessment for a user
    */
-  async startAssessment(
-    data: { userId: string; assessmentId: string }
-  ): Promise<{ participationId: string; sessionId: string }> {
+  async startAssessment(data: {
+    userId: string;
+    assessmentId: string;
+  }): Promise<{ participationId: string; sessionId: string }> {
     try {
       const { assessmentId, userId } = data;
 
@@ -489,11 +509,8 @@ export class AssessmentService {
         where: {
           id: assessmentId,
           status: AssessmentStatus.ACTIVE,
-          OR: [
-            { startsAt: null },
-            { startsAt: { lte: new Date() } }
-          ]
-        }
+          OR: [{ startsAt: null }, { startsAt: { lte: new Date() } }],
+        },
       });
 
       if (!assessment) {
@@ -505,7 +522,7 @@ export class AssessmentService {
 
       // Check if user already has a participation
       const existingParticipation = await this.prisma.assessmentParticipation.findFirst({
-        where: { assessmentId, userId }
+        where: { assessmentId, userId },
       });
 
       if (existingParticipation) {
@@ -523,20 +540,20 @@ export class AssessmentService {
           userId,
           startedAt: new Date(),
           metadata: JSON.stringify({}),
-          status: 'IN_PROGRESS'
-        }
+          status: 'IN_PROGRESS',
+        },
       });
 
       log('info', 'Assessment session started', {
         assessmentId,
         userId,
         participationId: participation.id,
-        sessionId
+        sessionId,
       });
 
       return {
         participationId: participation.id,
-        sessionId
+        sessionId,
       };
     } catch (error) {
       log('error', 'Failed to start assessment', { data, error });
@@ -551,19 +568,16 @@ export class AssessmentService {
   /**
    * Get user's assessment participation
    */
-  async getAssessmentParticipation(
-    assessmentId: string,
-    userId: string
-  ) {
+  async getAssessmentParticipation(assessmentId: string, userId: string) {
     try {
       const participation = await this.prisma.assessmentParticipation.findFirst({
         where: { assessmentId, userId },
         include: {
           assessment: true,
           user: {
-            select: { id: true, firstName: true, lastName: true, email: true }
-          }
-        }
+            select: { id: true, firstName: true, lastName: true, email: true },
+          },
+        },
       });
 
       return participation;
@@ -577,5 +591,3 @@ export class AssessmentService {
     }
   }
 }
-
-

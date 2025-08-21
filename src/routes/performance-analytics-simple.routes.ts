@@ -21,7 +21,7 @@ export function createPerformanceAnalyticsSimpleRoutes(): Router {
     logger.error(operation, error as Error, {});
     res.status(500).json({
       success: false,
-      message: `Failed to ${operation.toLowerCase()}`
+      message: `Failed to ${operation.toLowerCase()}`,
     });
   };
 
@@ -35,8 +35,8 @@ export function createPerformanceAnalyticsSimpleRoutes(): Router {
             overall: 85.2,
             assessments: 15,
             averageScore: 78.5,
-            improvement: 12.3
-          }
+            improvement: 12.3,
+          },
         });
       } catch (error) {
         handleError(error, res, 'Get performance overview');
@@ -51,8 +51,8 @@ export function createPerformanceAnalyticsSimpleRoutes(): Router {
             completed: 12,
             pending: 3,
             averageTime: 45,
-            successRate: 0.8
-          }
+            successRate: 0.8,
+          },
         });
       } catch (error) {
         handleError(error, res, 'Get assessment metrics');
@@ -67,8 +67,8 @@ export function createPerformanceAnalyticsSimpleRoutes(): Router {
             candidateId: req.params.candidateId,
             progress: 75,
             milestones: [],
-            nextSteps: []
-          }
+            nextSteps: [],
+          },
         });
       } catch (error) {
         handleError(error, res, 'Get candidate progress');
@@ -82,8 +82,8 @@ export function createPerformanceAnalyticsSimpleRoutes(): Router {
           data: {
             skills: [],
             strengths: [],
-            improvements: []
-          }
+            improvements: [],
+          },
         });
       } catch (error) {
         handleError(error, res, 'Get skill analysis');
@@ -97,8 +97,8 @@ export function createPerformanceAnalyticsSimpleRoutes(): Router {
           data: {
             averageTime: 45,
             timeDistribution: {},
-            efficiency: 0.85
-          }
+            efficiency: 0.85,
+          },
         });
       } catch (error) {
         handleError(error, res, 'Get time analytics');
@@ -112,13 +112,13 @@ export function createPerformanceAnalyticsSimpleRoutes(): Router {
           data: {
             comparison: {},
             baseline: {},
-            percentile: 75
-          }
+            percentile: 75,
+          },
         });
       } catch (error) {
         handleError(error, res, 'Get comparison data');
       }
-    }
+    },
   };
 
   // Routes with authentication
@@ -134,7 +134,7 @@ export function createPerformanceAnalyticsSimpleRoutes(): Router {
     res.json({
       success: true,
       service: 'performance-analytics-simple',
-      status: 'operational'
+      status: 'operational',
     });
   });
 

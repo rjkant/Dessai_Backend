@@ -4,7 +4,12 @@
  */
 
 import { Request, Response } from 'express';
-import { SessionService, CreateSessionData, NavigationRequest, AnswerSubmissionRequest } from '../services/session.service';
+import {
+  SessionService,
+  CreateSessionData,
+  NavigationRequest,
+  AnswerSubmissionRequest,
+} from '../services/session.service';
 import { database } from '../services/database.service';
 
 export class SessionController {
@@ -29,7 +34,7 @@ export class SessionController {
       if (!assessmentId || !candidateId) {
         res.status(400).json({
           success: false,
-          error: 'Assessment ID and candidate ID are required'
+          error: 'Assessment ID and candidate ID are required',
         });
         return;
       }
@@ -39,7 +44,7 @@ export class SessionController {
         candidateId,
         configuration,
         metadata,
-        ...(expiresAt && { expiresAt: new Date(expiresAt) })
+        ...(expiresAt && { expiresAt: new Date(expiresAt) }),
       };
 
       const session = await this.sessionService.createSession(sessionData);
@@ -47,13 +52,13 @@ export class SessionController {
       res.status(201).json({
         success: true,
         data: session,
-        message: 'Session created successfully'
+        message: 'Session created successfully',
       });
     } catch (error: any) {
       console.error('Create session error:', error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to create session'
+        error: error.message || 'Failed to create session',
       });
     }
   };
@@ -70,13 +75,13 @@ export class SessionController {
       res.status(200).json({
         success: true,
         data: session,
-        message: 'Session started successfully'
+        message: 'Session started successfully',
       });
     } catch (error: any) {
       console.error('Start session error:', error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to start session'
+        error: error.message || 'Failed to start session',
       });
     }
   };
@@ -93,13 +98,13 @@ export class SessionController {
       res.status(200).json({
         success: true,
         data: session,
-        message: 'Session completed successfully'
+        message: 'Session completed successfully',
       });
     } catch (error: any) {
       console.error('Complete session error:', error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to complete session'
+        error: error.message || 'Failed to complete session',
       });
     }
   };
@@ -115,13 +120,13 @@ export class SessionController {
 
       res.status(200).json({
         success: true,
-        data: session
+        data: session,
       });
     } catch (error: any) {
       console.error('Get session error:', error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to get session'
+        error: error.message || 'Failed to get session',
       });
     }
   };
@@ -137,13 +142,13 @@ export class SessionController {
 
       res.status(200).json({
         success: true,
-        data: progress
+        data: progress,
       });
     } catch (error: any) {
       console.error('Get session progress error:', error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to get session progress'
+        error: error.message || 'Failed to get session progress',
       });
     }
   };
@@ -160,13 +165,13 @@ export class SessionController {
       res.status(200).json({
         success: true,
         data: sessions,
-        total: sessions.length
+        total: sessions.length,
       });
     } catch (error: any) {
       console.error('List sessions error:', error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to list sessions'
+        error: error.message || 'Failed to list sessions',
       });
     }
   };
@@ -187,28 +192,31 @@ export class SessionController {
       if (!direction) {
         res.status(400).json({
           success: false,
-          error: 'Navigation direction is required'
+          error: 'Navigation direction is required',
         });
         return;
       }
 
       const navigationRequest: NavigationRequest = {
         direction,
-        targetIndex
+        targetIndex,
       };
 
-      const navigationState = await this.sessionService.navigateToQuestion(sessionId, navigationRequest);
+      const navigationState = await this.sessionService.navigateToQuestion(
+        sessionId,
+        navigationRequest
+      );
 
       res.status(200).json({
         success: true,
         data: navigationState,
-        message: 'Navigation successful'
+        message: 'Navigation successful',
       });
     } catch (error: any) {
       console.error('Navigate question error:', error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to navigate'
+        error: error.message || 'Failed to navigate',
       });
     }
   };
@@ -229,7 +237,7 @@ export class SessionController {
       if (!questionId) {
         res.status(400).json({
           success: false,
-          error: 'Question ID is required'
+          error: 'Question ID is required',
         });
         return;
       }
@@ -237,7 +245,7 @@ export class SessionController {
       if (answer === undefined || answer === null) {
         res.status(400).json({
           success: false,
-          error: 'Answer is required'
+          error: 'Answer is required',
         });
         return;
       }
@@ -247,7 +255,7 @@ export class SessionController {
         answer,
         timeSpent: timeSpent || 0,
         flagged,
-        confidence
+        confidence,
       };
 
       const submission = await this.sessionService.submitAnswer(sessionId, submissionRequest);
@@ -255,13 +263,13 @@ export class SessionController {
       res.status(200).json({
         success: true,
         data: submission,
-        message: 'Answer submitted successfully'
+        message: 'Answer submitted successfully',
       });
     } catch (error: any) {
       console.error('Submit answer error:', error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to submit answer'
+        error: error.message || 'Failed to submit answer',
       });
     }
   };
@@ -281,13 +289,13 @@ export class SessionController {
       res.status(200).json({
         success: true,
         data: { expiredCount: count },
-        message: `Cleaned up ${count} expired sessions`
+        message: `Cleaned up ${count} expired sessions`,
       });
     } catch (error: any) {
       console.error('Cleanup sessions error:', error);
       res.status(500).json({
         success: false,
-        error: error.message || 'Failed to cleanup expired sessions'
+        error: error.message || 'Failed to cleanup expired sessions',
       });
     }
   };

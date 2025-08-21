@@ -2,7 +2,7 @@
  * Question Validation Schemas
  * TASK-CG-006: Question Management System
  * Persona: Quality Assurance Engineer
- * 
+ *
  * Express-validator schemas for question-related API endpoints.
  * Provides reusable validation chains for request validation.
  */
@@ -38,7 +38,7 @@ const tagsValidator = () =>
     .optional()
     .isArray()
     .withMessage('Tags must be an array')
-    .custom((tags) => {
+    .custom(tags => {
       if (tags && tags.length > 0) {
         return tags.every((tag: any) => typeof tag === 'string' && tag.trim().length > 0);
       }
@@ -62,7 +62,7 @@ const basicContentValidator = () => [
     .isLength({ min: 5, max: 200 })
     .withMessage('Title must be between 5 and 200 characters')
     .trim(),
-  
+
   body('description')
     .isLength({ min: 10, max: 5000 })
     .withMessage('Description must be between 10 and 5000 characters')
@@ -187,13 +187,13 @@ export const createQuestionSchema = [
   questionDifficultyValidator(),
   tagsValidator(),
   estimatedTimeValidator(),
-  
+
   // Conditional content validation based on question type
-  body('content').custom((content) => {
+  body('content').custom(content => {
     if (!content || typeof content !== 'object') {
       throw new Error('Content is required and must be an object');
     }
-    
+
     // Additional content validation would be implemented here
     // based on the question type
     return true;
@@ -204,38 +204,33 @@ export const createQuestionSchema = [
  * Update question validation schema
  */
 export const updateQuestionSchema = [
-  param('id')
-    .isUUID()
-    .withMessage('Question ID must be a valid UUID'),
-  
+  param('id').isUUID().withMessage('Question ID must be a valid UUID'),
+
   body('title')
     .optional()
     .isLength({ min: 5, max: 200 })
     .withMessage('Title must be between 5 and 200 characters')
     .trim(),
-  
+
   body('description')
     .optional()
     .isLength({ min: 10, max: 5000 })
     .withMessage('Description must be between 10 and 5000 characters')
     .trim(),
-  
+
   body('difficulty')
     .optional()
     .isIn(Object.values(QuestionDifficulty))
     .withMessage(`Difficulty must be one of: ${Object.values(QuestionDifficulty).join(', ')}`),
-  
+
   tagsValidator(),
-  
+
   body('estimatedTimeMinutes')
     .optional()
     .isInt({ min: 1, max: 480 })
     .withMessage('Estimated time must be between 1 and 480 minutes'),
-  
-  body('isActive')
-    .optional()
-    .isBoolean()
-    .withMessage('isActive must be a boolean'),
+
+  body('isActive').optional().isBoolean().withMessage('isActive must be a boolean'),
 ];
 
 /**
@@ -248,46 +243,40 @@ export const searchQuestionsSchema = [
     .trim()
     .isLength({ min: 1, max: 100 })
     .withMessage('Search query must be 1-100 characters'),
-  
+
   query('type')
     .optional()
-    .custom((value) => {
+    .custom(value => {
       if (Array.isArray(value)) {
         return value.every(type => Object.values(QuestionType).includes(type));
       }
       return Object.values(QuestionType).includes(value);
     })
     .withMessage(`Type must be one of: ${Object.values(QuestionType).join(', ')}`),
-  
+
   query('difficulty')
     .optional()
-    .custom((value) => {
+    .custom(value => {
       if (Array.isArray(value)) {
         return value.every(diff => Object.values(QuestionDifficulty).includes(diff));
       }
       return Object.values(QuestionDifficulty).includes(value);
     })
     .withMessage(`Difficulty must be one of: ${Object.values(QuestionDifficulty).join(', ')}`),
-  
-  query('page')
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage('Page must be a positive integer'),
-  
+
+  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
+
   query('limit')
     .optional()
     .isInt({ min: 1, max: 100 })
     .withMessage('Limit must be between 1 and 100'),
-  
+
   query('sortBy')
     .optional()
     .isIn(['title', 'difficulty', 'type', 'createdAt', 'updatedAt'])
     .withMessage('Invalid sort field'),
-  
-  query('sortOrder')
-    .optional()
-    .isIn(['asc', 'desc'])
-    .withMessage('Sort order must be asc or desc'),
+
+  query('sortOrder').optional().isIn(['asc', 'desc']).withMessage('Sort order must be asc or desc'),
 ];
 
 /**
@@ -297,28 +286,19 @@ export const bulkQuestionOperationSchema = [
   body('operation')
     .isIn(['delete', 'activate', 'deactivate', 'updateTags'])
     .withMessage('Operation must be one of: delete, activate, deactivate, updateTags'),
-  
-  body('questionIds')
-    .isArray({ min: 1, max: 100 })
-    .withMessage('Must specify 1-100 question IDs'),
-  
-  body('questionIds.*')
-    .isUUID()
-    .withMessage('All question IDs must be valid UUIDs'),
-  
-  body('data')
-    .optional()
-    .isObject()
-    .withMessage('Data must be an object'),
+
+  body('questionIds').isArray({ min: 1, max: 100 }).withMessage('Must specify 1-100 question IDs'),
+
+  body('questionIds.*').isUUID().withMessage('All question IDs must be valid UUIDs'),
+
+  body('data').optional().isObject().withMessage('Data must be an object'),
 ];
 
 /**
  * Question ID parameter validation
  */
 export const questionIdSchema = [
-  param('id')
-    .isUUID()
-    .withMessage('Question ID must be a valid UUID'),
+  param('id').isUUID().withMessage('Question ID must be a valid UUID'),
 ];
 
 // ============================================================================

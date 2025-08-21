@@ -2,7 +2,7 @@
  * Integration Controller
  * Epic 7: Integration Services - API Controller Implementation
  * Persona: Senior Software Engineer
- *
+ * 
  * Handles all integration-related API endpoints for ATS provider connections,
  * data synchronization, and webhook processing.
  */
@@ -18,16 +18,15 @@ export class IntegrationController {
    * Configure ATS provider for organization
    * POST /api/integrations/ats/configure
    */
-  static async configureATS(req: Request, res: Response, next: NextFunction): Promise<void> {
+  static async configureATS(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const authReq = req as AuthRequest;
       const { provider, configuration } = req.body;
-      const organizationId = authReq.user.organizationId;
+      const organizationId = req.user.organizationId;
 
-      console.log('Configuring ATS provider', {
-        provider,
+      console.log('Configuring ATS provider', { 
+        provider, 
         organizationId,
-        userId: authReq.user.id,
+        userId: req.user.id 
       });
 
       // For now, return a mock response since the service doesn't have configureATS method
@@ -36,20 +35,20 @@ export class IntegrationController {
         provider,
         configuration: { ...configuration, apiKey: '[REDACTED]' },
         organizationId,
-        createdAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
       };
 
       res.status(200).json({
         success: true,
         message: 'ATS provider configured successfully',
-        data: result,
+        data: result
       });
     } catch (error) {
       console.error('Error configuring ATS:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to configure ATS provider',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
@@ -58,11 +57,10 @@ export class IntegrationController {
    * Test connection to ATS provider
    * POST /api/integrations/ats/:provider/test
    */
-  static async testConnection(req: Request, res: Response, next: NextFunction): Promise<void> {
+  static async testConnection(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const authReq = req as AuthRequest;
       const provider = req.params.provider as ATSProvider;
-      const organizationId = authReq.user.organizationId;
+      const organizationId = req.user.organizationId;
 
       console.log('Testing ATS connection', { provider, organizationId });
 
@@ -72,14 +70,14 @@ export class IntegrationController {
       res.status(200).json({
         success: true,
         message: 'Connection test successful',
-        data: { connected: isConnected },
+        data: { connected: isConnected }
       });
     } catch (error) {
       console.error('Error testing connection:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to test connection',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
@@ -88,11 +86,10 @@ export class IntegrationController {
    * Get candidates from ATS provider
    * GET /api/integrations/ats/:provider/candidates
    */
-  static async getCandidates(req: Request, res: Response, next: NextFunction): Promise<void> {
+  static async getCandidates(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const authReq = req as AuthRequest;
       const provider = req.params.provider as ATSProvider;
-      const organizationId = authReq.user.organizationId;
+      const organizationId = req.user.organizationId;
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
       const filters = req.query.filters ? JSON.parse(req.query.filters as string) : {};
@@ -106,8 +103,8 @@ export class IntegrationController {
           firstName: 'John',
           lastName: 'Doe',
           email: 'john.doe@example.com',
-          status: 'active',
-        },
+          status: 'active'
+        }
       ];
 
       res.status(200).json({
@@ -118,16 +115,16 @@ export class IntegrationController {
             page,
             limit,
             total: candidates.length,
-            totalPages: Math.ceil(candidates.length / limit),
-          },
-        },
+            totalPages: Math.ceil(candidates.length / limit)
+          }
+        }
       });
     } catch (error) {
       console.error('Error fetching candidates:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to fetch candidates',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
@@ -136,11 +133,10 @@ export class IntegrationController {
    * Get job positions from ATS provider
    * GET /api/integrations/ats/:provider/jobs
    */
-  static async getJobPositions(req: Request, res: Response, next: NextFunction): Promise<void> {
+  static async getJobPositions(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const authReq = req as AuthRequest;
       const provider = req.params.provider as ATSProvider;
-      const organizationId = authReq.user.organizationId;
+      const organizationId = req.user.organizationId;
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 10;
 
@@ -152,8 +148,8 @@ export class IntegrationController {
           id: 'job-1',
           title: 'Software Engineer',
           department: 'Engineering',
-          status: 'open',
-        },
+          status: 'open'
+        }
       ];
 
       res.status(200).json({
@@ -164,16 +160,16 @@ export class IntegrationController {
             page,
             limit,
             total: positions.length,
-            totalPages: Math.ceil(positions.length / limit),
-          },
-        },
+            totalPages: Math.ceil(positions.length / limit)
+          }
+        }
       });
     } catch (error) {
       console.error('Error fetching job positions:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to fetch job positions',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
@@ -182,11 +178,10 @@ export class IntegrationController {
    * Create candidate in ATS provider
    * POST /api/integrations/ats/:provider/candidates
    */
-  static async createCandidate(req: Request, res: Response, next: NextFunction): Promise<void> {
+  static async createCandidate(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const authReq = req as AuthRequest;
       const provider = req.params.provider as ATSProvider;
-      const organizationId = authReq.user.organizationId;
+      const organizationId = req.user.organizationId;
       const candidateData = req.body;
 
       console.log('Creating candidate', { provider, organizationId });
@@ -197,14 +192,14 @@ export class IntegrationController {
       res.status(201).json({
         success: true,
         message: 'Candidate created successfully',
-        data: { id: candidateId, ...candidateData },
+        data: { id: candidateId, ...candidateData }
       });
     } catch (error) {
       console.error('Error creating candidate:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to create candidate',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
@@ -213,12 +208,11 @@ export class IntegrationController {
    * Update candidate in ATS provider
    * PUT /api/integrations/ats/:provider/candidates/:candidateId
    */
-  static async updateCandidate(req: Request, res: Response, next: NextFunction): Promise<void> {
+  static async updateCandidate(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const authReq = req as AuthRequest;
       const provider = req.params.provider as ATSProvider;
       const candidateId = req.params.candidateId;
-      const organizationId = authReq.user.organizationId;
+      const organizationId = req.user.organizationId;
       const updateData = req.body;
 
       console.log('Updating candidate', { provider, candidateId, organizationId });
@@ -226,14 +220,14 @@ export class IntegrationController {
       res.status(200).json({
         success: true,
         message: 'Candidate updated successfully',
-        data: { id: candidateId, ...updateData },
+        data: { id: candidateId, ...updateData }
       });
     } catch (error) {
       console.error('Error updating candidate:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to update candidate',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
@@ -242,11 +236,10 @@ export class IntegrationController {
    * Synchronize data from ATS provider
    * POST /api/integrations/ats/:provider/sync
    */
-  static async syncData(req: Request, res: Response, next: NextFunction): Promise<void> {
+  static async syncData(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const authReq = req as AuthRequest;
       const provider = req.params.provider as ATSProvider;
-      const organizationId = authReq.user.organizationId;
+      const organizationId = req.user.organizationId;
       const syncOptions = req.body;
 
       console.log('Starting data synchronization', { provider, organizationId });
@@ -255,20 +248,20 @@ export class IntegrationController {
       const syncResult = {
         id: `sync-${Date.now()}`,
         status: 'started',
-        startTime: new Date().toISOString(),
+        startTime: new Date().toISOString()
       };
 
       res.status(202).json({
         success: true,
         message: 'Data synchronization started',
-        data: syncResult,
+        data: syncResult
       });
     } catch (error) {
       console.error('Error starting data sync:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to start data synchronization',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
@@ -290,14 +283,14 @@ export class IntegrationController {
       res.status(200).json({
         success: true,
         message: 'Webhook processed successfully',
-        data: { processed },
+        data: { processed }
       });
     } catch (error) {
       console.error('Error processing webhook:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to process webhook',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
@@ -306,10 +299,9 @@ export class IntegrationController {
    * Get integration metrics
    * GET /api/integrations/metrics
    */
-  static async getMetrics(req: Request, res: Response, next: NextFunction): Promise<void> {
+  static async getMetrics(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const authReq = req as AuthRequest;
-      const organizationId = authReq.user.organizationId;
+      const organizationId = req.user.organizationId;
       const provider = req.query.provider as ATSProvider;
 
       console.log('Fetching integration metrics', { organizationId, provider });
@@ -319,19 +311,19 @@ export class IntegrationController {
         totalSyncs: 10,
         successfulSyncs: 8,
         failedSyncs: 2,
-        lastSyncTime: new Date().toISOString(),
+        lastSyncTime: new Date().toISOString()
       };
 
       res.status(200).json({
         success: true,
-        data: metrics,
+        data: metrics
       });
     } catch (error) {
       console.error('Error fetching metrics:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to fetch integration metrics',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
@@ -340,10 +332,9 @@ export class IntegrationController {
    * Get available providers
    * GET /api/integrations/providers
    */
-  static async getProviders(req: Request, res: Response, next: NextFunction): Promise<void> {
+  static async getProviders(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const authReq = req as AuthRequest;
-      const organizationId = authReq.user.organizationId;
+      const organizationId = req.user.organizationId;
 
       console.log('Fetching available providers', { organizationId });
 
@@ -351,14 +342,14 @@ export class IntegrationController {
 
       res.status(200).json({
         success: true,
-        data: { providers },
+        data: { providers }
       });
     } catch (error) {
       console.error('Error fetching providers:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to fetch providers',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }
@@ -380,22 +371,22 @@ export class IntegrationController {
           atsProviders: {
             greenhouse: 'healthy',
             workday: 'healthy',
-            bamboo_hr: 'healthy',
-          },
-        },
+            bamboo_hr: 'healthy'
+          }
+        }
       };
 
       res.status(200).json({
         success: true,
         message: 'Integration service is healthy',
-        data: healthStatus,
+        data: healthStatus
       });
     } catch (error) {
       console.error('Health check failed:', error);
       res.status(503).json({
         success: false,
         message: 'Integration service health check failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : 'Unknown error'
       });
     }
   }

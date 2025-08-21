@@ -1,9 +1,9 @@
 /**
  * Epic 5 Task 5.3: Bias Detection Service - Comprehensive Implementation
- * 
+ *
  * Enterprise-grade bias detection service with statistical analysis,
  * demographic monitoring, compliance reporting, and remediation recommendations.
- * 
+ *
  * Features:
  * - Statistical bias detection with multiple algorithms (Chi-square, Fisher's exact, t-test, ANOVA)
  * - Protected characteristic analysis with intersectional bias detection
@@ -47,7 +47,7 @@ import {
   TimeRange,
   MetricValue,
   StatisticalSignificance,
-  BiasDetectionEvent
+  BiasDetectionEvent,
 } from '../types/bias-detection.types';
 import { PerformanceMetric } from '../types/performance-analytics.types';
 
@@ -58,13 +58,10 @@ class StatisticalUtils {
   /**
    * Calculate Chi-square test for independence
    */
-  static chiSquareTest(
-    observed: number[][],
-    expected: number[][]
-  ): StatisticalTestResult {
+  static chiSquareTest(observed: number[][], expected: number[][]): StatisticalTestResult {
     let chiSquare = 0;
-    let degreesOfFreedom = (observed.length - 1) * (observed[0].length - 1);
-    
+    const degreesOfFreedom = (observed.length - 1) * (observed[0].length - 1);
+
     for (let i = 0; i < observed.length; i++) {
       for (let j = 0; j < observed[i].length; j++) {
         if (expected[i][j] > 0) {
@@ -72,10 +69,10 @@ class StatisticalUtils {
         }
       }
     }
-    
+
     const pValue = this.calculatePValue(chiSquare, degreesOfFreedom, 'chi-square');
     const effectSize = Math.sqrt(chiSquare / observed.flat().reduce((sum, val) => sum + val, 0));
-    
+
     return {
       algorithm: BiasDetectionAlgorithm.CHI_SQUARE_TEST,
       testStatistic: chiSquare,
@@ -83,25 +80,23 @@ class StatisticalUtils {
       confidenceInterval: this.calculateConfidenceInterval(chiSquare, degreesOfFreedom),
       effectSize,
       powerAnalysis: this.calculatePowerAnalysis(observed.flat().length, effectSize, 0.05),
-      interpretation: this.interpretStatisticalResult(pValue, effectSize, 'chi-square')
+      interpretation: this.interpretStatisticalResult(pValue, effectSize, 'chi-square'),
     };
   }
-  
+
   /**
    * Calculate Fisher's exact test for small samples
    */
-  static fishersExactTest(
-    a: number, b: number, c: number, d: number
-  ): StatisticalTestResult {
+  static fishersExactTest(a: number, b: number, c: number, d: number): StatisticalTestResult {
     const n = a + b + c + d;
     const oddsRatio = (a * d) / (b * c);
     const logOddsRatio = Math.log(oddsRatio);
-    const standardError = Math.sqrt(1/a + 1/b + 1/c + 1/d);
-    
+    const standardError = Math.sqrt(1 / a + 1 / b + 1 / c + 1 / d);
+
     // Hypergeometric probability calculation
     const pValue = this.calculateFishersExactPValue(a, b, c, d);
     const effectSize = Math.abs(logOddsRatio);
-    
+
     return {
       algorithm: BiasDetectionAlgorithm.FISHERS_EXACT_TEST,
       testStatistic: oddsRatio,
@@ -109,14 +104,14 @@ class StatisticalUtils {
       confidenceInterval: {
         lower: Math.exp(logOddsRatio - 1.96 * standardError),
         upper: Math.exp(logOddsRatio + 1.96 * standardError),
-        level: 0.95
+        level: 0.95,
       },
       effectSize,
       powerAnalysis: this.calculatePowerAnalysis(n, effectSize, 0.05),
-      interpretation: this.interpretStatisticalResult(pValue, effectSize, 'fishers-exact')
+      interpretation: this.interpretStatisticalResult(pValue, effectSize, 'fishers-exact'),
     };
   }
-  
+
   /**
    * Calculate two-sample t-test
    */
@@ -127,64 +122,67 @@ class StatisticalUtils {
   ): StatisticalTestResult {
     const mean1 = group1.reduce((sum, val) => sum + val, 0) / group1.length;
     const mean2 = group2.reduce((sum, val) => sum + val, 0) / group2.length;
-    
-    const variance1 = group1.reduce((sum, val) => sum + Math.pow(val - mean1, 2), 0) / (group1.length - 1);
-    const variance2 = group2.reduce((sum, val) => sum + Math.pow(val - mean2, 2), 0) / (group2.length - 1);
-    
+
+    const variance1 =
+      group1.reduce((sum, val) => sum + Math.pow(val - mean1, 2), 0) / (group1.length - 1);
+    const variance2 =
+      group2.reduce((sum, val) => sum + Math.pow(val - mean2, 2), 0) / (group2.length - 1);
+
     let standardError: number;
     let degreesOfFreedom: number;
-    
+
     if (equalVariances) {
-      const pooledVariance = ((group1.length - 1) * variance1 + (group2.length - 1) * variance2) / 
-                            (group1.length + group2.length - 2);
-      standardError = Math.sqrt(pooledVariance * (1/group1.length + 1/group2.length));
+      const pooledVariance =
+        ((group1.length - 1) * variance1 + (group2.length - 1) * variance2) /
+        (group1.length + group2.length - 2);
+      standardError = Math.sqrt(pooledVariance * (1 / group1.length + 1 / group2.length));
       degreesOfFreedom = group1.length + group2.length - 2;
     } else {
-      standardError = Math.sqrt(variance1/group1.length + variance2/group2.length);
-      degreesOfFreedom = Math.pow(variance1/group1.length + variance2/group2.length, 2) /
-                        (Math.pow(variance1/group1.length, 2)/(group1.length - 1) + 
-                         Math.pow(variance2/group2.length, 2)/(group2.length - 1));
+      standardError = Math.sqrt(variance1 / group1.length + variance2 / group2.length);
+      degreesOfFreedom =
+        Math.pow(variance1 / group1.length + variance2 / group2.length, 2) /
+        (Math.pow(variance1 / group1.length, 2) / (group1.length - 1) +
+          Math.pow(variance2 / group2.length, 2) / (group2.length - 1));
     }
-    
+
     const tStatistic = (mean1 - mean2) / standardError;
     const pValue = this.calculatePValue(Math.abs(tStatistic), degreesOfFreedom, 't-test');
     const cohensD = (mean1 - mean2) / Math.sqrt((variance1 + variance2) / 2);
-    
+
     return {
       algorithm: BiasDetectionAlgorithm.T_TEST,
       testStatistic: tStatistic,
       pValue,
       confidenceInterval: {
-        lower: (mean1 - mean2) - 1.96 * standardError,
-        upper: (mean1 - mean2) + 1.96 * standardError,
-        level: 0.95
+        lower: mean1 - mean2 - 1.96 * standardError,
+        upper: mean1 - mean2 + 1.96 * standardError,
+        level: 0.95,
       },
       effectSize: Math.abs(cohensD),
-      powerAnalysis: this.calculatePowerAnalysis(group1.length + group2.length, Math.abs(cohensD), 0.05),
-      interpretation: this.interpretStatisticalResult(pValue, Math.abs(cohensD), 't-test')
+      powerAnalysis: this.calculatePowerAnalysis(
+        group1.length + group2.length,
+        Math.abs(cohensD),
+        0.05
+      ),
+      interpretation: this.interpretStatisticalResult(pValue, Math.abs(cohensD), 't-test'),
     };
   }
-  
+
   /**
    * Calculate adverse impact ratio (80% rule)
    */
-  static adverseImpactRatio(
-    majoritySelectionRate: number,
-    minoritySelectionRate: number
-  ): number {
+  static adverseImpactRatio(majoritySelectionRate: number, minoritySelectionRate: number): number {
     return minoritySelectionRate / majoritySelectionRate;
   }
-  
+
   /**
    * Calculate demographic parity difference
    */
-  static demographicParityDifference(
-    groupRates: Record<string, number>
-  ): number {
+  static demographicParityDifference(groupRates: Record<string, number>): number {
     const rates = Object.values(groupRates);
     return Math.max(...rates) - Math.min(...rates);
   }
-  
+
   /**
    * Calculate equalized odds difference
    */
@@ -196,7 +194,7 @@ class StatisticalUtils {
     const fprDiff = this.demographicParityDifference(falsePositiveRates);
     return Math.max(tprDiff, fprDiff);
   }
-  
+
   // Helper methods for statistical calculations
   private static calculatePValue(testStat: number, df: number, testType: string): number {
     // Simplified p-value calculation - in production, use proper statistical libraries
@@ -207,7 +205,7 @@ class StatisticalUtils {
     }
     return 0.1;
   }
-  
+
   private static calculateFishersExactPValue(a: number, b: number, c: number, d: number): number {
     // Simplified Fisher's exact test calculation
     const n = a + b + c + d;
@@ -215,36 +213,32 @@ class StatisticalUtils {
     const expected = marginalProduct / (n * n * n);
     return expected < 0.05 ? 0.01 : 0.1;
   }
-  
+
   private static calculateConfidenceInterval(testStat: number, df: number) {
     const margin = 1.96; // 95% CI
     return {
       lower: testStat - margin,
       upper: testStat + margin,
-      level: 0.95
+      level: 0.95,
     };
   }
-  
+
   private static calculatePowerAnalysis(sampleSize: number, effectSize: number, alpha: number) {
     // Simplified power analysis
-    const power = Math.min(0.95, 0.5 + (sampleSize * effectSize * alpha));
+    const power = Math.min(0.95, 0.5 + sampleSize * effectSize * alpha);
     const requiredSampleSize = Math.ceil(100 / effectSize);
-    
+
     return {
       observedPower: power,
       requiredSampleSize,
-      actualSampleSize: sampleSize
+      actualSampleSize: sampleSize,
     };
   }
-  
-  private static interpretStatisticalResult(
-    pValue: number, 
-    effectSize: number, 
-    testType: string
-  ) {
+
+  private static interpretStatisticalResult(pValue: number, effectSize: number, testType: string) {
     let significance: StatisticalSignificance;
     let isSignificant = false;
-    
+
     if (pValue < 0.001) {
       significance = StatisticalSignificance.EXTREMELY_SIGNIFICANT;
       isSignificant = true;
@@ -259,18 +253,21 @@ class StatisticalUtils {
     } else {
       significance = StatisticalSignificance.NOT_SIGNIFICANT;
     }
-    
+
     let effectDescription = 'small';
-    if (effectSize > 0.8) effectDescription = 'large';
-    else if (effectSize > 0.5) effectDescription = 'medium';
-    
+    if (effectSize > 0.8) {
+      effectDescription = 'large';
+    } else if (effectSize > 0.5) {
+      effectDescription = 'medium';
+    }
+
     return {
       isSignificant,
       significance,
       description: `${testType} shows ${effectDescription} effect size (${effectSize.toFixed(3)}) with p-value ${pValue.toFixed(4)}`,
-      recommendation: isSignificant ? 
-        'Statistical evidence of bias detected. Consider implementing remediation measures.' :
-        'No significant bias detected at current significance level.'
+      recommendation: isSignificant
+        ? 'Statistical evidence of bias detected. Consider implementing remediation measures.'
+        : 'No significant bias detected at current significance level.',
     };
   }
 }
@@ -288,7 +285,7 @@ export class BiasDetectionService extends EventEmitter {
   private configurations: Map<string, BiasDetectionConfiguration> = new Map();
   private activeAnalyses: Map<string, BiasAnalysisResult[]> = new Map();
   private alertThresholds: Map<string, Record<BiasSeverity, number>> = new Map();
-  
+
   constructor(
     prisma: PrismaClient,
     redis: RedisService,
@@ -302,69 +299,69 @@ export class BiasDetectionService extends EventEmitter {
     this.dataCollectionService = dataCollectionService;
     this.performanceAnalyticsService = performanceAnalyticsService;
     this.logger = logger;
-    
+
     this.initializeService();
   }
-  
+
   /**
    * Initialize bias detection service
    */
   private async initializeService(): Promise<void> {
     try {
       this.logger.info('Initializing Bias Detection Service');
-      
+
       // Load default configurations
       await this.loadDefaultConfigurations();
-      
+
       // Initialize alert thresholds
       this.initializeAlertThresholds();
-      
+
       // Start monitoring processes
       this.startMonitoringProcesses();
-      
+
       this.logger.info('Bias Detection Service initialized successfully');
     } catch (error) {
       this.logger.error('Failed to initialize Bias Detection Service', { error });
       throw error;
     }
   }
-  
+
   /**
    * Create comprehensive bias analysis
    */
   async createBiasAnalysis(request: CreateBiasAnalysisRequest): Promise<BiasAnalysisResponse> {
     try {
       const analysisId = `analysis_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
+
       this.logger.info('Creating bias analysis', { analysisId, request });
-      
+
       // Initialize analysis response
       const response: BiasAnalysisResponse = {
         analysisId,
         status: 'IN_PROGRESS',
         progress: 0,
-        estimatedCompletionTime: new Date(Date.now() + 300000) // 5 minutes
+        estimatedCompletionTime: new Date(Date.now() + 300000), // 5 minutes
       };
-      
+
       // Cache analysis status
       await this.redis.set(
         `bias_analysis:${analysisId}`,
         JSON.stringify(response),
         300 // 5 minutes TTL
       );
-      
+
       // Process analysis asynchronously
       this.processAnalysisAsync(analysisId, request).catch(error => {
         this.logger.error('Bias analysis processing failed', { analysisId, error });
       });
-      
+
       return response;
     } catch (error) {
       this.logger.error('Failed to create bias analysis', { error });
       throw error;
     }
   }
-  
+
   /**
    * Process bias analysis asynchronously
    */
@@ -375,25 +372,25 @@ export class BiasDetectionService extends EventEmitter {
     try {
       // Update progress
       await this.updateAnalysisProgress(analysisId, 10);
-      
+
       // Collect demographic data
       const demographics = await this.collectDemographicData(
         request.organizationId,
         request.characteristics,
         request.timeRange
       );
-      
+
       await this.updateAnalysisProgress(analysisId, 30);
-      
+
       // Perform statistical analysis
       const biasResults = await this.performStatisticalAnalysis(
         demographics,
         request.context,
         request.algorithms
       );
-      
+
       await this.updateAnalysisProgress(analysisId, 60);
-      
+
       // Intersectional analysis if requested
       let intersectionalAnalysis: IntersectionalAnalysis | undefined;
       if (request.includeIntersectional) {
@@ -403,24 +400,24 @@ export class BiasDetectionService extends EventEmitter {
           request.context
         );
       }
-      
+
       await this.updateAnalysisProgress(analysisId, 80);
-      
+
       // Generate ML fairness metrics
       const mlFairnessMetrics = await this.calculateMLFairnessMetrics(
         demographics,
         request.context
       );
-      
+
       // Generate alerts and recommendations
       const alerts = await this.generateBiasAlerts(biasResults, analysisId);
       const recommendations = await this.generateRemediationRecommendations(
         biasResults,
         intersectionalAnalysis
       );
-      
+
       await this.updateAnalysisProgress(analysisId, 100);
-      
+
       // Complete analysis
       const completedResponse: BiasAnalysisResponse = {
         analysisId,
@@ -430,42 +427,37 @@ export class BiasDetectionService extends EventEmitter {
         mlFairnessMetrics,
         alerts,
         recommendations,
-        progress: 100
+        progress: 100,
       };
-      
+
       // Cache completed results
       await this.redis.set(
         `bias_analysis:${analysisId}`,
         JSON.stringify(completedResponse),
         3600 // 1 hour TTL
       );
-      
+
       // Store results in database
       await this.storeBiasAnalysisResults(analysisId, completedResponse);
-      
+
       // Emit completion event
       this.emit('analysis_completed', { analysisId, results: completedResponse });
-      
+
       this.logger.info('Bias analysis completed successfully', { analysisId });
-      
     } catch (error) {
       this.logger.error('Bias analysis processing failed', { analysisId, error });
-      
+
       // Update status to failed
       const failedResponse: BiasAnalysisResponse = {
         analysisId,
         status: 'FAILED',
-        progress: 0
+        progress: 0,
       };
-      
-      await this.redis.set(
-        `bias_analysis:${analysisId}`,
-        JSON.stringify(failedResponse),
-        300
-      );
+
+      await this.redis.set(`bias_analysis:${analysisId}`, JSON.stringify(failedResponse), 300);
     }
   }
-  
+
   /**
    * Collect demographic data for analysis
    */
@@ -475,7 +467,7 @@ export class BiasDetectionService extends EventEmitter {
     timeRange: TimeRange
   ): Promise<Map<ProtectedCharacteristic, DemographicGroup[]>> {
     const demographics = new Map<ProtectedCharacteristic, DemographicGroup[]>();
-    
+
     for (const characteristic of characteristics) {
       try {
         // Query demographic data from database
@@ -485,20 +477,20 @@ export class BiasDetectionService extends EventEmitter {
           characteristic,
           timeRange
         );
-        
+
         demographics.set(characteristic, groupData);
       } catch (error) {
-        this.logger.error('Failed to collect demographic data', { 
-          characteristic, 
-          organizationId, 
-          error 
+        this.logger.error('Failed to collect demographic data', {
+          characteristic,
+          organizationId,
+          error,
         });
       }
     }
-    
+
     return demographics;
   }
-  
+
   /**
    * Query demographic groups from database
    */
@@ -509,7 +501,7 @@ export class BiasDetectionService extends EventEmitter {
   ): Promise<DemographicGroup[]> {
     // Simplified implementation - in production, this would query actual user demographics
     const mockGroups: DemographicGroup[] = [];
-    
+
     switch (characteristic) {
       case ProtectedCharacteristic.GENDER:
         mockGroups.push(
@@ -519,7 +511,7 @@ export class BiasDetectionService extends EventEmitter {
             label: 'Male',
             sampleSize: 150,
             representation: 0.6,
-            isMinorityGroup: false
+            isMinorityGroup: false,
           },
           {
             characteristic,
@@ -527,7 +519,7 @@ export class BiasDetectionService extends EventEmitter {
             label: 'Female',
             sampleSize: 90,
             representation: 0.36,
-            isMinorityGroup: true
+            isMinorityGroup: true,
           },
           {
             characteristic,
@@ -535,11 +527,11 @@ export class BiasDetectionService extends EventEmitter {
             label: 'Non-binary',
             sampleSize: 10,
             representation: 0.04,
-            isMinorityGroup: true
+            isMinorityGroup: true,
           }
         );
         break;
-        
+
       case ProtectedCharacteristic.AGE:
         mockGroups.push(
           {
@@ -548,7 +540,7 @@ export class BiasDetectionService extends EventEmitter {
             label: '18-25 years',
             sampleSize: 80,
             representation: 0.32,
-            isMinorityGroup: false
+            isMinorityGroup: false,
           },
           {
             characteristic,
@@ -556,7 +548,7 @@ export class BiasDetectionService extends EventEmitter {
             label: '26-35 years',
             sampleSize: 120,
             representation: 0.48,
-            isMinorityGroup: false
+            isMinorityGroup: false,
           },
           {
             characteristic,
@@ -564,7 +556,7 @@ export class BiasDetectionService extends EventEmitter {
             label: '36-45 years',
             sampleSize: 40,
             representation: 0.16,
-            isMinorityGroup: true
+            isMinorityGroup: true,
           },
           {
             characteristic,
@@ -572,11 +564,11 @@ export class BiasDetectionService extends EventEmitter {
             label: '45+ years',
             sampleSize: 10,
             representation: 0.04,
-            isMinorityGroup: true
+            isMinorityGroup: true,
           }
         );
         break;
-        
+
       case ProtectedCharacteristic.ETHNICITY:
         mockGroups.push(
           {
@@ -585,7 +577,7 @@ export class BiasDetectionService extends EventEmitter {
             label: 'White',
             sampleSize: 180,
             representation: 0.72,
-            isMinorityGroup: false
+            isMinorityGroup: false,
           },
           {
             characteristic,
@@ -593,7 +585,7 @@ export class BiasDetectionService extends EventEmitter {
             label: 'Hispanic/Latino',
             sampleSize: 35,
             representation: 0.14,
-            isMinorityGroup: true
+            isMinorityGroup: true,
           },
           {
             characteristic,
@@ -601,7 +593,7 @@ export class BiasDetectionService extends EventEmitter {
             label: 'Black/African American',
             sampleSize: 20,
             representation: 0.08,
-            isMinorityGroup: true
+            isMinorityGroup: true,
           },
           {
             characteristic,
@@ -609,11 +601,11 @@ export class BiasDetectionService extends EventEmitter {
             label: 'Asian',
             sampleSize: 15,
             representation: 0.06,
-            isMinorityGroup: true
+            isMinorityGroup: true,
           }
         );
         break;
-        
+
       default:
         // Generate generic groups for other characteristics
         mockGroups.push(
@@ -623,7 +615,7 @@ export class BiasDetectionService extends EventEmitter {
             label: 'Majority Group',
             sampleSize: 200,
             representation: 0.8,
-            isMinorityGroup: false
+            isMinorityGroup: false,
           },
           {
             characteristic,
@@ -631,14 +623,14 @@ export class BiasDetectionService extends EventEmitter {
             label: 'Minority Group',
             sampleSize: 50,
             representation: 0.2,
-            isMinorityGroup: true
+            isMinorityGroup: true,
           }
         );
     }
-    
+
     return mockGroups;
   }
-  
+
   /**
    * Perform statistical bias analysis
    */
@@ -648,16 +640,20 @@ export class BiasDetectionService extends EventEmitter {
     algorithms: BiasDetectionAlgorithm[]
   ): Promise<BiasAnalysisResult[]> {
     const results: BiasAnalysisResult[] = [];
-    
+
     for (const [characteristic, groups] of demographics) {
-      if (groups.length < 2) continue;
-      
+      if (groups.length < 2) {
+        continue;
+      }
+
       // Find majority and minority groups
       const majorityGroup = groups.find(g => !g.isMinorityGroup);
       const minorityGroups = groups.filter(g => g.isMinorityGroup);
-      
-      if (!majorityGroup || minorityGroups.length === 0) continue;
-      
+
+      if (!majorityGroup || minorityGroups.length === 0) {
+        continue;
+      }
+
       for (const minorityGroup of minorityGroups) {
         const analysisResult = await this.analyzeBiasBetweenGroups(
           majorityGroup,
@@ -665,16 +661,16 @@ export class BiasDetectionService extends EventEmitter {
           context,
           algorithms
         );
-        
+
         if (analysisResult) {
           results.push(analysisResult);
         }
       }
     }
-    
+
     return results;
   }
-  
+
   /**
    * Analyze bias between two demographic groups
    */
@@ -686,51 +682,53 @@ export class BiasDetectionService extends EventEmitter {
   ): Promise<BiasAnalysisResult | null> {
     try {
       const analysisId = `bias_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
+
       // Generate mock performance data for analysis
       const referencePerformance = this.generateMockPerformanceData(referenceGroup.sampleSize);
       const comparisonPerformance = this.generateMockPerformanceData(comparisonGroup.sampleSize);
-      
+
       // Calculate statistical tests
       const statisticalTests: StatisticalTestResult[] = [];
-      
+
       for (const algorithm of algorithms) {
         let testResult: StatisticalTestResult;
-        
+
         switch (algorithm) {
           case BiasDetectionAlgorithm.T_TEST:
             testResult = StatisticalUtils.tTest(referencePerformance, comparisonPerformance);
             break;
-            
+
           case BiasDetectionAlgorithm.CHI_SQUARE_TEST:
             // Convert continuous data to categorical for chi-square
             const refCategorical = this.categorizeContinuousData(referencePerformance);
             const compCategorical = this.categorizeContinuousData(comparisonPerformance);
-            testResult = StatisticalUtils.chiSquareTest(
-              [refCategorical],
-              [compCategorical]
-            );
+            testResult = StatisticalUtils.chiSquareTest([refCategorical], [compCategorical]);
             break;
-            
+
           default:
             continue;
         }
-        
+
         statisticalTests.push(testResult);
       }
-      
+
       // Calculate adverse impact ratio
-      const referenceSelectionRate = referencePerformance.filter(score => score > 0.7).length / referencePerformance.length;
-      const comparisonSelectionRate = comparisonPerformance.filter(score => score > 0.7).length / comparisonPerformance.length;
-      const adverseImpactRatio = StatisticalUtils.adverseImpactRatio(referenceSelectionRate, comparisonSelectionRate);
-      
+      const referenceSelectionRate =
+        referencePerformance.filter(score => score > 0.7).length / referencePerformance.length;
+      const comparisonSelectionRate =
+        comparisonPerformance.filter(score => score > 0.7).length / comparisonPerformance.length;
+      const adverseImpactRatio = StatisticalUtils.adverseImpactRatio(
+        referenceSelectionRate,
+        comparisonSelectionRate
+      );
+
       // Determine bias severity
       const biasSeverity = this.determineBiasSeverity(statisticalTests, adverseImpactRatio);
       const biasDetected = biasSeverity !== BiasSeverity.NONE;
-      
+
       // Identify bias pattern
       const biasPattern = this.identifyBiasPattern(statisticalTests, context);
-      
+
       return {
         id: analysisId,
         timestamp: new Date(),
@@ -739,14 +737,16 @@ export class BiasDetectionService extends EventEmitter {
         comparisonGroup,
         metric: 'OVERALL_SCORE' as any,
         referenceValue: {
-          value: referencePerformance.reduce((sum, val) => sum + val, 0) / referencePerformance.length,
+          value:
+            referencePerformance.reduce((sum, val) => sum + val, 0) / referencePerformance.length,
           sampleSize: referencePerformance.length,
-          timestamp: new Date()
+          timestamp: new Date(),
         },
         comparisonValue: {
-          value: comparisonPerformance.reduce((sum, val) => sum + val, 0) / comparisonPerformance.length,
+          value:
+            comparisonPerformance.reduce((sum, val) => sum + val, 0) / comparisonPerformance.length,
           sampleSize: comparisonPerformance.length,
-          timestamp: new Date()
+          timestamp: new Date(),
         },
         statisticalTests,
         adverseImpactRatio,
@@ -757,27 +757,26 @@ export class BiasDetectionService extends EventEmitter {
         sampleSizes: {
           reference: referenceGroup.sampleSize,
           comparison: comparisonGroup.sampleSize,
-          total: referenceGroup.sampleSize + comparisonGroup.sampleSize
+          total: referenceGroup.sampleSize + comparisonGroup.sampleSize,
         },
         timeRange: {
           startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
           endDate: new Date(),
-          period: 'MONTH'
+          period: 'MONTH',
         },
         methodology: algorithms.map(alg => alg.toString()),
         limitations: [
           'Analysis based on available demographic data',
           'Sample sizes may limit statistical power',
-          'Correlation does not imply causation'
-        ]
+          'Correlation does not imply causation',
+        ],
       };
-      
     } catch (error) {
       this.logger.error('Failed to analyze bias between groups', { error });
       return null;
     }
   }
-  
+
   /**
    * Perform intersectional analysis
    */
@@ -787,19 +786,20 @@ export class BiasDetectionService extends EventEmitter {
     context: BiasContext
   ): Promise<IntersectionalAnalysis> {
     const analysisId = `intersectional_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // Generate intersectional groups (simplified)
     const intersectionalGroups = this.generateIntersectionalGroups(demographics, characteristics);
-    
+
     // Analyze individual characteristics
-    const individualCharacteristicBias: Record<ProtectedCharacteristic, BiasAnalysisResult> = {} as any;
-    
+    const individualCharacteristicBias: Record<ProtectedCharacteristic, BiasAnalysisResult> =
+      {} as any;
+
     for (const characteristic of characteristics) {
       const groups = demographics.get(characteristic);
       if (groups && groups.length >= 2) {
         const majorityGroup = groups.find(g => !g.isMinorityGroup);
         const minorityGroup = groups.find(g => g.isMinorityGroup);
-        
+
         if (majorityGroup && minorityGroup) {
           const analysis = await this.analyzeBiasBetweenGroups(
             majorityGroup,
@@ -807,33 +807,35 @@ export class BiasDetectionService extends EventEmitter {
             context,
             [BiasDetectionAlgorithm.T_TEST]
           );
-          
+
           if (analysis) {
             individualCharacteristicBias[characteristic] = analysis;
           }
         }
       }
     }
-    
+
     // Calculate intersectional bias effects (simplified)
     const intersectionalBiasEffects = this.calculateIntersectionalEffects(
       characteristics,
       individualCharacteristicBias
     );
-    
+
     // Generate recommendations
     const recommendations = await this.generateIntersectionalRecommendations(
       intersectionalBiasEffects,
       characteristics
     );
-    
+
     return {
       id: analysisId,
       timestamp: new Date(),
       context,
       characteristics,
       intersectionalGroups,
-      overallBiasDetected: Object.values(individualCharacteristicBias).some(bias => bias.biasDetected),
+      overallBiasDetected: Object.values(individualCharacteristicBias).some(
+        bias => bias.biasDetected
+      ),
       individualCharacteristicBias,
       intersectionalBiasEffects,
       regressionAnalysis: {
@@ -841,12 +843,12 @@ export class BiasDetectionService extends EventEmitter {
         coefficients: {},
         significance: {},
         adjustedRSquared: 0.75,
-        multicollinearity: {}
+        multicollinearity: {},
       },
-      recommendations
+      recommendations,
     };
   }
-  
+
   /**
    * Calculate ML fairness metrics
    */
@@ -855,11 +857,11 @@ export class BiasDetectionService extends EventEmitter {
     context: BiasContext
   ): Promise<MLFairnessMetrics> {
     const metricsId = `ml_fairness_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // Generate mock fairness metrics (in production, these would be calculated from actual ML model predictions)
     const groupScores: Record<string, number> = {};
     let overallDemographicParity = 0;
-    
+
     for (const [characteristic, groups] of demographics) {
       for (const group of groups) {
         const groupKey = `${characteristic}_${group.value}`;
@@ -867,9 +869,9 @@ export class BiasDetectionService extends EventEmitter {
         overallDemographicParity += Math.abs(groupScores[groupKey] - 0.85);
       }
     }
-    
+
     overallDemographicParity /= Object.keys(groupScores).length;
-    
+
     return {
       id: metricsId,
       modelId: 'assessment_scoring_model_v1',
@@ -878,13 +880,13 @@ export class BiasDetectionService extends EventEmitter {
         overallScore: 1 - overallDemographicParity,
         groupScores,
         threshold: 0.1,
-        isPassing: overallDemographicParity < 0.1
+        isPassing: overallDemographicParity < 0.1,
       },
       equalizedOpportunity: {
         truePositiveRates: groupScores,
         difference: overallDemographicParity,
         threshold: 0.1,
-        isPassing: overallDemographicParity < 0.1
+        isPassing: overallDemographicParity < 0.1,
       },
       equalizedOdds: {
         truePositiveRates: groupScores,
@@ -893,18 +895,18 @@ export class BiasDetectionService extends EventEmitter {
         ),
         maxDifference: overallDemographicParity,
         threshold: 0.1,
-        isPassing: overallDemographicParity < 0.1
+        isPassing: overallDemographicParity < 0.1,
       },
       calibration: {
         groupCalibrationScores: groupScores,
         overallCalibration: 1 - overallDemographicParity,
-        isPassing: overallDemographicParity < 0.1
+        isPassing: overallDemographicParity < 0.1,
       },
       individualFairness: {
         averageConsistency: 0.92,
         worstCaseConsistency: 0.78,
         threshold: 0.8,
-        isPassing: true
+        isPassing: true,
       },
       overallFairness: {
         score: (1 - overallDemographicParity) * 100,
@@ -914,12 +916,12 @@ export class BiasDetectionService extends EventEmitter {
         recommendations: [
           'Continue monitoring demographic parity',
           'Consider bias mitigation techniques for underperforming groups',
-          'Implement regular fairness audits'
-        ]
-      }
+          'Implement regular fairness audits',
+        ],
+      },
     };
   }
-  
+
   /**
    * Generate bias alerts
    */
@@ -928,11 +930,11 @@ export class BiasDetectionService extends EventEmitter {
     analysisId: string
   ): Promise<BiasAlert[]> {
     const alerts: BiasAlert[] = [];
-    
+
     for (const result of biasResults) {
       if (result.biasDetected && result.biasSeverity !== BiasSeverity.NONE) {
         const alertId = `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        
+
         const alert: BiasAlert = {
           id: alertId,
           timestamp: new Date(),
@@ -949,16 +951,16 @@ export class BiasDetectionService extends EventEmitter {
           analysisId,
           recommendations: await this.generateAlertRecommendations(result),
           escalationLevel: result.biasSeverity === BiasSeverity.CRITICAL ? 2 : 1,
-          notifiedUsers: []
+          notifiedUsers: [],
         };
-        
+
         alerts.push(alert);
       }
     }
-    
+
     return alerts;
   }
-  
+
   /**
    * Generate remediation recommendations
    */
@@ -967,11 +969,11 @@ export class BiasDetectionService extends EventEmitter {
     intersectionalAnalysis?: IntersectionalAnalysis
   ): Promise<RemediationRecommendation[]> {
     const recommendations: RemediationRecommendation[] = [];
-    
+
     for (const result of biasResults) {
       if (result.biasDetected) {
         const recommendationId = `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        
+
         const recommendation: RemediationRecommendation = {
           id: recommendationId,
           timestamp: new Date(),
@@ -986,52 +988,55 @@ export class BiasDetectionService extends EventEmitter {
             biasReduction: this.estimateBiasReduction(result),
             timeToImpact: '3-6 months',
             riskLevel: 'MEDIUM',
-            sideEffects: ['Temporary increase in review time', 'Need for additional training']
+            sideEffects: ['Temporary increase in review time', 'Need for additional training'],
           },
           successMetrics: this.generateSuccessMetrics(result),
-          status: 'PROPOSED'
+          status: 'PROPOSED',
         };
-        
+
         recommendations.push(recommendation);
       }
     }
-    
+
     return recommendations;
   }
-  
+
   // Helper methods for service implementation
   private generateMockPerformanceData(sampleSize: number): number[] {
     return Array.from({ length: sampleSize }, () => Math.random() * 0.3 + 0.7); // Scores 0.7-1.0
   }
-  
+
   private categorizeContinuousData(data: number[]): number[] {
     return [
       data.filter(val => val < 0.8).length,
       data.filter(val => val >= 0.8 && val < 0.9).length,
-      data.filter(val => val >= 0.9).length
+      data.filter(val => val >= 0.9).length,
     ];
   }
-  
+
   private determineBiasSeverity(
     tests: StatisticalTestResult[],
     adverseImpactRatio: number
   ): BiasSeverity {
     const significantTests = tests.filter(test => test.interpretation.isSignificant);
-    
+
     if (adverseImpactRatio < 0.6 || significantTests.length > 0) {
-      if (adverseImpactRatio < 0.5) return BiasSeverity.CRITICAL;
-      if (adverseImpactRatio < 0.7) return BiasSeverity.HIGH;
+      if (adverseImpactRatio < 0.5) {
+        return BiasSeverity.CRITICAL;
+      }
+      if (adverseImpactRatio < 0.7) {
+        return BiasSeverity.HIGH;
+      }
       return BiasSeverity.MODERATE;
     }
-    
-    if (adverseImpactRatio < 0.8) return BiasSeverity.LOW;
+
+    if (adverseImpactRatio < 0.8) {
+      return BiasSeverity.LOW;
+    }
     return BiasSeverity.NONE;
   }
-  
-  private identifyBiasPattern(
-    tests: StatisticalTestResult[],
-    context: BiasContext
-  ): BiasPattern {
+
+  private identifyBiasPattern(tests: StatisticalTestResult[], context: BiasContext): BiasPattern {
     // Simplified pattern identification
     if (context === BiasContext.ASSESSMENT_SCORING) {
       return BiasPattern.EVALUATION_BIAS;
@@ -1040,12 +1045,12 @@ export class BiasDetectionService extends EventEmitter {
     }
     return BiasPattern.SYSTEMATIC_UNDERPERFORMANCE;
   }
-  
+
   private calculateBiasConfidence(tests: StatisticalTestResult[]): number {
     const significantTests = tests.filter(test => test.interpretation.isSignificant);
     return significantTests.length / tests.length;
   }
-  
+
   private generateIntersectionalGroups(
     demographics: Map<ProtectedCharacteristic, DemographicGroup[]>,
     characteristics: ProtectedCharacteristic[]
@@ -1053,41 +1058,47 @@ export class BiasDetectionService extends EventEmitter {
     // Simplified intersectional group generation
     return [];
   }
-  
+
   private calculateIntersectionalEffects(
     characteristics: ProtectedCharacteristic[],
     individualBias: Record<ProtectedCharacteristic, BiasAnalysisResult>
   ) {
     return [];
   }
-  
+
   private async generateIntersectionalRecommendations(
     effects: any[],
     characteristics: ProtectedCharacteristic[]
   ): Promise<RemediationRecommendation[]> {
     return [];
   }
-  
-  private async generateAlertRecommendations(result: BiasAnalysisResult): Promise<RemediationRecommendation[]> {
+
+  private async generateAlertRecommendations(
+    result: BiasAnalysisResult
+  ): Promise<RemediationRecommendation[]> {
     return [];
   }
-  
+
   private selectRemediationStrategy(result: BiasAnalysisResult): RemediationStrategy {
     if (result.context === BiasContext.ASSESSMENT_SCORING) {
       return RemediationStrategy.BIAS_CORRECTION;
     }
     return RemediationStrategy.DIVERSE_REVIEW_PANELS;
   }
-  
+
   private determinePriority(severity: BiasSeverity): 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' {
     switch (severity) {
-      case BiasSeverity.CRITICAL: return 'CRITICAL';
-      case BiasSeverity.HIGH: return 'HIGH';
-      case BiasSeverity.MODERATE: return 'MEDIUM';
-      default: return 'LOW';
+      case BiasSeverity.CRITICAL:
+        return 'CRITICAL';
+      case BiasSeverity.HIGH:
+        return 'HIGH';
+      case BiasSeverity.MODERATE:
+        return 'MEDIUM';
+      default:
+        return 'LOW';
     }
   }
-  
+
   private generateImplementationSteps(result: BiasAnalysisResult) {
     return [
       {
@@ -1096,7 +1107,7 @@ export class BiasDetectionService extends EventEmitter {
         description: 'Review and validate bias detection findings with stakeholders',
         estimatedEffort: '1-2 weeks',
         requiredResources: ['Data Analyst', 'HR Representative'],
-        timeline: 'Week 1-2'
+        timeline: 'Week 1-2',
       },
       {
         step: 2,
@@ -1104,7 +1115,7 @@ export class BiasDetectionService extends EventEmitter {
         description: 'Develop detailed remediation implementation plan',
         estimatedEffort: '1 week',
         requiredResources: ['Technical Team', 'Legal Review'],
-        timeline: 'Week 3'
+        timeline: 'Week 3',
       },
       {
         step: 3,
@@ -1112,32 +1123,32 @@ export class BiasDetectionService extends EventEmitter {
         description: 'Execute remediation measures and monitor progress',
         estimatedEffort: '4-8 weeks',
         requiredResources: ['Development Team', 'QA Testing'],
-        timeline: 'Week 4-12'
-      }
+        timeline: 'Week 4-12',
+      },
     ];
   }
-  
+
   private estimateBiasReduction(result: BiasAnalysisResult): number {
     return Math.min(80, 30 + (1 - result.adverseImpactRatio) * 100);
   }
-  
+
   private generateSuccessMetrics(result: BiasAnalysisResult) {
     return [
       {
         metric: 'Adverse Impact Ratio',
         currentValue: result.adverseImpactRatio,
         targetValue: 0.8,
-        measurementMethod: 'Statistical calculation of selection rates'
+        measurementMethod: 'Statistical calculation of selection rates',
       },
       {
         metric: 'Statistical Significance',
         currentValue: result.statisticalTests[0]?.pValue || 0.05,
         targetValue: 0.05,
-        measurementMethod: 'P-value from statistical tests'
-      }
+        measurementMethod: 'P-value from statistical tests',
+      },
     ];
   }
-  
+
   private async updateAnalysisProgress(analysisId: string, progress: number): Promise<void> {
     try {
       const cachedData = await this.redis.get(`bias_analysis:${analysisId}`);
@@ -1150,7 +1161,7 @@ export class BiasDetectionService extends EventEmitter {
       this.logger.error('Failed to update analysis progress', { analysisId, progress, error });
     }
   }
-  
+
   private async storeBiasAnalysisResults(
     analysisId: string,
     response: BiasAnalysisResponse
@@ -1158,7 +1169,7 @@ export class BiasDetectionService extends EventEmitter {
     try {
       // Store in database (simplified - would use proper schema)
       this.activeAnalyses.set(analysisId, response.results || []);
-      
+
       // Emit event for audit trail
       const event: BiasDetectionEvent = {
         id: `event_${Date.now()}`,
@@ -1170,17 +1181,16 @@ export class BiasDetectionService extends EventEmitter {
         data: { analysisId, status: response.status },
         biasSpecificData: {
           analysisId,
-          affectedUsers: response.results?.length || 0
-        }
+          affectedUsers: response.results?.length || 0,
+        },
       };
-      
+
       await this.dataCollectionService.collectEvent(event as any);
-      
     } catch (error) {
       this.logger.error('Failed to store bias analysis results', { analysisId, error });
     }
   }
-  
+
   private async loadDefaultConfigurations(): Promise<void> {
     // Load default bias detection configurations
     const defaultConfig: BiasDetectionConfiguration = {
@@ -1191,29 +1201,26 @@ export class BiasDetectionService extends EventEmitter {
       enabledCharacteristics: [
         ProtectedCharacteristic.GENDER,
         ProtectedCharacteristic.AGE,
-        ProtectedCharacteristic.ETHNICITY
+        ProtectedCharacteristic.ETHNICITY,
       ],
-      enabledContexts: [
-        BiasContext.ASSESSMENT_SCORING,
-        BiasContext.CANDIDATE_RANKING
-      ],
+      enabledContexts: [BiasContext.ASSESSMENT_SCORING, BiasContext.CANDIDATE_RANKING],
       enabledAlgorithms: [
         BiasDetectionAlgorithm.T_TEST,
         BiasDetectionAlgorithm.CHI_SQUARE_TEST,
-        BiasDetectionAlgorithm.ADVERSE_IMPACT_RATIO
+        BiasDetectionAlgorithm.ADVERSE_IMPACT_RATIO,
       ],
       statisticalThresholds: {
         significanceLevel: 0.05,
         effectSizeThreshold: 0.2,
         adverseImpactThreshold: 0.8,
-        sampleSizeRequirement: 30
+        sampleSizeRequirement: 30,
       },
       alertThresholds: {
         [BiasSeverity.LOW]: 0.8,
         [BiasSeverity.MODERATE]: 0.7,
         [BiasSeverity.HIGH]: 0.6,
         [BiasSeverity.CRITICAL]: 0.5,
-        [BiasSeverity.NONE]: 1.0
+        [BiasSeverity.NONE]: 1.0,
       },
       alertFrequency: 'DAILY',
       notificationChannels: ['EMAIL', 'DASHBOARD'],
@@ -1228,12 +1235,12 @@ export class BiasDetectionService extends EventEmitter {
       createdAt: new Date(),
       updatedBy: 'system',
       updatedAt: new Date(),
-      isActive: true
+      isActive: true,
     };
-    
+
     this.configurations.set('default', defaultConfig);
   }
-  
+
   private initializeAlertThresholds(): void {
     // Initialize default alert thresholds
     this.alertThresholds.set('default', {
@@ -1241,10 +1248,10 @@ export class BiasDetectionService extends EventEmitter {
       [BiasSeverity.MODERATE]: 0.7,
       [BiasSeverity.HIGH]: 0.6,
       [BiasSeverity.CRITICAL]: 0.5,
-      [BiasSeverity.NONE]: 1.0
+      [BiasSeverity.NONE]: 1.0,
     });
   }
-  
+
   private startMonitoringProcesses(): void {
     // Start periodic bias monitoring
     setInterval(() => {
@@ -1252,10 +1259,10 @@ export class BiasDetectionService extends EventEmitter {
         this.logger.error('Periodic bias check failed', { error });
       });
     }, 60000); // Every minute
-    
+
     this.logger.info('Started bias monitoring processes');
   }
-  
+
   private async performPeriodicBiasCheck(): Promise<void> {
     try {
       // Simplified periodic check
@@ -1264,7 +1271,7 @@ export class BiasDetectionService extends EventEmitter {
       this.logger.error('Periodic bias check failed', { error });
     }
   }
-  
+
   /**
    * Get bias analysis status
    */
@@ -1280,7 +1287,7 @@ export class BiasDetectionService extends EventEmitter {
       return null;
     }
   }
-  
+
   /**
    * Generate comprehensive bias detection report
    */
@@ -1291,7 +1298,7 @@ export class BiasDetectionService extends EventEmitter {
   ): Promise<BiasDetectionReport> {
     try {
       const reportId = `report_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
+
       // Generate comprehensive report (simplified implementation)
       const report: BiasDetectionReport = {
         id: reportId,
@@ -1307,12 +1314,12 @@ export class BiasDetectionService extends EventEmitter {
           keyFindings: [
             'Gender bias detected in technical assessments',
             'Age-related disparities in interview scheduling',
-            'Improvement in overall fairness metrics over time'
+            'Improvement in overall fairness metrics over time',
           ],
           criticalIssues: 2,
           highPriorityRecommendations: 5,
           complianceScore: 75,
-          trendDirection: 'IMPROVING' as any
+          trendDirection: 'IMPROVING' as any,
         },
         characteristicAnalysis: {} as any,
         contextAnalysis: {} as any,
@@ -1322,36 +1329,33 @@ export class BiasDetectionService extends EventEmitter {
           totalRecommendations: 10,
           implementedRecommendations: 3,
           inProgressRecommendations: 4,
-          overallEffectiveness: 0.65
+          overallEffectiveness: 0.65,
         },
         statisticalAppendix: {
           methodologyNotes: [
             'Statistical tests performed at 95% confidence level',
-            'Adverse impact calculated using 80% rule'
+            'Adverse impact calculated using 80% rule',
           ],
-          limitations: [
-            'Limited demographic data availability',
-            'Sample sizes vary across groups'
-          ],
+          limitations: ['Limited demographic data availability', 'Sample sizes vary across groups'],
           dataQualityAssessment: {
             completeness: 0.85,
             accuracy: 0.92,
             consistency: 0.88,
-            timeliness: 0.95
+            timeliness: 0.95,
           },
-          sampleSizeAnalysis: {} as any
+          sampleSizeAnalysis: {} as any,
         },
         exportFormats: ['PDF', 'HTML'] as any,
-        attachments: []
+        attachments: [],
       };
-      
+
       return report;
     } catch (error) {
       this.logger.error('Failed to generate bias detection report', { error });
       throw error;
     }
   }
-  
+
   /**
    * Get system health metrics
    */
@@ -1362,11 +1366,9 @@ export class BiasDetectionService extends EventEmitter {
       falsePositiveRate: 0.05,
       falseNegativeRate: 0.03,
       systemUptime: 99.9,
-      dataQualityScore: 0.92
+      dataQualityScore: 0.92,
     };
   }
 }
 
 export default BiasDetectionService;
-
-

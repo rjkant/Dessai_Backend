@@ -28,12 +28,12 @@ import {
   AlertChannel,
   ChannelType,
   EscalationLevel,
-  RuleCategory
+  RuleCategory,
 } from '../types/integrity-monitoring.types';
 import {
   ViolationSeverity,
   AIProcessingResponse,
-  AggregatedAnalysis
+  AggregatedAnalysis,
 } from '../types/ai-analysis.types';
 
 const logger = new Logger('IntegrityMonitoringService');
@@ -88,12 +88,11 @@ export class IntegrityMonitoringService extends EventEmitter {
       logger.info('Integrity Monitoring Service initialized successfully', {
         rulesLoaded: this.activeRules.size,
         alertChannels: this.alertChannels.size,
-        mode: this.config.mode
+        mode: this.config.mode,
       });
-
     } catch (error) {
       logger.error('Failed to initialize Integrity Monitoring Service', {
-        error: (error as any).message
+        error: (error as any).message,
       });
       throw error;
     }
@@ -132,15 +131,14 @@ export class IntegrityMonitoringService extends EventEmitter {
         sessionId,
         userId,
         assessmentId,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       logger.info('Session monitoring started successfully', { sessionId });
-
     } catch (error) {
       logger.error('Failed to start session monitoring', {
         sessionId,
-        error: (error as any).message
+        error: (error as any).message,
       });
       throw error;
     }
@@ -162,7 +160,7 @@ export class IntegrityMonitoringService extends EventEmitter {
 
       logger.debug('Processing analysis results for integrity violations', {
         sessionId,
-        analysisId: analysisResults.id
+        analysisId: analysisResults.id,
       });
 
       const events: IntegrityEvent[] = [];
@@ -170,24 +168,27 @@ export class IntegrityMonitoringService extends EventEmitter {
 
       // Process each type of analysis result
       if (analysisResults.results.faceDetection) {
-        events.push(...await this.processFaceDetectionResults(sessionId, analysisResults));
+        events.push(...(await this.processFaceDetectionResults(sessionId, analysisResults)));
       }
 
       if (analysisResults.results.gazeTracking) {
-        events.push(...await this.processGazeTrackingResults(sessionId, analysisResults));
+        events.push(...(await this.processGazeTrackingResults(sessionId, analysisResults)));
       }
 
       if (analysisResults.results.audioAnalysis) {
-        events.push(...await this.processAudioAnalysisResults(sessionId, analysisResults));
+        events.push(...(await this.processAudioAnalysisResults(sessionId, analysisResults)));
       }
 
       if (analysisResults.results.behaviorAnalysis) {
-        events.push(...await this.processBehaviorAnalysisResults(sessionId, analysisResults));
+        events.push(...(await this.processBehaviorAnalysisResults(sessionId, analysisResults)));
       }
 
       // Process aggregated violations
-      if (aggregated.violationsSummary.timeline && aggregated.violationsSummary.timeline.length > 0) {
-        events.push(...await this.processAggregatedViolations(sessionId, analysisResults));
+      if (
+        aggregated.violationsSummary.timeline &&
+        aggregated.violationsSummary.timeline.length > 0
+      ) {
+        events.push(...(await this.processAggregatedViolations(sessionId, analysisResults)));
       }
 
       // Update violation counts
@@ -202,15 +203,16 @@ export class IntegrityMonitoringService extends EventEmitter {
       logger.info('Analysis results processed', {
         sessionId,
         eventsGenerated: processedEvents.length,
-        highPriorityEvents: processedEvents.filter(e => e.severity === ViolationSeverity.HIGH || e.severity === ViolationSeverity.CRITICAL).length
+        highPriorityEvents: processedEvents.filter(
+          e => e.severity === ViolationSeverity.HIGH || e.severity === ViolationSeverity.CRITICAL
+        ).length,
       });
 
       return processedEvents;
-
     } catch (error) {
       logger.error('Failed to process analysis results', {
         sessionId,
-        error: (error as any).message
+        error: (error as any).message,
       });
       throw error;
     }
@@ -225,7 +227,7 @@ export class IntegrityMonitoringService extends EventEmitter {
         eventId: event.id,
         sessionId: event.sessionId,
         type: event.type,
-        severity: event.severity
+        severity: event.severity,
       });
 
       // Determine alert configuration based on event severity
@@ -244,13 +246,13 @@ export class IntegrityMonitoringService extends EventEmitter {
           await this.sendAlert(channel, alertContent, event);
           logger.debug('Alert sent successfully', {
             channelId: channel.id,
-            eventId: event.id
+            eventId: event.id,
           });
         } catch (error) {
           logger.error('Failed to send alert through channel', {
             channelId: channel.id,
             eventId: event.id,
-            error: (error as any).message
+            error: (error as any).message,
           });
         }
       });
@@ -263,13 +265,12 @@ export class IntegrityMonitoringService extends EventEmitter {
       this.emit('alert-generated', {
         event,
         channelsSent: alertConfig.channels.length,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
-
     } catch (error) {
       logger.error('Failed to generate alert', {
         eventId: event.id,
-        error: (error as any).message
+        error: (error as any).message,
       });
       throw error;
     }
@@ -289,7 +290,7 @@ export class IntegrityMonitoringService extends EventEmitter {
 
       // Calculate statistics from events
       const statistics = await this.calculateSessionStatistics(sessionId);
-      
+
       // Cache statistics
       await this.redisService.setWithExpiry(
         statisticsKey,
@@ -298,11 +299,10 @@ export class IntegrityMonitoringService extends EventEmitter {
       );
 
       return statistics;
-
     } catch (error) {
       logger.error('Failed to get session statistics', {
         sessionId,
-        error: (error as any).message
+        error: (error as any).message,
       });
       return null;
     }
@@ -339,15 +339,14 @@ export class IntegrityMonitoringService extends EventEmitter {
       this.emit('session-monitoring-stopped', {
         sessionId,
         timestamp: new Date(),
-        finalStats
+        finalStats,
       });
 
       logger.info('Session monitoring stopped successfully', { sessionId });
-
     } catch (error) {
       logger.error('Failed to stop session monitoring', {
         sessionId,
-        error: (error as any).message
+        error: (error as any).message,
       });
       throw error;
     }
@@ -380,14 +379,13 @@ export class IntegrityMonitoringService extends EventEmitter {
 
       this.emit('configuration-updated', {
         config: this.config,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       logger.info('Configuration updated successfully');
-
     } catch (error) {
       logger.error('Failed to update configuration', {
-        error: (error as any).message
+        error: (error as any).message,
       });
       throw error;
     }
@@ -415,8 +413,8 @@ export class IntegrityMonitoringService extends EventEmitter {
           alertChannels: this.alertChannels.size,
           mode: this.config.mode,
           sensitivity: this.config.sensitivity,
-          uptime: process.uptime()
-        }
+          uptime: process.uptime(),
+        },
       };
 
       // Check for warning conditions
@@ -431,14 +429,13 @@ export class IntegrityMonitoringService extends EventEmitter {
       }
 
       return status;
-
     } catch (error) {
       logger.error('Health check failed', { error: (error as any).message });
       return {
         status: 'error',
         details: {
-          error: (error as any).message
-        }
+          error: (error as any).message,
+        },
       };
     }
   }
@@ -476,7 +473,6 @@ export class IntegrityMonitoringService extends EventEmitter {
       // This could be extended to support dynamic rule loading
 
       logger.info('Integrity rules loaded', { count: this.activeRules.size });
-
     } catch (error) {
       logger.error('Failed to load integrity rules', { error: (error as any).message });
       throw error;
@@ -496,7 +492,6 @@ export class IntegrityMonitoringService extends EventEmitter {
       }
 
       logger.info('Alert channels setup complete', { count: this.alertChannels.size });
-
     } catch (error) {
       logger.error('Failed to setup alert channels', { error: (error as any).message });
       throw error;
@@ -514,7 +509,6 @@ export class IntegrityMonitoringService extends EventEmitter {
       await this.processingQueue.initialize(this.options.processing);
 
       logger.info('Processing components initialized');
-
     } catch (error) {
       logger.error('Failed to initialize processing', { error: (error as any).message });
       throw error;
@@ -553,7 +547,7 @@ export class IntegrityMonitoringService extends EventEmitter {
       startTime: new Date(),
       violationCounts: new Map<ViolationType, number>(),
       riskScore: 0,
-      lastActivity: new Date()
+      lastActivity: new Date(),
     };
 
     this.violationCounts.set(sessionId, new Map());
@@ -563,7 +557,7 @@ export class IntegrityMonitoringService extends EventEmitter {
       `integrity:session:${sessionId}`,
       JSON.stringify({
         ...sessionState,
-        violationCounts: Object.fromEntries(sessionState.violationCounts)
+        violationCounts: Object.fromEntries(sessionState.violationCounts),
       }),
       86400 // 24 hours
     );
@@ -577,39 +571,46 @@ export class IntegrityMonitoringService extends EventEmitter {
     const faceResults = results.results.faceDetection!;
 
     // Check for no face detected
-    if (faceResults.detections.length === 0 || faceResults.confidence < this.config.thresholds.face.noFaceDetected.confidence) {
-      events.push(await this.createIntegrityEvent(
-        sessionId,
-        results.sessionId,
-        results.requestId,
-        'face_not_detected',
-        this.config.thresholds.face.noFaceDetected.severity,
-        'No face detected or low confidence',
-        {
-          confidence: faceResults.confidence,
-          threshold: this.config.thresholds.face.noFaceDetected.confidence,
-          faceCount: faceResults.detections.length
-        },
-        results.timestamp
-      ));
+    if (
+      faceResults.detections.length === 0 ||
+      faceResults.confidence < this.config.thresholds.face.noFaceDetected.confidence
+    ) {
+      events.push(
+        await this.createIntegrityEvent(
+          sessionId,
+          results.sessionId,
+          results.requestId,
+          'face_not_detected',
+          this.config.thresholds.face.noFaceDetected.severity,
+          'No face detected or low confidence',
+          {
+            confidence: faceResults.confidence,
+            threshold: this.config.thresholds.face.noFaceDetected.confidence,
+            faceCount: faceResults.detections.length,
+          },
+          results.timestamp
+        )
+      );
     }
 
     // Check for multiple faces
     if (faceResults.detections.length > this.config.thresholds.face.multipleFaces.count) {
-      events.push(await this.createIntegrityEvent(
-        sessionId,
-        results.sessionId,
-        results.requestId,
-        'multiple_faces',
-        this.config.thresholds.face.multipleFaces.severity,
-        `Multiple faces detected: ${faceResults.detections.length}`,
-        {
-          faceCount: faceResults.detections.length,
-          threshold: this.config.thresholds.face.multipleFaces.count,
-          faces: faceResults.detections
-        },
-        results.timestamp
-      ));
+      events.push(
+        await this.createIntegrityEvent(
+          sessionId,
+          results.sessionId,
+          results.requestId,
+          'multiple_faces',
+          this.config.thresholds.face.multipleFaces.severity,
+          `Multiple faces detected: ${faceResults.detections.length}`,
+          {
+            faceCount: faceResults.detections.length,
+            threshold: this.config.thresholds.face.multipleFaces.count,
+            faces: faceResults.detections,
+          },
+          results.timestamp
+        )
+      );
     }
 
     return events;
@@ -626,22 +627,26 @@ export class IntegrityMonitoringService extends EventEmitter {
     const horizontalDev = Math.abs(gazeResults.gazePoint.x - 0.5);
     const verticalDev = Math.abs(gazeResults.gazePoint.y - 0.5);
 
-    if (horizontalDev > this.config.thresholds.gaze.gazeDeviation.horizontalDegrees / 100 ||
-        verticalDev > this.config.thresholds.gaze.gazeDeviation.verticalDegrees / 100) {
-      events.push(await this.createIntegrityEvent(
-        sessionId,
-        results.sessionId,
-        results.requestId,
-        gazeResults.violations[0]?.type || 'gaze_deviation',
-        this.config.thresholds.gaze.gazeDeviation.severity,
-        'Gaze deviation detected',
-        {
-          gazePoint: gazeResults.gazePoint,
-          deviation: { horizontal: horizontalDev, vertical: verticalDev },
-          attention: gazeResults.attentionMetrics.focusScore
-        },
-        results.timestamp
-      ));
+    if (
+      horizontalDev > this.config.thresholds.gaze.gazeDeviation.horizontalDegrees / 100 ||
+      verticalDev > this.config.thresholds.gaze.gazeDeviation.verticalDegrees / 100
+    ) {
+      events.push(
+        await this.createIntegrityEvent(
+          sessionId,
+          results.sessionId,
+          results.requestId,
+          gazeResults.violations[0]?.type || 'gaze_deviation',
+          this.config.thresholds.gaze.gazeDeviation.severity,
+          'Gaze deviation detected',
+          {
+            gazePoint: gazeResults.gazePoint,
+            deviation: { horizontal: horizontalDev, vertical: verticalDev },
+            attention: gazeResults.attentionMetrics.focusScore,
+          },
+          results.timestamp
+        )
+      );
     }
 
     return events;
@@ -657,20 +662,22 @@ export class IntegrityMonitoringService extends EventEmitter {
     // Check for multiple voices
     const speakerCount = audioResults.speechAnalysis?.speakerCount || 0;
     if (speakerCount > this.config.thresholds.audio.voiceDetection.otherVoices) {
-      events.push(await this.createIntegrityEvent(
-        sessionId,
-        results.sessionId,
-        results.requestId,
-        audioResults.violations[0]?.type || 'multiple_voices',
-        this.config.thresholds.audio.voiceDetection.severity,
-        `Multiple voices detected: ${speakerCount}`,
-        {
-          voiceCount: speakerCount,
-          threshold: this.config.thresholds.audio.voiceDetection.otherVoices,
-          volume: audioResults.audioFeatures.volume.average
-        },
-        results.timestamp
-      ));
+      events.push(
+        await this.createIntegrityEvent(
+          sessionId,
+          results.sessionId,
+          results.requestId,
+          audioResults.violations[0]?.type || 'multiple_voices',
+          this.config.thresholds.audio.voiceDetection.severity,
+          `Multiple voices detected: ${speakerCount}`,
+          {
+            voiceCount: speakerCount,
+            threshold: this.config.thresholds.audio.voiceDetection.otherVoices,
+            volume: audioResults.audioFeatures.volume.average,
+          },
+          results.timestamp
+        )
+      );
     }
 
     return events;
@@ -685,20 +692,22 @@ export class IntegrityMonitoringService extends EventEmitter {
 
     // Process behavior anomalies
     for (const anomaly of behaviorResults.anomalies) {
-      events.push(await this.createIntegrityEvent(
-        sessionId,
-        results.sessionId,
-        results.requestId,
-        'suspicious_behavior',
-        anomaly.severity,
-        anomaly.description,
-        {
-          behaviorType: anomaly.type,
-          confidence: anomaly.confidence,
-          patterns: behaviorResults.behaviorPatterns
-        },
-        results.timestamp
-      ));
+      events.push(
+        await this.createIntegrityEvent(
+          sessionId,
+          results.sessionId,
+          results.requestId,
+          'suspicious_behavior',
+          anomaly.severity,
+          anomaly.description,
+          {
+            behaviorType: anomaly.type,
+            confidence: anomaly.confidence,
+            patterns: behaviorResults.behaviorPatterns,
+          },
+          results.timestamp
+        )
+      );
     }
 
     return events;
@@ -713,21 +722,23 @@ export class IntegrityMonitoringService extends EventEmitter {
 
     // Process each violation from aggregated results timeline
     for (const violation of aggregated.violationsSummary.timeline) {
-      events.push(await this.createIntegrityEvent(
-        sessionId,
-        results.sessionId,
-        results.requestId,
-        violation.type as ViolationType,
-        violation.severity,
-        violation.description,
-        {
-          aggregated: true,
-          riskScore: aggregated.overallRiskScore,
-          total: aggregated.violationsSummary.total,
-          timestamp: violation.timestamp
-        },
-        results.timestamp
-      ));
+      events.push(
+        await this.createIntegrityEvent(
+          sessionId,
+          results.sessionId,
+          results.requestId,
+          violation.type as ViolationType,
+          violation.severity,
+          violation.description,
+          {
+            aggregated: true,
+            riskScore: aggregated.overallRiskScore,
+            total: aggregated.violationsSummary.total,
+            timestamp: violation.timestamp,
+          },
+          results.timestamp
+        )
+      );
     }
 
     return events;
@@ -761,7 +772,7 @@ export class IntegrityMonitoringService extends EventEmitter {
         location: details.location,
         context: details,
         relatedEvents: [],
-        parentEventId: undefined
+        parentEventId: undefined,
       },
       evidence: [],
       resolved: false,
@@ -769,10 +780,11 @@ export class IntegrityMonitoringService extends EventEmitter {
         processingTime: Date.now() - timestamp.getTime(),
         algorithmVersion: '1.0.0',
         confidence: details.confidence || 0.8,
-        reviewRequired: severity === ViolationSeverity.HIGH || severity === ViolationSeverity.CRITICAL,
+        reviewRequired:
+          severity === ViolationSeverity.HIGH || severity === ViolationSeverity.CRITICAL,
         automaticActions: [],
-        manualActions: []
-      }
+        manualActions: [],
+      },
     };
 
     // Store event
@@ -784,14 +796,14 @@ export class IntegrityMonitoringService extends EventEmitter {
   private getCategoryForViolationType(type: ViolationType): any {
     // Map violation types to categories
     const categoryMap: Record<string, string> = {
-      'face_not_detected': 'identity_verification',
-      'multiple_faces': 'identity_verification',
-      'face_obscured': 'identity_verification',
-      'gaze_deviation': 'attention_monitoring',
-      'multiple_voices': 'audio_monitoring',
-      'suspicious_behavior': 'behavioral_analysis',
-      'environment_change': 'environment_control',
-      'technical_violation': 'technical_security'
+      face_not_detected: 'identity_verification',
+      multiple_faces: 'identity_verification',
+      face_obscured: 'identity_verification',
+      gaze_deviation: 'attention_monitoring',
+      multiple_voices: 'audio_monitoring',
+      suspicious_behavior: 'behavioral_analysis',
+      environment_change: 'environment_control',
+      technical_violation: 'technical_security',
     };
 
     return categoryMap[type] || 'behavioral_analysis';
@@ -807,10 +819,7 @@ export class IntegrityMonitoringService extends EventEmitter {
       );
 
       // Add to session events list
-      await this.redisService.listPush(
-        `integrity:session:${event.sessionId}:events`,
-        event.id
-      );
+      await this.redisService.listPush(`integrity:session:${event.sessionId}:events`, event.id);
 
       // Store in database for long-term storage if needed
       // This could be extended to use Prisma for persistent storage
@@ -818,13 +827,12 @@ export class IntegrityMonitoringService extends EventEmitter {
       logger.debug('Integrity event stored', {
         eventId: event.id,
         sessionId: event.sessionId,
-        type: event.type
+        type: event.type,
       });
-
     } catch (error) {
       logger.error('Failed to store integrity event', {
         eventId: event.id,
-        error: (error as any).message
+        error: (error as any).message,
       });
       throw error;
     }
@@ -838,8 +846,9 @@ export class IntegrityMonitoringService extends EventEmitter {
 
     for (const event of events) {
       // Find applicable rules
-      const applicableRules = Array.from(this.activeRules.values())
-        .filter(rule => this.isRuleApplicable(rule, event));
+      const applicableRules = Array.from(this.activeRules.values()).filter(rule =>
+        this.isRuleApplicable(rule, event)
+      );
 
       // Process event with each applicable rule
       for (const rule of applicableRules) {
@@ -878,7 +887,7 @@ export class IntegrityMonitoringService extends EventEmitter {
   private evaluateRuleCondition(condition: any, event: IntegrityEvent): boolean {
     // Simple condition evaluation - could be extended
     const fieldValue = this.getFieldValue(event, condition.field);
-    
+
     switch (condition.operator) {
       case 'equals':
         return fieldValue === condition.value;
@@ -894,18 +903,21 @@ export class IntegrityMonitoringService extends EventEmitter {
   private getFieldValue(event: IntegrityEvent, field: string): any {
     const fields = field.split('.');
     let value: any = event;
-    
+
     for (const f of fields) {
       value = value?.[f];
     }
-    
+
     return value;
   }
 
-  private async applyRuleToEvent(rule: IntegrityRule, event: IntegrityEvent): Promise<IntegrityEvent> {
+  private async applyRuleToEvent(
+    rule: IntegrityRule,
+    event: IntegrityEvent
+  ): Promise<IntegrityEvent> {
     // Apply rule modifications to event
     const processedEvent = { ...event };
-    
+
     // Add rule information
     processedEvent.ruleId = rule.id;
     processedEvent.metadata.automaticActions = rule.actions.map(a => a.type);
@@ -922,7 +934,7 @@ export class IntegrityMonitoringService extends EventEmitter {
           ruleId: rule.id,
           actionType: action.type,
           eventId: event.id,
-          error: (error as any).message
+          error: (error as any).message,
         });
       }
     }
@@ -950,10 +962,10 @@ export class IntegrityMonitoringService extends EventEmitter {
   private async flagEventForReview(event: IntegrityEvent): Promise<void> {
     event.metadata.reviewRequired = true;
     await this.storeIntegrityEvent(event);
-    
+
     logger.info('Event flagged for review', {
       eventId: event.id,
-      sessionId: event.sessionId
+      sessionId: event.sessionId,
     });
   }
 
@@ -961,7 +973,7 @@ export class IntegrityMonitoringService extends EventEmitter {
     // Implementation would capture evidence based on configuration
     logger.info('Evidence capture requested', {
       eventId: event.id,
-      captureConfig: capture
+      captureConfig: capture,
     });
   }
 
@@ -971,7 +983,7 @@ export class IntegrityMonitoringService extends EventEmitter {
       sessionId: event.sessionId,
       type: event.type,
       severity: event.severity,
-      description: event.description
+      description: event.description,
     });
   }
 
@@ -992,11 +1004,14 @@ export class IntegrityMonitoringService extends EventEmitter {
     );
   }
 
-  private async updateSessionStatistics(sessionId: string, events: IntegrityEvent[]): Promise<void> {
+  private async updateSessionStatistics(
+    sessionId: string,
+    events: IntegrityEvent[]
+  ): Promise<void> {
     // Implementation would update comprehensive session statistics
     logger.debug('Session statistics updated', {
       sessionId,
-      eventCount: events.length
+      eventCount: events.length,
     });
   }
 
@@ -1004,8 +1019,9 @@ export class IntegrityMonitoringService extends EventEmitter {
     // Return appropriate alert configuration based on severity
     return {
       enabled: true,
-      channels: Array.from(this.alertChannels.values())
-        .filter(channel => this.shouldSendAlertToChannel(channel, severity))
+      channels: Array.from(this.alertChannels.values()).filter(channel =>
+        this.shouldSendAlertToChannel(channel, severity)
+      ),
     };
   }
 
@@ -1019,11 +1035,15 @@ export class IntegrityMonitoringService extends EventEmitter {
       subject: `Integrity Violation Detected: ${event.type}`,
       body: `A ${event.severity} integrity violation has been detected in session ${event.sessionId}.\n\nDetails: ${event.description}`,
       event: event,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 
-  private async sendAlert(channel: AlertChannel, content: any, event: IntegrityEvent): Promise<void> {
+  private async sendAlert(
+    channel: AlertChannel,
+    content: any,
+    event: IntegrityEvent
+  ): Promise<void> {
     switch (channel.type) {
       case ChannelType.EMAIL:
         // Implementation would send email
@@ -1046,7 +1066,7 @@ export class IntegrityMonitoringService extends EventEmitter {
     // Update alert statistics
     logger.debug('Alert statistics updated', {
       eventId: event.id,
-      channelCount
+      channelCount,
     });
   }
 
@@ -1057,55 +1077,55 @@ export class IntegrityMonitoringService extends EventEmitter {
       timeRange: {
         start: new Date(),
         end: new Date(),
-        duration: 0
+        duration: 0,
       },
       totalEvents: 0,
       eventsByType: {
-        'face_not_detected': 0,
-        'multiple_faces': 0,
-        'face_obscured': 0,
-        'looking_away': 0,
-        'multiple_screens': 0,
-        'reading_assistance': 0,
-        'suspicious_behavior': 0,
-        'prolonged_absence': 0,
-        'multiple_speakers': 0,
-        'background_conversation': 0,
-        'external_assistance': 0,
-        'phone_call': 0,
-        'suspicious_sounds': 0,
-        'audio_tampering': 0,
-        'dictation_software': 0,
-        'environment_change': 0,
-        'technical_violation': 0,
-        'identity_violation': 0,
-        'attention_violation': 0
+        face_not_detected: 0,
+        multiple_faces: 0,
+        face_obscured: 0,
+        looking_away: 0,
+        multiple_screens: 0,
+        reading_assistance: 0,
+        suspicious_behavior: 0,
+        prolonged_absence: 0,
+        multiple_speakers: 0,
+        background_conversation: 0,
+        external_assistance: 0,
+        phone_call: 0,
+        suspicious_sounds: 0,
+        audio_tampering: 0,
+        dictation_software: 0,
+        environment_change: 0,
+        technical_violation: 0,
+        identity_violation: 0,
+        attention_violation: 0,
       } as Record<ViolationType, number>,
       eventsBySeverity: {
-        'low': 0,
-        'medium': 0,
-        'high': 0,
-        'critical': 0
+        low: 0,
+        medium: 0,
+        high: 0,
+        critical: 0,
       } as Record<ViolationSeverity, number>,
       riskScore: {
         overall: 0,
         categories: {
-          'identity_verification': 0,
-          'attention_monitoring': 0,
-          'environment_control': 0,
-          'technical_security': 0,
-          'behavioral_analysis': 0,
-          'audio_monitoring': 0
+          identity_verification: 0,
+          attention_monitoring: 0,
+          environment_control: 0,
+          technical_security: 0,
+          behavioral_analysis: 0,
+          audio_monitoring: 0,
         } as Record<RuleCategory, number>,
         trend: 'stable' as any,
-        factors: []
+        factors: [],
       },
       compliance: {
         overallScore: 100,
         passedChecks: 0,
         failedChecks: 0,
         warningChecks: 0,
-        requirements: []
+        requirements: [],
       },
       performance: {
         detectionLatency: 0,
@@ -1118,20 +1138,23 @@ export class IntegrityMonitoringService extends EventEmitter {
           falseNegatives: 0,
           precision: 0,
           recall: 0,
-          f1Score: 0
+          f1Score: 0,
         },
         resourceUsage: {
           cpuUsage: 0,
           memoryUsage: 0,
           networkUsage: 0,
-          storageUsage: 0
-        }
+          storageUsage: 0,
+        },
       },
-      recommendations: []
+      recommendations: [],
     };
   }
 
-  private async generateSessionReport(sessionId: string, statistics: MonitoringStatistics): Promise<void> {
+  private async generateSessionReport(
+    sessionId: string,
+    statistics: MonitoringStatistics
+  ): Promise<void> {
     logger.info('Generating session report', { sessionId });
     // Implementation would generate comprehensive session report
   }
@@ -1147,11 +1170,10 @@ export class IntegrityMonitoringService extends EventEmitter {
       await this.redisService.del(`integrity:stats:${sessionId}`);
 
       logger.debug('Session data cleaned up', { sessionId });
-
     } catch (error) {
       logger.error('Failed to cleanup session data', {
         sessionId,
-        error: (error as any).message
+        error: (error as any).message,
       });
     }
   }
@@ -1170,11 +1192,14 @@ export class IntegrityMonitoringService extends EventEmitter {
     logger.info('Handling violation detected event', {
       eventId: event.id,
       type: event.type,
-      severity: event.severity
+      severity: event.severity,
     });
 
     // Generate alert if needed
-    if (event.severity === ViolationSeverity.HIGH || event.severity === ViolationSeverity.CRITICAL) {
+    if (
+      event.severity === ViolationSeverity.HIGH ||
+      event.severity === ViolationSeverity.CRITICAL
+    ) {
       await this.generateAlert(event);
     }
   }
@@ -1250,7 +1275,6 @@ class ProcessingQueue {
   size(): number {
     return this.queue.length;
   }
-
 
   async cleanup(): Promise<void> {
     this.queue = [];

@@ -2,14 +2,14 @@
  * Assessment Type Definitions
  * TASK-CG-005: Assessment Management Core
  * Persona: Senior Software Engineer
- * 
+ *
  * Comprehensive type definitions for assessment management,
  * question handling, and assessment configuration.
  */
 
-import { 
+import {
   Assessment,
-  Question, 
+  Question,
   AssessmentQuestion,
   AssessmentParticipation,
   Submission,
@@ -17,7 +17,7 @@ import {
   AssessmentStatus,
   QuestionType,
   Difficulty,
-  ParticipationStatus
+  ParticipationStatus,
 } from '@prisma/client';
 
 // ============================================================================
@@ -54,11 +54,11 @@ export interface AssessmentSettings {
   maxAttempts: number;
   shuffleQuestions: boolean;
   showResults: boolean;
-  
+
   // Timing settings
   timeWarningAt: number; // minutes before time expires
   autoSubmit: boolean;
-  
+
   // Proctoring settings
   proctoring: {
     enabled: boolean;
@@ -68,7 +68,7 @@ export interface AssessmentSettings {
     tabSwitchDetection: boolean;
     faceDetection: boolean;
   };
-  
+
   // Collaboration settings
   collaboration: {
     enabled: boolean;
@@ -76,7 +76,7 @@ export interface AssessmentSettings {
     allowChat: boolean;
     allowScreenShare: boolean;
   };
-  
+
   // Access control
   accessControl: {
     ipWhitelist: string[];
@@ -131,7 +131,7 @@ export interface QuestionContent {
   prompt: string;
   hints?: string[];
   explanation?: string;
-  
+
   // Question-type specific content
   coding?: CodingQuestionContent;
   multipleChoice?: MultipleChoiceQuestionContent;
@@ -302,7 +302,7 @@ export interface AnswerSubmission {
 export interface AnswerContent {
   // Common fields
   timestamp: Date;
-  
+
   // Type-specific content
   coding?: CodingAnswer;
   multipleChoice?: MultipleChoiceAnswer;
@@ -605,7 +605,7 @@ export enum AssessmentErrorCode {
   SUBMISSION_DEADLINE_PASSED = 'SUBMISSION_DEADLINE_PASSED',
   SESSION_EXPIRED = 'SESSION_EXPIRED',
   MAXIMUM_ATTEMPTS_EXCEEDED = 'MAXIMUM_ATTEMPTS_EXCEEDED',
-  VALIDATION_ERROR = 'VALIDATION_ERROR'
+  VALIDATION_ERROR = 'VALIDATION_ERROR',
 }
 
 export class AssessmentError extends Error {
@@ -653,5 +653,5 @@ export {
   AssessmentStatus,
   QuestionType,
   Difficulty,
-  ParticipationStatus
+  ParticipationStatus,
 };

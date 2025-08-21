@@ -13,7 +13,7 @@ import {
   SessionProgress,
   SessionError,
   SessionErrorCode,
-  PaginatedResponse
+  PaginatedResponse,
 } from '../types/session.types';
 import { sessionValidationUtils } from '../utils/session-validation.util';
 
@@ -42,7 +42,7 @@ export class SessionService {
       // Check if assessment exists
       const assessment = await this.prisma.assessment.findUnique({
         where: { id: request.assessmentId },
-        include: { questions: true }
+        include: { questions: true },
       });
 
       if (!assessment) {
@@ -55,13 +55,16 @@ export class SessionService {
           assessmentId: request.assessmentId,
           userId: request.candidateId,
           status: {
-            in: ['INVITED', 'IN_PROGRESS']
-          }
-        }
+            in: ['INVITED', 'IN_PROGRESS'],
+          },
+        },
       });
 
       if (existingParticipation) {
-        throw this.createError(SessionErrorCode.SESSION_ALREADY_COMPLETED, 'Active session already exists');
+        throw this.createError(
+          SessionErrorCode.SESSION_ALREADY_COMPLETED,
+          'Active session already exists'
+        );
       }
 
       // Create assessment participation (our "session")
@@ -76,9 +79,9 @@ export class SessionService {
             totalQuestions: assessment.questions.length,
             currentQuestionIndex: 0,
             timeSpent: 0,
-            ...JSON.parse(JSON.stringify(request.metadata || {}))
-          } as any
-        }
+            ...JSON.parse(JSON.stringify(request.metadata || {})),
+          } as any,
+        },
       });
 
       return this.mapToSessionModel(participation, assessment.questions.length);
@@ -96,7 +99,7 @@ export class SessionService {
   async startSession(sessionId: string): Promise<AssessmentSession> {
     const participation = await this.prisma.assessmentParticipation.findUnique({
       where: { id: sessionId },
-      include: { assessment: { include: { questions: true } } }
+      include: { assessment: { include: { questions: true } } },
     });
 
     if (!participation) {
@@ -109,7 +112,7 @@ export class SessionService {
 
     const sessionMetadata = participation.metadata as any;
     const expiresAt = new Date(sessionMetadata.expiresAt);
-    
+
     if (expiresAt < new Date()) {
       throw this.createError(SessionErrorCode.SESSION_EXPIRED, 'Session has expired');
     }
@@ -121,9 +124,9 @@ export class SessionService {
         startedAt: new Date(),
         metadata: {
           ...sessionMetadata,
-          actualStartTime: new Date()
-        }
-      }
+          actualStartTime: new Date(),
+        },
+      },
     });
 
     return this.mapToSessionModel(updatedParticipation, participation.assessment.questions.length);
@@ -135,7 +138,7 @@ export class SessionService {
   async completeSession(sessionId: string): Promise<AssessmentSession> {
     const participation = await this.prisma.assessmentParticipation.findUnique({
       where: { id: sessionId },
-      include: { assessment: { include: { questions: true } } }
+      include: { assessment: { include: { questions: true } } },
     });
 
     if (!participation) {
@@ -143,12 +146,15 @@ export class SessionService {
     }
 
     if (participation.status === 'COMPLETED') {
-      throw this.createError(SessionErrorCode.SESSION_ALREADY_COMPLETED, 'Session already completed');
+      throw this.createError(
+        SessionErrorCode.SESSION_ALREADY_COMPLETED,
+        'Session already completed'
+      );
     }
 
     // Calculate final time spent
     const sessionMetadata = participation.metadata as any;
-    const timeSpent = participation.startedAt 
+    const timeSpent = participation.startedAt
       ? Math.floor((Date.now() - participation.startedAt.getTime()) / 1000)
       : sessionMetadata.timeSpent || 0;
 
@@ -160,9 +166,9 @@ export class SessionService {
         metadata: {
           ...sessionMetadata,
           timeSpent,
-          completedAt: new Date()
-        }
-      }
+          completedAt: new Date(),
+        },
+      },
     });
 
     return this.mapToSessionModel(updatedParticipation, participation.assessment.questions.length);
@@ -178,10 +184,10 @@ export class SessionService {
   async getSessionProgress(sessionId: string): Promise<SessionProgress> {
     const participation = await this.prisma.assessmentParticipation.findUnique({
       where: { id: sessionId },
-      include: { 
+      include: {
         submissions: true,
-        assessment: { include: { questions: true } }
-      }
+        assessment: { include: { questions: true } },
+      },
     });
 
     if (!participation) {
@@ -207,7 +213,7 @@ export class SessionService {
       flagged,
       timeSpent,
       timeRemaining,
-      progressPercentage
+      progressPercentage,
     };
   }
 
@@ -220,7 +226,7 @@ export class SessionService {
    */
   async submitAnswer(sessionId: string, request: SubmitAnswerRequest): Promise<void> {
     const participation = await this.prisma.assessmentParticipation.findUnique({
-      where: { id: sessionId }
+      where: { id: sessionId },
     });
 
     if (!participation) {
@@ -234,15 +240,18 @@ export class SessionService {
     // Validate answer format
     const validationResult = sessionValidationUtils.validateAnswerData(request.answer);
     if (!validationResult.isValid) {
-      throw this.createError(SessionErrorCode.INVALID_ANSWER_FORMAT, validationResult.errors.join(', '));
+      throw this.createError(
+        SessionErrorCode.INVALID_ANSWER_FORMAT,
+        validationResult.errors.join(', ')
+      );
     }
 
     // Check if answer already submitted
     const existingSubmission = await this.prisma.submission.findFirst({
       where: {
         participationId: sessionId,
-        questionId: request.questionId
-      }
+        questionId: request.questionId,
+      },
     });
 
     if (existingSubmission) {
@@ -255,9 +264,9 @@ export class SessionService {
             flagged: request.flagged || false,
             confidence: request.confidence,
             timeSpent: request.timeSpent,
-            submittedAt: new Date().toISOString()
-          } as any
-        }
+            submittedAt: new Date().toISOString(),
+          } as any,
+        },
       });
     } else {
       // Create new submission
@@ -270,9 +279,9 @@ export class SessionService {
             flagged: request.flagged || false,
             confidence: request.confidence,
             timeSpent: request.timeSpent,
-            submittedAt: new Date().toISOString()
-          } as any
-        }
+            submittedAt: new Date().toISOString(),
+          } as any,
+        },
       });
     }
 
@@ -284,9 +293,9 @@ export class SessionService {
         metadata: {
           ...sessionMetadata,
           timeSpent: (sessionMetadata.timeSpent || 0) + (request.timeSpent || 0),
-          lastActivity: new Date()
-        }
-      }
+          lastActivity: new Date(),
+        },
+      },
     });
   }
 
@@ -303,8 +312,8 @@ export class SessionService {
       include: {
         assessment: { include: { questions: true } },
         user: true,
-        submissions: true
-      }
+        submissions: true,
+      },
     });
 
     if (!participation) {
@@ -320,16 +329,24 @@ export class SessionService {
   async listSessions(query: SessionListQuery): Promise<PaginatedResponse<AssessmentSession>> {
     const where: any = {};
 
-    if (query.assessmentId) where.assessmentId = query.assessmentId;
-    if (query.candidateId) where.userId = query.candidateId;
+    if (query.assessmentId) {
+      where.assessmentId = query.assessmentId;
+    }
+    if (query.candidateId) {
+      where.userId = query.candidateId;
+    }
     if (query.status) {
       // Map our session status to participation status
       const participationStatuses = query.status.map(status => {
         switch (status) {
-          case SessionStatus.SCHEDULED: return 'INVITED';
-          case SessionStatus.IN_PROGRESS: return 'IN_PROGRESS';
-          case SessionStatus.COMPLETED: return 'COMPLETED';
-          default: return 'INVITED';
+          case SessionStatus.SCHEDULED:
+            return 'INVITED';
+          case SessionStatus.IN_PROGRESS:
+            return 'IN_PROGRESS';
+          case SessionStatus.COMPLETED:
+            return 'COMPLETED';
+          default:
+            return 'INVITED';
         }
       });
       where.status = { in: participationStatuses };
@@ -337,8 +354,12 @@ export class SessionService {
 
     if (query.startDate || query.endDate) {
       where.startedAt = {};
-      if (query.startDate) where.startedAt.gte = query.startDate;
-      if (query.endDate) where.startedAt.lte = query.endDate;
+      if (query.startDate) {
+        where.startedAt.gte = query.startDate;
+      }
+      if (query.endDate) {
+        where.startedAt.lte = query.endDate;
+      }
     }
 
     const page = query.page || 1;
@@ -362,20 +383,20 @@ export class SessionService {
         take: limit,
         include: {
           assessment: { include: { questions: true } },
-          user: true
-        }
+          user: true,
+        },
       }),
-      this.prisma.assessmentParticipation.count({ where })
+      this.prisma.assessmentParticipation.count({ where }),
     ]);
 
     return {
-      data: participations.map(participation => 
+      data: participations.map(participation =>
         this.mapToSessionModel(participation, participation.assessment.questions.length)
       ),
       total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit),
     };
   }
 
@@ -385,7 +406,7 @@ export class SessionService {
 
   private mapToSessionModel(participation: any, totalQuestions: number): AssessmentSession {
     const metadata = participation.metadata as any;
-    
+
     return {
       id: participation.id,
       assessmentId: participation.assessmentId,
@@ -400,16 +421,20 @@ export class SessionService {
       configuration: metadata.configuration || {},
       metadata: metadata,
       createdAt: participation.invitedAt,
-      updatedAt: participation.invitedAt // Using invitedAt as we don't have updatedAt
+      updatedAt: participation.invitedAt, // Using invitedAt as we don't have updatedAt
     };
   }
 
   private mapParticipationStatusToSessionStatus(status: string): SessionStatus {
     switch (status) {
-      case 'INVITED': return SessionStatus.SCHEDULED;
-      case 'IN_PROGRESS': return SessionStatus.IN_PROGRESS;
-      case 'COMPLETED': return SessionStatus.COMPLETED;
-      default: return SessionStatus.READY;
+      case 'INVITED':
+        return SessionStatus.SCHEDULED;
+      case 'IN_PROGRESS':
+        return SessionStatus.IN_PROGRESS;
+      case 'COMPLETED':
+        return SessionStatus.COMPLETED;
+      default:
+        return SessionStatus.READY;
     }
   }
 
@@ -418,7 +443,7 @@ export class SessionService {
       code,
       message,
       details,
-      timestamp: new Date()
+      timestamp: new Date(),
     } as SessionError;
   }
 }

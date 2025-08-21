@@ -2,14 +2,14 @@
  * User Profile Management Service
  * TASK-CG-004: User Profile Management System
  * Persona: Senior Software Engineer
- * 
+ *
  * Core service for user profile CRUD operations, preferences management,
  * and user-related business logic with comprehensive validation.
  */
 
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
-import { 
+import {
   IUserService,
   CreateUserProfileRequest,
   UpdateUserProfileRequest,
@@ -22,14 +22,14 @@ import {
   UserActivitySummary,
   UserErrorCode,
   UserError,
-  UserWithRelations
+  UserWithRelations,
 } from '@/types/user.types';
-import { 
+import {
   validateCreateUserProfile,
   validateUpdateUserProfile,
   normalizeEmail,
   stripSensitiveFields,
-  sanitizeUserInput
+  sanitizeUserInput,
 } from '@/utils/validation.util';
 
 // ============================================================================
@@ -62,7 +62,7 @@ export class UserService implements IUserService {
 
     // Check if email already exists
     const existingUser = await this.prisma.user.findUnique({
-      where: { email: normalizedEmail }
+      where: { email: normalizedEmail },
     });
 
     if (existingUser) {
@@ -75,7 +75,7 @@ export class UserService implements IUserService {
     // Verify organization and role exist
     const [organization, role] = await Promise.all([
       this.prisma.organization.findUnique({ where: { id: data.organizationId } }),
-      this.prisma.role.findUnique({ where: { id: data.roleId } })
+      this.prisma.role.findUnique({ where: { id: data.roleId } }),
     ]);
 
     if (!organization) {
@@ -94,23 +94,23 @@ export class UserService implements IUserService {
       notifications: {
         email: true,
         inApp: true,
-        assessmentReminders: true
+        assessmentReminders: true,
       },
       privacy: {
         profileVisibility: 'organization',
-        allowAnalytics: true
+        allowAnalytics: true,
       },
       ui: {
         theme: 'auto',
         language: 'en',
         dateFormat: 'MM/DD/YYYY',
-        timeFormat: '12h'
+        timeFormat: '12h',
       },
       assessment: {
         autoSave: true,
         confirmNavigation: true,
-        showTimer: true
-      }
+        showTimer: true,
+      },
     };
 
     const preferences = { ...defaultPreferences, ...sanitizedData.preferences };
@@ -126,12 +126,12 @@ export class UserService implements IUserService {
         profileImage: sanitizedData.profileImage,
         preferences,
         organizationId: data.organizationId,
-        roleId: data.roleId
+        roleId: data.roleId,
       },
       include: {
         organization: true,
-        role: true
-      }
+        role: true,
+      },
     });
 
     return this.transformUserToProfile(user);
@@ -145,8 +145,8 @@ export class UserService implements IUserService {
       where: { id },
       include: {
         organization: true,
-        role: true
-      }
+        role: true,
+      },
     });
 
     if (!user) {
@@ -161,13 +161,13 @@ export class UserService implements IUserService {
    */
   async getProfileByEmail(email: string): Promise<UserProfile | null> {
     const normalizedEmail = normalizeEmail(email);
-    
+
     const user = await this.prisma.user.findUnique({
       where: { email: normalizedEmail },
       include: {
         organization: true,
-        role: true
-      }
+        role: true,
+      },
     });
 
     if (!user) {
@@ -205,8 +205,8 @@ export class UserService implements IUserService {
       data: sanitizedData,
       include: {
         organization: true,
-        role: true
-      }
+        role: true,
+      },
     });
 
     return this.transformUserToProfile(updatedUser);
@@ -245,7 +245,7 @@ export class UserService implements IUserService {
       notifications: { ...currentPreferences.notifications, ...preferences.notifications },
       privacy: { ...currentPreferences.privacy, ...preferences.privacy },
       ui: { ...currentPreferences.ui, ...preferences.ui },
-      assessment: { ...currentPreferences.assessment, ...preferences.assessment }
+      assessment: { ...currentPreferences.assessment, ...preferences.assessment },
     };
 
     const updatedUser = await this.prisma.user.update({
@@ -253,8 +253,8 @@ export class UserService implements IUserService {
       data: { preferences: updatedPreferences },
       include: {
         organization: true,
-        role: true
-      }
+        role: true,
+      },
     });
 
     return this.transformUserToProfile(updatedUser);
@@ -274,8 +274,8 @@ export class UserService implements IUserService {
       data: { profileImage: imageData.url },
       include: {
         organization: true,
-        role: true
-      }
+        role: true,
+      },
     });
 
     return this.transformUserToProfile(updatedUser);
@@ -290,13 +290,7 @@ export class UserService implements IUserService {
       throw new UserError(UserErrorCode.USER_NOT_FOUND, 'User not found');
     }
 
-    const requiredFields = [
-      'firstName',
-      'lastName',
-      'email',
-      'timezone',
-      'profileImage'
-    ];
+    const requiredFields = ['firstName', 'lastName', 'email', 'timezone', 'profileImage'];
 
     const missingFields: string[] = [];
     const recommendations: string[] = [];
@@ -305,7 +299,7 @@ export class UserService implements IUserService {
       const value = (user as any)[field];
       if (!value || value === '') {
         missingFields.push(field);
-        
+
         switch (field) {
           case 'profileImage':
             recommendations.push('Add a profile photo to help others recognize you');
@@ -332,7 +326,7 @@ export class UserService implements IUserService {
     return {
       percentage,
       missingFields,
-      recommendations
+      recommendations,
     };
   }
 
@@ -353,7 +347,7 @@ export class UserService implements IUserService {
       sortBy = 'createdAt',
       sortOrder = 'desc',
       page = 1,
-      limit = 10
+      limit = 10,
     } = options;
 
     const where: any = {};
@@ -363,7 +357,7 @@ export class UserService implements IUserService {
       where.OR = [
         { firstName: { contains: search, mode: 'insensitive' } },
         { lastName: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } }
+        { email: { contains: search, mode: 'insensitive' } },
       ];
     }
 
@@ -392,13 +386,13 @@ export class UserService implements IUserService {
         where,
         include: {
           organization: true,
-          role: true
+          role: true,
         },
         orderBy: { [sortBy]: sortOrder },
         skip,
-        take: limit
+        take: limit,
       }),
-      this.prisma.user.count({ where })
+      this.prisma.user.count({ where }),
     ]);
 
     const totalPages = Math.ceil(total / limit);
@@ -411,8 +405,8 @@ export class UserService implements IUserService {
         total,
         totalPages,
         hasNext: page < totalPages,
-        hasPrev: page > 1
-      }
+        hasPrev: page > 1,
+      },
     };
   }
 
@@ -424,9 +418,9 @@ export class UserService implements IUserService {
       where: { organizationId },
       include: {
         organization: true,
-        role: true
+        role: true,
       },
-      orderBy: { firstName: 'asc' }
+      orderBy: { firstName: 'asc' },
     });
 
     return users.map(user => this.transformUserToProfile(user));
@@ -440,9 +434,9 @@ export class UserService implements IUserService {
       where: { roleId },
       include: {
         organization: true,
-        role: true
+        role: true,
       },
-      orderBy: { firstName: 'asc' }
+      orderBy: { firstName: 'asc' },
     });
 
     return users.map(user => this.transformUserToProfile(user));
@@ -461,8 +455,8 @@ export class UserService implements IUserService {
       data: { isActive: true },
       include: {
         organization: true,
-        role: true
-      }
+        role: true,
+      },
     });
 
     return this.transformUserToProfile(updatedUser);
@@ -477,8 +471,8 @@ export class UserService implements IUserService {
       data: { isActive: false },
       include: {
         organization: true,
-        role: true
-      }
+        role: true,
+      },
     });
 
     return this.transformUserToProfile(updatedUser);
@@ -493,8 +487,8 @@ export class UserService implements IUserService {
       data: { emailVerified: true },
       include: {
         organization: true,
-        role: true
-      }
+        role: true,
+      },
     });
 
     return this.transformUserToProfile(updatedUser);
@@ -512,8 +506,8 @@ export class UserService implements IUserService {
       where: { id },
       include: {
         role: true,
-        assessmentParticipations: true
-      }
+        assessmentParticipations: true,
+      },
     });
 
     if (!user) {
@@ -541,7 +535,7 @@ export class UserService implements IUserService {
       assessmentsInProgress,
       organizationRole: user.role.name,
       profileCompletion,
-      accountStatus
+      accountStatus,
     };
   }
 
@@ -551,7 +545,7 @@ export class UserService implements IUserService {
   async updateLastLogin(id: string): Promise<void> {
     await this.prisma.user.update({
       where: { id },
-      data: { lastLoginAt: new Date() }
+      data: { lastLoginAt: new Date() },
     });
   }
 
@@ -564,7 +558,7 @@ export class UserService implements IUserService {
    */
   private transformUserToProfile(user: UserWithRelations): UserProfile {
     const strippedUser = stripSensitiveFields(user);
-    
+
     return {
       id: strippedUser.id,
       email: strippedUser.email,
@@ -581,13 +575,13 @@ export class UserService implements IUserService {
       organization: {
         id: user.organization.id,
         name: user.organization.name,
-        slug: user.organization.slug
+        slug: user.organization.slug,
       },
       role: {
         id: user.role.id,
         name: user.role.name,
-        description: user.role.description
-      }
+        description: user.role.description,
+      },
     };
   }
 }

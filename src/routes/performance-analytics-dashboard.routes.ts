@@ -21,7 +21,7 @@ export function createPerformanceAnalyticsDashboardRoutes(): Router {
     logger.error(operation, error as Error, {});
     res.status(500).json({
       success: false,
-      message: `Failed to ${operation.toLowerCase()}`
+      message: `Failed to ${operation.toLowerCase()}`,
     });
   };
 
@@ -36,11 +36,11 @@ export function createPerformanceAnalyticsDashboardRoutes(): Router {
               overallPerformance: 85.5,
               assessmentCompletion: 92.3,
               codeQuality: 78.9,
-              timeEfficiency: 88.1
+              timeEfficiency: 88.1,
             },
             trends: [],
-            benchmarks: {}
-          }
+            benchmarks: {},
+          },
         });
       } catch (error) {
         handleError(error, res, 'Get advanced performance metrics');
@@ -54,8 +54,8 @@ export function createPerformanceAnalyticsDashboardRoutes(): Router {
           data: {
             widgets: [],
             layout: { columns: 3, rows: 2 },
-            lastUpdated: new Date().toISOString()
-          }
+            lastUpdated: new Date().toISOString(),
+          },
         });
       } catch (error) {
         handleError(error, res, 'Get dashboard analytics');
@@ -69,8 +69,8 @@ export function createPerformanceAnalyticsDashboardRoutes(): Router {
           data: {
             predictions: [],
             confidence: 0.85,
-            recommendations: []
-          }
+            recommendations: [],
+          },
         });
       } catch (error) {
         handleError(error, res, 'Get predictive insights');
@@ -84,8 +84,8 @@ export function createPerformanceAnalyticsDashboardRoutes(): Router {
           data: {
             benchmarks: {},
             industry: 'technology',
-            comparison: {}
-          }
+            comparison: {},
+          },
         });
       } catch (error) {
         handleError(error, res, 'Get industry benchmarks');
@@ -99,8 +99,8 @@ export function createPerformanceAnalyticsDashboardRoutes(): Router {
           data: {
             forecast: [],
             period: '6months',
-            accuracy: 0.78
-          }
+            accuracy: 0.78,
+          },
         });
       } catch (error) {
         handleError(error, res, 'Generate forecast');
@@ -114,8 +114,8 @@ export function createPerformanceAnalyticsDashboardRoutes(): Router {
           data: {
             comparison: {},
             baseline: {},
-            improvements: []
-          }
+            improvements: [],
+          },
         });
       } catch (error) {
         handleError(error, res, 'Get performance comparison');
@@ -129,8 +129,8 @@ export function createPerformanceAnalyticsDashboardRoutes(): Router {
           data: {
             id: 'config123',
             layout: req.body.layout || {},
-            widgets: req.body.widgets || []
-          }
+            widgets: req.body.widgets || [],
+          },
         });
       } catch (error) {
         handleError(error, res, 'Create dashboard config');
@@ -142,12 +142,14 @@ export function createPerformanceAnalyticsDashboardRoutes(): Router {
         res.setHeader('Content-Type', 'text/event-stream');
         res.setHeader('Cache-Control', 'no-cache');
         res.setHeader('Connection', 'keep-alive');
-        
+
         res.write('data: {"type":"init","timestamp":"' + new Date().toISOString() + '"}\n\n');
-        
+
         // Keep connection alive for demo
         const interval = setInterval(() => {
-          res.write('data: {"type":"heartbeat","timestamp":"' + new Date().toISOString() + '"}\n\n');
+          res.write(
+            'data: {"type":"heartbeat","timestamp":"' + new Date().toISOString() + '"}\n\n'
+          );
         }, 30000);
 
         req.on('close', () => {
@@ -156,7 +158,7 @@ export function createPerformanceAnalyticsDashboardRoutes(): Router {
       } catch (error) {
         handleError(error, res, 'Get analytics stream');
       }
-    }
+    },
   };
 
   // Routes with proper Express.js signatures
@@ -174,7 +176,7 @@ export function createPerformanceAnalyticsDashboardRoutes(): Router {
     res.json({
       success: true,
       service: 'performance-analytics-dashboard',
-      status: 'operational'
+      status: 'operational',
     });
   });
 

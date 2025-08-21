@@ -2,7 +2,7 @@
  * User Profile Management Types
  * TASK-CG-004: User Profile Management System
  * Persona: Senior Software Engineer
- * 
+ *
  * Type definitions for user profile management, CRUD operations,
  * and profile-related functionality.
  */
@@ -139,7 +139,7 @@ export enum UserStatus {
   ACTIVE = 'ACTIVE',
   INACTIVE = 'INACTIVE',
   SUSPENDED = 'SUSPENDED',
-  PENDING_VERIFICATION = 'PENDING_VERIFICATION'
+  PENDING_VERIFICATION = 'PENDING_VERIFICATION',
 }
 
 /**
@@ -150,7 +150,7 @@ export enum UserRole {
   MANAGER = 'MANAGER',
   INTERVIEWER = 'INTERVIEWER',
   CANDIDATE = 'CANDIDATE',
-  VIEWER = 'VIEWER'
+  VIEWER = 'VIEWER',
 }
 
 /**
@@ -232,22 +232,22 @@ export interface IUserService {
   getProfileByEmail(email: string): Promise<UserProfile | null>;
   updateProfile(id: string, data: UpdateUserProfileRequest): Promise<UserProfile>;
   deleteProfile(id: string): Promise<void>;
-  
+
   // Profile management
   updatePreferences(id: string, preferences: Partial<UserPreferences>): Promise<UserProfile>;
   updateProfileImage(id: string, imageData: ProfileImageUpload): Promise<UserProfile>;
   calculateProfileCompletion(id: string): Promise<ProfileCompletion>;
-  
+
   // User search and listing
   searchUsers(options: UserSearchOptions): Promise<PaginatedUsers>;
   getUsersByOrganization(organizationId: string): Promise<UserProfile[]>;
   getUsersByRole(roleId: string): Promise<UserProfile[]>;
-  
+
   // User status management
   activateUser(id: string): Promise<UserProfile>;
   deactivateUser(id: string): Promise<UserProfile>;
   verifyEmail(id: string): Promise<UserProfile>;
-  
+
   // Activity and analytics
   getUserActivity(id: string): Promise<UserActivitySummary>;
   updateLastLogin(id: string): Promise<void>;
@@ -306,7 +306,7 @@ export enum UserErrorCode {
   ROLE_NOT_FOUND = 'ROLE_NOT_FOUND',
   INSUFFICIENT_PERMISSIONS = 'INSUFFICIENT_PERMISSIONS',
   ACCOUNT_DEACTIVATED = 'ACCOUNT_DEACTIVATED',
-  VALIDATION_FAILED = 'VALIDATION_FAILED'
+  VALIDATION_FAILED = 'VALIDATION_FAILED',
 }
 
 /**

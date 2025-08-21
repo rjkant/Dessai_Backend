@@ -275,7 +275,7 @@ export class QuestionController {
         draft: 0,
         byType: {},
         byDifficulty: {},
-        usage: { totalAttempts: 0, averageScore: 0 }
+        usage: { totalAttempts: 0, averageScore: 0 },
       };
 
       res.json({
@@ -335,7 +335,7 @@ export class QuestionController {
         title: `${originalQuestion.title} (Copy)`,
         ...modifications,
       };
-      
+
       const duplicatedQuestion = await this.questionService.createQuestion(
         duplicateData,
         organizationId,
@@ -420,16 +420,30 @@ export class QuestionController {
   private buildSearchCriteria(query: any): QuestionSearchCriteria {
     const criteria: QuestionSearchCriteria = {};
 
-    if (query.type) criteria.type = query.type;
-    if (query.difficulty) criteria.difficulty = query.difficulty;
-    if (query.query) criteria.query = query.query;
+    if (query.type) {
+      criteria.type = query.type;
+    }
+    if (query.difficulty) {
+      criteria.difficulty = query.difficulty;
+    }
+    if (query.query) {
+      criteria.query = query.query;
+    }
     if (query.tags) {
       criteria.tags = Array.isArray(query.tags) ? query.tags : [query.tags];
     }
-    if (query.sortBy) criteria.sortBy = query.sortBy;
-    if (query.sortOrder) criteria.sortOrder = query.sortOrder;
-    if (query.limit) criteria.limit = parseInt(query.limit, 10);
-    if (query.page) criteria.page = parseInt(query.page, 10);
+    if (query.sortBy) {
+      criteria.sortBy = query.sortBy;
+    }
+    if (query.sortOrder) {
+      criteria.sortOrder = query.sortOrder;
+    }
+    if (query.limit) {
+      criteria.limit = parseInt(query.limit, 10);
+    }
+    if (query.page) {
+      criteria.page = parseInt(query.page, 10);
+    }
 
     return criteria;
   }
@@ -441,8 +455,12 @@ export class QuestionController {
     return [
       body('title').notEmpty().withMessage('Title is required'),
       body('description').notEmpty().withMessage('Description is required'),
-      body('type').isIn(['CODING', 'MULTIPLE_CHOICE', 'SYSTEM_DESIGN', 'DATABASE']).withMessage('Valid question type is required'),
-      body('difficulty').isIn(['EASY', 'MEDIUM', 'HARD', 'EXPERT']).withMessage('Valid difficulty is required'),
+      body('type')
+        .isIn(['CODING', 'MULTIPLE_CHOICE', 'SYSTEM_DESIGN', 'DATABASE'])
+        .withMessage('Valid question type is required'),
+      body('difficulty')
+        .isIn(['EASY', 'MEDIUM', 'HARD', 'EXPERT'])
+        .withMessage('Valid difficulty is required'),
       body('content').notEmpty().withMessage('Question content is required'),
       body('tags').optional().isArray().withMessage('Tags must be an array'),
     ];
@@ -456,8 +474,14 @@ export class QuestionController {
       param('id').isUUID().withMessage('Valid question ID is required'),
       body('title').optional().notEmpty().withMessage('Title cannot be empty'),
       body('description').optional().notEmpty().withMessage('Description cannot be empty'),
-      body('type').optional().isIn(['CODING', 'MULTIPLE_CHOICE', 'SYSTEM_DESIGN', 'DATABASE']).withMessage('Valid question type required'),
-      body('difficulty').optional().isIn(['EASY', 'MEDIUM', 'HARD', 'EXPERT']).withMessage('Valid difficulty required'),
+      body('type')
+        .optional()
+        .isIn(['CODING', 'MULTIPLE_CHOICE', 'SYSTEM_DESIGN', 'DATABASE'])
+        .withMessage('Valid question type required'),
+      body('difficulty')
+        .optional()
+        .isIn(['EASY', 'MEDIUM', 'HARD', 'EXPERT'])
+        .withMessage('Valid difficulty required'),
       body('tags').optional().isArray().withMessage('Tags must be an array'),
     ];
   }
@@ -466,9 +490,7 @@ export class QuestionController {
    * Validation rules for question ID parameter
    */
   static idValidation() {
-    return [
-      param('id').isUUID().withMessage('Valid question ID is required'),
-    ];
+    return [param('id').isUUID().withMessage('Valid question ID is required')];
   }
 
   /**
@@ -476,9 +498,18 @@ export class QuestionController {
    */
   static searchValidation() {
     return [
-      query('type').optional().isIn(['CODING', 'MULTIPLE_CHOICE', 'SYSTEM_DESIGN', 'DATABASE']).withMessage('Valid question type required'),
-      query('difficulty').optional().isIn(['EASY', 'MEDIUM', 'HARD', 'EXPERT']).withMessage('Valid difficulty required'),
-      query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100'),
+      query('type')
+        .optional()
+        .isIn(['CODING', 'MULTIPLE_CHOICE', 'SYSTEM_DESIGN', 'DATABASE'])
+        .withMessage('Valid question type required'),
+      query('difficulty')
+        .optional()
+        .isIn(['EASY', 'MEDIUM', 'HARD', 'EXPERT'])
+        .withMessage('Valid difficulty required'),
+      query('limit')
+        .optional()
+        .isInt({ min: 1, max: 100 })
+        .withMessage('Limit must be between 1 and 100'),
       query('offset').optional().isInt({ min: 0 }).withMessage('Offset must be non-negative'),
     ];
   }
@@ -488,7 +519,9 @@ export class QuestionController {
    */
   static bulkGetValidation() {
     return [
-      body('ids').isArray({ min: 1, max: 100 }).withMessage('IDs array must contain 1-100 valid question IDs'),
+      body('ids')
+        .isArray({ min: 1, max: 100 })
+        .withMessage('IDs array must contain 1-100 valid question IDs'),
       body('ids.*').isUUID().withMessage('Each ID must be a valid UUID'),
     ];
   }

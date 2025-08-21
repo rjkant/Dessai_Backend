@@ -17,21 +17,33 @@ const collaborationController = new CollaborationController();
 // ============================================================================
 
 const validateSessionId = [
-  param('sessionId').isString().isLength({ min: 1, max: 100 }).withMessage('Valid session ID required')
+  param('sessionId')
+    .isString()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Valid session ID required'),
 ];
 
 const validateJoinSession = [
   ...validateSessionId,
-  body('role').optional().isIn(['candidate', 'interviewer', 'observer']).withMessage('Invalid role'),
-  body('userName').optional().isString().isLength({ min: 1, max: 100 }).withMessage('Username must be 1-100 characters')
+  body('role')
+    .optional()
+    .isIn(['candidate', 'interviewer', 'observer'])
+    .withMessage('Invalid role'),
+  body('userName')
+    .optional()
+    .isString()
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Username must be 1-100 characters'),
 ];
 
 const validateCodeChange = [
   ...validateSessionId,
-  body('operation').isIn(['insert', 'delete', 'replace']).withMessage('Operation must be insert, delete, or replace'),
+  body('operation')
+    .isIn(['insert', 'delete', 'replace'])
+    .withMessage('Operation must be insert, delete, or replace'),
   body('position').isInt({ min: 0 }).withMessage('Position must be a non-negative integer'),
   body('content').isString().withMessage('Content must be a string'),
-  body('length').optional().isInt({ min: 0 }).withMessage('Length must be a non-negative integer')
+  body('length').optional().isInt({ min: 0 }).withMessage('Length must be a non-negative integer'),
 ];
 
 const validateCursorUpdate = [
@@ -42,7 +54,7 @@ const validateCursorUpdate = [
   body('selection.startLine').optional().isInt({ min: 0 }),
   body('selection.startColumn').optional().isInt({ min: 0 }),
   body('selection.endLine').optional().isInt({ min: 0 }),
-  body('selection.endColumn').optional().isInt({ min: 0 })
+  body('selection.endColumn').optional().isInt({ min: 0 }),
 ];
 
 // ============================================================================
@@ -148,7 +160,7 @@ router.get('/health', (_req, res) => {
     service: 'collaboration',
     status: 'healthy',
     timestamp: new Date(),
-    version: '1.0.0'
+    version: '1.0.0',
   });
 });
 

@@ -1,218 +1,109 @@
 /**
- * Integration Services Routes
- * Persona: Senior Software Engineer
- * 
- * Express routing configuration for integration management endpoints:
- * - ATS provider configuration and operations
- * - Calendar provider configuration and operations  
- * - Data synchronization endpoints
- * - Webhook handling
- * - Health monitoring and testing
+ * Integration Routes
+ * Dessai Backend - External System Integrations
  */
 
-import { Router, Request, Response } from 'express';
-import { IntegrationController } from '../controllers/integration.controller.js';
-import { AuthMiddleware } from '../middleware/auth.middleware.js';
-import { roleGuard } from '../middleware/role.middleware.js';
-import { UserRole } from '../types/auth.types.js';
+import { Router } from 'express';
+import { IntegrationController } from '../controllers/integration.controller';
+import { AuthMiddleware } from '../middleware/auth.middleware';
+
+const router = Router();
 
 /**
- * Create integration routes
+ * @route   GET /api/integrations/health
+ * @desc    Health check for integration service
+ * @access  Public
  */
-export function createIntegrationRoutes(integrationController: IntegrationController): Router {
-  const router = Router();
+router.get('/health', IntegrationController.healthCheck);
 
-  // ============================================================================
-  // ATS INTEGRATION ROUTES
-  // ============================================================================
+/**
+ * @route   POST /api/integrations/ats/configure
+ * @desc    Configure ATS provider for organization
+ * @access  Private
+ */
+router.post('/ats/configure', AuthMiddleware.authenticate, IntegrationController.configureATS);
 
-  /**
-   * Configure ATS provider for organization
-   * POST /api/integrations/ats/configure
-   * Requires: admin role
-   */
-  router.post('/ats/configure',
-    AuthMiddleware.authenticate as any,
-    roleGuard([UserRole.ADMIN, UserRole.HR_MANAGER]) as any,
-    (req: Request, res: Response) => integrationController.configureATS(req as any, res)
-  );
+/**
+ * @route   POST /api/integrations/ats/:provider/test
+ * @desc    Test connection to ATS provider
+ * @access  Private
+ */
+router.post(
+  '/ats/:provider/test',
+  AuthMiddleware.authenticate,
+  IntegrationController.testConnection
+);
 
-  /**
-   * Get candidates from ATS
-   * GET /api/integrations/ats/:provider/candidates
-   */
-  router.get('/ats/:provider/candidates',
-    AuthMiddleware.authenticate as any,
-    roleGuard([UserRole.ADMIN, UserRole.HR_MANAGER, UserRole.INTERVIEWER]) as any,
-    (req: Request, res: Response) => integrationController.getCandidates(req as any, res)
-  );
+/**
+ * @route   GET /api/integrations/ats/:provider/candidates
+ * @desc    Get candidates from ATS provider
+ * @access  Private
+ */
+router.get(
+  '/ats/:provider/candidates',
+  AuthMiddleware.authenticate,
+  IntegrationController.getCandidates
+);
 
-  /**
-   * Create candidate in ATS
-   * POST /api/integrations/ats/:provider/candidates
-   */
-  router.post('/ats/:provider/candidates',
-    AuthMiddleware.authenticate as any,
-    roleGuard([UserRole.ADMIN, UserRole.HR_MANAGER, UserRole.INTERVIEWER]) as any,
-    (req: Request, res: Response) => integrationController.createCandidate(req as any, res)
-  );
+/**
+ * @route   GET /api/integrations/ats/:provider/jobs
+ * @desc    Get job positions from ATS provider
+ * @access  Private
+ */
+router.get(
+  '/ats/:provider/jobs',
+  AuthMiddleware.authenticate,
+  IntegrationController.getJobPositions
+);
 
-  /**
-   * Get jobs from ATS
-   * GET /api/integrations/ats/:provider/jobs
-   */
-  router.get('/ats/:provider/jobs',
-    AuthMiddleware.authenticate as any,
-    roleGuard([UserRole.ADMIN, UserRole.HR_MANAGER]) as any,
-    (req: Request, res: Response) => integrationController.getJobs(req as any, res)
-  );
+/**
+ * @route   POST /api/integrations/ats/:provider/candidates
+ * @desc    Create candidate in ATS provider
+ * @access  Private
+ */
+router.post(
+  '/ats/:provider/candidates',
+  AuthMiddleware.authenticate,
+  IntegrationController.createCandidate
+);
 
-  /**
-   * Create job in ATS
-   * POST /api/integrations/ats/:provider/jobs
-   */
-  router.post('/ats/:provider/jobs',
-    AuthMiddleware.authenticate as any,
-    roleGuard([UserRole.ADMIN, UserRole.HR_MANAGER]) as any,
-    (req: Request, res: Response) => integrationController.createJob(req as any, res)
-  );
+/**
+ * @route   PUT /api/integrations/ats/:provider/candidates/:candidateId
+ * @desc    Update candidate in ATS provider
+ * @access  Private
+ */
+router.put(
+  '/ats/:provider/candidates/:candidateId',
+  AuthMiddleware.authenticate,
+  IntegrationController.updateCandidate
+);
 
-  /**
-   * Get applications from ATS
-   * GET /api/integrations/ats/:provider/applications
-   */
-  router.get('/ats/:provider/applications',
-    AuthMiddleware.authenticate as any,
-    roleGuard([UserRole.ADMIN, UserRole.HR_MANAGER, UserRole.INTERVIEWER]) as any,
-    (req: Request, res: Response) => integrationController.getApplications(req as any, res)
-  );
+/**
+ * @route   POST /api/integrations/ats/:provider/sync
+ * @desc    Synchronize data from ATS provider
+ * @access  Private
+ */
+router.post('/ats/:provider/sync', AuthMiddleware.authenticate, IntegrationController.syncData);
 
-  // ============================================================================
-  // DATA SYNCHRONIZATION ROUTES
-  // ============================================================================
+/**
+ * @route   POST /api/integrations/ats/:provider/webhook
+ * @desc    Handle webhook from ATS provider
+ * @access  Public (webhook endpoint)
+ */
+router.post('/ats/:provider/webhook', IntegrationController.handleWebhook);
 
-  /**
-   * Start data synchronization with ATS
-   * POST /api/integrations/sync/start
-   */
-  router.post('/sync/start',
-    AuthMiddleware.authenticate as any,
-    roleGuard([UserRole.ADMIN, UserRole.HR_MANAGER]) as any,
-    (req: Request, res: Response) => integrationController.startDataSync(req as any, res)
-  );
+/**
+ * @route   GET /api/integrations/metrics
+ * @desc    Get integration metrics
+ * @access  Private
+ */
+router.get('/metrics', AuthMiddleware.authenticate, IntegrationController.getMetrics);
 
-  /**
-   * Get synchronization status
-   * GET /api/integrations/sync/status/:syncId
-   */
-  router.get('/sync/status/:syncId',
-    AuthMiddleware.authenticate as any,
-    (req: Request, res: Response) => integrationController.getSyncStatus(req as any, res)
-  );
+/**
+ * @route   GET /api/integrations/providers
+ * @desc    Get available ATS providers
+ * @access  Private
+ */
+router.get('/providers', AuthMiddleware.authenticate, IntegrationController.getProviders);
 
-  // ============================================================================
-  // CALENDAR INTEGRATION ROUTES
-  // ============================================================================
-
-  /**
-   * Configure calendar provider for organization
-   * POST /api/integrations/calendar/configure
-   */
-  router.post('/calendar/configure',
-    AuthMiddleware.authenticate as any,
-    roleGuard([UserRole.ADMIN, UserRole.HR_MANAGER]) as any,
-    (req: Request, res: Response) => integrationController.configureCalendar(req as any, res)
-  );
-
-  /**
-   * Get OAuth authorization URL for calendar provider
-   * GET /api/integrations/calendar/:provider/auth-url
-   */
-  router.get('/calendar/:provider/auth-url',
-    AuthMiddleware.authenticate as any,
-    (req: Request, res: Response) => integrationController.getCalendarAuthUrl(req as any, res)
-  );
-
-  /**
-   * Exchange authorization code for access token
-   * POST /api/integrations/calendar/:provider/exchange-code
-   */
-  router.post('/calendar/:provider/exchange-code',
-    AuthMiddleware.authenticate as any,
-    (req: Request, res: Response) => integrationController.exchangeCalendarCode(req as any, res)
-  );
-
-  /**
-   * Get user calendars
-   * GET /api/integrations/calendar/:provider/calendars
-   */
-  router.get('/calendar/:provider/calendars',
-    AuthMiddleware.authenticate as any,
-    (req: Request, res: Response) => integrationController.getCalendars(req as any, res)
-  );
-
-  /**
-   * Create calendar event
-   * POST /api/integrations/calendar/:provider/events
-   */
-  router.post('/calendar/:provider/events',
-    AuthMiddleware.authenticate as any,
-    (req: Request, res: Response) => integrationController.createCalendarEvent(req as any, res)
-  );
-
-  /**
-   * Schedule interview meeting
-   * POST /api/integrations/calendar/:provider/meetings
-   */
-  router.post('/calendar/:provider/meetings',
-    AuthMiddleware.authenticate as any,
-    roleGuard([UserRole.ADMIN, UserRole.HR_MANAGER, UserRole.INTERVIEWER]) as any,
-    (req: Request, res: Response) => integrationController.scheduleMeeting(req as any, res)
-  );
-
-  /**
-   * Find available time slots
-   * POST /api/integrations/calendar/:provider/available-slots
-   */
-  router.post('/calendar/:provider/available-slots',
-    AuthMiddleware.authenticate as any,
-    (req: Request, res: Response) => integrationController.findAvailableSlots(req as any, res)
-  );
-
-  // ============================================================================
-  // WEBHOOK ROUTES
-  // ============================================================================
-
-  /**
-   * Handle webhook from external providers
-   * POST /api/integrations/webhooks/:provider
-   */
-  router.post('/webhooks/:provider',
-    (req: Request, res: Response) => integrationController.handleWebhook(req as any, res)
-  );
-
-  // ============================================================================
-  // HEALTH AND TESTING ROUTES
-  // ============================================================================
-
-  /**
-   * Get integration health status
-   * GET /api/integrations/health
-   */
-  router.get('/health',
-    AuthMiddleware.authenticate as any,
-    (req: Request, res: Response) => integrationController.getHealthStatus(req as any, res)
-  );
-
-  /**
-   * Test integration connectivity
-   * POST /api/integrations/test/:provider
-   */
-  router.post('/test/:provider',
-    AuthMiddleware.authenticate as any,
-    roleGuard([UserRole.ADMIN]) as any,
-    (req: Request, res: Response) => integrationController.testIntegration(req as any, res)
-  );
-
-  return router;
-}
+export default router;

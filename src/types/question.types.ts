@@ -2,7 +2,7 @@
  * Question Types and Interfaces
  * TASK-CG-006: Question Management System
  * Persona: Senior Software Engineer
- * 
+ *
  * Comprehensive type definitions for question management operations,
  * supporting multiple question types and content structures.
  */
@@ -13,7 +13,7 @@
 
 export enum QuestionType {
   CODING = 'CODING',
-  MULTIPLE_CHOICE = 'MULTIPLE_CHOICE', 
+  MULTIPLE_CHOICE = 'MULTIPLE_CHOICE',
   SYSTEM_DESIGN = 'SYSTEM_DESIGN',
   DATABASE = 'DATABASE',
   ALGORITHM = 'ALGORITHM',
@@ -125,7 +125,7 @@ export interface AlgorithmQuestionContent {
   timeLimit: number;
 }
 
-export type QuestionContent = 
+export type QuestionContent =
   | CodingQuestionContent
   | MultipleChoiceQuestionContent
   | SystemDesignQuestionContent

@@ -2,7 +2,7 @@
  * WebRTC Error Utilities
  * TASK-CG-009: WebRTC Media Streaming
  * Persona: Senior Software Engineer
- * 
+ *
  * Custom error classes for WebRTC operations
  */
 
@@ -17,7 +17,7 @@ export class WebRTCError extends Error {
     this.code = code;
     this.statusCode = statusCode;
     this.details = details;
-    
+
     // Maintain proper stack trace
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, WebRTCError);

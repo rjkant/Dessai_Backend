@@ -22,7 +22,7 @@ import {
   AIProcessingConfig,
   ProcessingSettings,
   OutputSettings,
-  PerformanceSettings
+  PerformanceSettings,
 } from '../types/ai-analysis.types';
 
 const logger = new Logger('AIAnalysisController');
@@ -43,21 +43,21 @@ export class AIAnalysisController {
    * Setup event listeners for AI engine
    */
   private setupEventListeners(): void {
-    this.aiEngine.on('analysis-completed', (data) => {
+    this.aiEngine.on('analysis-completed', data => {
       logger.info('AI analysis completed', {
         sessionId: data.sessionId,
-        processingTime: data.response.processingTime
+        processingTime: data.response.processingTime,
       });
     });
 
-    this.aiEngine.on('analysis-failed', (data) => {
+    this.aiEngine.on('analysis-failed', data => {
       logger.error('AI analysis failed', {
         requestId: data.request.id,
-        error: data.error.message
+        error: data.error.message,
       });
     });
 
-    this.aiEngine.on('performance-metrics', (metrics) => {
+    this.aiEngine.on('performance-metrics', metrics => {
       logger.info('AI performance metrics', metrics);
     });
   }
@@ -70,7 +70,7 @@ export class AIAnalysisController {
     try {
       logger.info('Processing frame analysis request', {
         userId: req.user.id,
-        sessionId: req.body.sessionId
+        sessionId: req.body.sessionId,
       });
 
       const {
@@ -79,7 +79,7 @@ export class AIAnalysisController {
         frameData,
         audioData,
         priority = ProcessingPriority.REALTIME,
-        config
+        config,
       } = req.body;
 
       // Validate request
@@ -87,7 +87,7 @@ export class AIAnalysisController {
         res.status(400).json({
           success: false,
           message: 'Missing required fields: sessionId, frameData',
-          code: 'INVALID_REQUEST'
+          code: 'INVALID_REQUEST',
         });
         return;
       }
@@ -98,7 +98,7 @@ export class AIAnalysisController {
         res.status(403).json({
           success: false,
           message: 'Access denied to session',
-          code: 'ACCESS_DENIED'
+          code: 'ACCESS_DENIED',
         });
         return;
       }
@@ -112,7 +112,7 @@ export class AIAnalysisController {
         inputData: this.prepareInputData(frameData, audioData),
         configuration: this.prepareProcessingConfig(config),
         priority,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       // Process analysis
@@ -121,7 +121,7 @@ export class AIAnalysisController {
       logger.info('Frame analysis completed', {
         sessionId,
         processingTime: result.processingTime,
-        riskScore: result.results.aggregated.overallRiskScore
+        riskScore: result.results.aggregated.overallRiskScore,
       });
 
       res.status(200).json({
@@ -132,21 +132,20 @@ export class AIAnalysisController {
           timestamp: result.timestamp,
           processingTime: result.processingTime,
           results: result.results,
-          performance: result.performance
-        }
+          performance: result.performance,
+        },
       });
-
     } catch (error) {
       logger.error('Failed to process frame analysis', {
         userId: req.user.id,
-        error: (error as any).message
+        error: (error as any).message,
       });
 
       res.status(500).json({
         success: false,
         message: 'Frame analysis failed',
         code: 'PROCESSING_ERROR',
-        error: (error as any).message
+        error: (error as any).message,
       });
     }
   }
@@ -159,7 +158,7 @@ export class AIAnalysisController {
     try {
       logger.info('Processing batch analysis request', {
         userId: req.user.id,
-        sessionId: req.body.sessionId
+        sessionId: req.body.sessionId,
       });
 
       const {
@@ -167,7 +166,7 @@ export class AIAnalysisController {
         assessmentId,
         batchData,
         priority = ProcessingPriority.NORMAL,
-        config
+        config,
       } = req.body;
 
       // Validate request
@@ -175,7 +174,7 @@ export class AIAnalysisController {
         res.status(400).json({
           success: false,
           message: 'Missing required fields: sessionId, batchData (array)',
-          code: 'INVALID_REQUEST'
+          code: 'INVALID_REQUEST',
         });
         return;
       }
@@ -186,7 +185,7 @@ export class AIAnalysisController {
         res.status(403).json({
           success: false,
           message: 'Access denied to session',
-          code: 'ACCESS_DENIED'
+          code: 'ACCESS_DENIED',
         });
         return;
       }
@@ -195,7 +194,7 @@ export class AIAnalysisController {
       const results = [];
       for (let i = 0; i < batchData.length; i++) {
         const item = batchData[i];
-        
+
         const processingRequest: AIProcessingRequest = {
           id: `batch_${Date.now()}_${i}_${Math.random().toString(36).substr(2, 9)}`,
           sessionId,
@@ -204,7 +203,7 @@ export class AIAnalysisController {
           inputData: this.prepareInputData(item.frameData, item.audioData),
           configuration: this.prepareProcessingConfig(config),
           priority,
-          timestamp: new Date()
+          timestamp: new Date(),
         };
 
         const result = await this.aiEngine.processAnalysis(processingRequest);
@@ -214,7 +213,8 @@ export class AIAnalysisController {
       logger.info('Batch analysis completed', {
         sessionId,
         itemsProcessed: results.length,
-        averageProcessingTime: results.reduce((sum, r) => sum + r.processingTime, 0) / results.length
+        averageProcessingTime:
+          results.reduce((sum, r) => sum + r.processingTime, 0) / results.length,
       });
 
       res.status(200).json({
@@ -224,21 +224,20 @@ export class AIAnalysisController {
           sessionId,
           timestamp: new Date(),
           itemsProcessed: results.length,
-          results: results
-        }
+          results: results,
+        },
       });
-
     } catch (error) {
       logger.error('Failed to process batch analysis', {
         userId: req.user.id,
-        error: (error as any).message
+        error: (error as any).message,
       });
 
       res.status(500).json({
         success: false,
         message: 'Batch analysis failed',
         code: 'PROCESSING_ERROR',
-        error: (error as any).message
+        error: (error as any).message,
       });
     }
   }
@@ -256,7 +255,7 @@ export class AIAnalysisController {
         sessionId,
         userId: req.user.id,
         page,
-        limit
+        limit,
       });
 
       // Verify session access
@@ -265,7 +264,7 @@ export class AIAnalysisController {
         res.status(403).json({
           success: false,
           message: 'Access denied to session',
-          code: 'ACCESS_DENIED'
+          code: 'ACCESS_DENIED',
         });
         return;
       }
@@ -275,7 +274,7 @@ export class AIAnalysisController {
         page: Number(page),
         limit: Number(limit),
         type: type as string,
-        severity: severity as string
+        severity: severity as string,
       });
 
       res.status(200).json({
@@ -287,23 +286,22 @@ export class AIAnalysisController {
             page: Number(page),
             limit: Number(limit),
             total: history.total,
-            pages: Math.ceil(history.total / Number(limit))
-          }
-        }
+            pages: Math.ceil(history.total / Number(limit)),
+          },
+        },
       });
-
     } catch (error) {
       logger.error('Failed to get analysis history', {
         sessionId: req.params.sessionId,
         userId: req.user.id,
-        error: (error as any).message
+        error: (error as any).message,
       });
 
       res.status(500).json({
         success: false,
         message: 'Failed to retrieve analysis history',
         code: 'RETRIEVAL_ERROR',
-        error: (error as any).message
+        error: (error as any).message,
       });
     }
   }
@@ -312,13 +310,17 @@ export class AIAnalysisController {
    * Get session risk assessment
    * GET /api/ai-analysis/sessions/:sessionId/risk-assessment
    */
-  async getSessionRiskAssessment(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
+  async getSessionRiskAssessment(
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const { sessionId } = req.params;
 
       logger.info('Getting session risk assessment', {
         sessionId,
-        userId: req.user.id
+        userId: req.user.id,
       });
 
       // Verify session access
@@ -327,7 +329,7 @@ export class AIAnalysisController {
         res.status(403).json({
           success: false,
           message: 'Access denied to session',
-          code: 'ACCESS_DENIED'
+          code: 'ACCESS_DENIED',
         });
         return;
       }
@@ -340,22 +342,21 @@ export class AIAnalysisController {
         data: {
           sessionId,
           riskAssessment,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       });
-
     } catch (error) {
       logger.error('Failed to get risk assessment', {
         sessionId: req.params.sessionId,
         userId: req.user.id,
-        error: (error as any).message
+        error: (error as any).message,
       });
 
       res.status(500).json({
         success: false,
         message: 'Failed to calculate risk assessment',
         code: 'ASSESSMENT_ERROR',
-        error: (error as any).message
+        error: (error as any).message,
       });
     }
   }
@@ -376,24 +377,23 @@ export class AIAnalysisController {
         data: {
           engine: {
             status: status.status,
-            details: status.details
+            details: status.details,
           },
           statistics: stats,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       });
-
     } catch (error) {
       logger.error('Failed to get engine status', {
         userId: req.user.id,
-        error: (error as any).message
+        error: (error as any).message,
       });
 
       res.status(500).json({
         success: false,
         message: 'Failed to get engine status',
         code: 'STATUS_ERROR',
-        error: (error as any).message
+        error: (error as any).message,
       });
     }
   }
@@ -413,7 +413,7 @@ export class AIAnalysisController {
         version: model.version,
         enabled: model.enabled,
         confidence: model.confidence,
-        performance: model.performance
+        performance: model.performance,
       }));
 
       res.status(200).json({
@@ -422,21 +422,20 @@ export class AIAnalysisController {
           models,
           totalModels: models.length,
           enabledModels: models.filter(m => m.enabled).length,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       });
-
     } catch (error) {
       logger.error('Failed to get available models', {
         userId: req.user.id,
-        error: (error as any).message
+        error: (error as any).message,
       });
 
       res.status(500).json({
         success: false,
         message: 'Failed to get available models',
         code: 'MODELS_ERROR',
-        error: (error as any).message
+        error: (error as any).message,
       });
     }
   }
@@ -453,7 +452,7 @@ export class AIAnalysisController {
       logger.info('Generating analysis report', {
         sessionId,
         userId: req.user.id,
-        format
+        format,
       });
 
       // Verify session access
@@ -462,7 +461,7 @@ export class AIAnalysisController {
         res.status(403).json({
           success: false,
           message: 'Access denied to session',
-          code: 'ACCESS_DENIED'
+          code: 'ACCESS_DENIED',
         });
         return;
       }
@@ -470,7 +469,7 @@ export class AIAnalysisController {
       // Generate comprehensive report
       const report = await this.generateComprehensiveReport(sessionId, {
         format,
-        includeEvidence
+        includeEvidence,
       });
 
       res.status(200).json({
@@ -479,22 +478,21 @@ export class AIAnalysisController {
           sessionId,
           report,
           generatedAt: new Date(),
-          format
-        }
+          format,
+        },
       });
-
     } catch (error) {
       logger.error('Failed to generate analysis report', {
         sessionId: req.params.sessionId,
         userId: req.user.id,
-        error: (error as any).message
+        error: (error as any).message,
       });
 
       res.status(500).json({
         success: false,
         message: 'Failed to generate analysis report',
         code: 'REPORT_ERROR',
-        error: (error as any).message
+        error: (error as any).message,
       });
     }
   }
@@ -512,7 +510,6 @@ export class AIAnalysisController {
 
       const sessionData = JSON.parse(session as string);
       return sessionData.userId === userId;
-
     } catch (error) {
       logger.error('Session access verification failed', { sessionId, userId, error });
       return false;
@@ -532,7 +529,7 @@ export class AIAnalysisController {
         frameNumber: frameData.frameNumber || 1,
         width: frameData.width || 640,
         height: frameData.height || 480,
-        format: frameData.format || 'jpeg' as any
+        format: frameData.format || ('jpeg' as any),
       };
     }
 
@@ -543,7 +540,7 @@ export class AIAnalysisController {
         duration: audioData.duration || 1000,
         sampleRate: audioData.sampleRate || 44100,
         channels: audioData.channels || 1,
-        format: audioData.format || 'pcm' as any
+        format: audioData.format || ('pcm' as any),
       };
     }
 
@@ -566,15 +563,15 @@ export class AIAnalysisController {
           imageEnhancement: true,
           noiseReduction: true,
           normalization: true,
-          augmentation: false
-        }
+          augmentation: false,
+        },
       },
       output: {
         includeRawResults: false,
         includeProbabilities: true,
         includeEvidence: false,
         compressionLevel: 5,
-        formatVersion: '1.0'
+        formatVersion: '1.0',
       },
       performance: {
         maxLatency: 2000,
@@ -583,10 +580,10 @@ export class AIAnalysisController {
           maxMemoryMB: 512,
           maxCpuPercent: 80,
           maxGpuPercent: 90,
-          maxDiskMB: 100
+          maxDiskMB: 100,
         },
-        fallbackStrategy: 'graceful_degradation' as any
-      }
+        fallbackStrategy: 'graceful_degradation' as any,
+      },
     };
 
     // Merge with provided config
@@ -600,16 +597,19 @@ export class AIAnalysisController {
   /**
    * Get session analysis history
    */
-  private async getSessionAnalysisHistory(sessionId: string, options: {
-    page: number;
-    limit: number;
-    type?: string;
-    severity?: string;
-  }): Promise<{ items: any[]; total: number }> {
+  private async getSessionAnalysisHistory(
+    sessionId: string,
+    options: {
+      page: number;
+      limit: number;
+      type?: string;
+      severity?: string;
+    }
+  ): Promise<{ items: any[]; total: number }> {
     try {
       // Get all analysis results for session
       const keys = await (this.redisService as any).keys(`ai:results:${sessionId}:*`);
-      
+
       let items = [];
       for (const key of keys) {
         const data = await this.redisService.get(key);
@@ -618,21 +618,21 @@ export class AIAnalysisController {
           items.push({
             key,
             timestamp: new Date(key.split(':')[3]),
-            ...analysisResult
+            ...analysisResult,
           });
         }
       }
 
       // Filter by type and severity if specified
       if (options.type) {
-        items = items.filter(item => 
-          item.results.aggregated.violationsSummary.byType[options.type!] > 0
+        items = items.filter(
+          item => item.results.aggregated.violationsSummary.byType[options.type!] > 0
         );
       }
 
       if (options.severity) {
-        items = items.filter(item =>
-          item.results.aggregated.violationsSummary.bySeverity[options.severity!] > 0
+        items = items.filter(
+          item => item.results.aggregated.violationsSummary.bySeverity[options.severity!] > 0
         );
       }
 
@@ -646,7 +646,6 @@ export class AIAnalysisController {
       const paginatedItems = items.slice(startIndex, endIndex);
 
       return { items: paginatedItems, total };
-
     } catch (error) {
       logger.error('Failed to get analysis history', { sessionId, error });
       return { items: [], total: 0 };
@@ -660,7 +659,7 @@ export class AIAnalysisController {
     try {
       const history = await this.getSessionAnalysisHistory(sessionId, {
         page: 1,
-        limit: 1000 // Get all data for assessment
+        limit: 1000, // Get all data for assessment
       });
 
       if (history.items.length === 0) {
@@ -669,14 +668,12 @@ export class AIAnalysisController {
           factors: [],
           recommendation: 'accept',
           confidence: 0,
-          dataPoints: 0
+          dataPoints: 0,
         };
       }
 
       // Aggregate risk scores
-      const riskScores = history.items.map(item => 
-        item.results.aggregated.overallRiskScore || 0
-      );
+      const riskScores = history.items.map(item => item.results.aggregated.overallRiskScore || 0);
 
       const averageRisk = riskScores.reduce((sum, score) => sum + score, 0) / riskScores.length;
       const maxRisk = Math.max(...riskScores);
@@ -687,7 +684,7 @@ export class AIAnalysisController {
         low: 0,
         medium: 0,
         high: 0,
-        critical: 0
+        critical: 0,
       };
 
       history.items.forEach(item => {
@@ -716,9 +713,8 @@ export class AIAnalysisController {
         recommendation,
         confidence: Math.min(1, history.items.length / 10), // Higher confidence with more data points
         dataPoints: history.items.length,
-        trend: this.calculateRiskTrend(riskScores)
+        trend: this.calculateRiskTrend(riskScores),
       };
-
     } catch (error) {
       logger.error('Failed to calculate risk assessment', { sessionId, error });
       throw error;
@@ -729,7 +725,9 @@ export class AIAnalysisController {
    * Calculate risk trend
    */
   private calculateRiskTrend(riskScores: number[]): string {
-    if (riskScores.length < 2) return 'insufficient_data';
+    if (riskScores.length < 2) {
+      return 'insufficient_data';
+    }
 
     const recent = riskScores.slice(0, Math.floor(riskScores.length / 3));
     const earlier = riskScores.slice(-Math.floor(riskScores.length / 3));
@@ -739,21 +737,26 @@ export class AIAnalysisController {
 
     const difference = recentAvg - earlierAvg;
 
-    if (Math.abs(difference) < 5) return 'stable';
+    if (Math.abs(difference) < 5) {
+      return 'stable';
+    }
     return difference > 0 ? 'increasing' : 'decreasing';
   }
 
   /**
    * Generate comprehensive analysis report
    */
-  private async generateComprehensiveReport(sessionId: string, options: {
-    format: string;
-    includeEvidence: boolean;
-  }): Promise<any> {
+  private async generateComprehensiveReport(
+    sessionId: string,
+    options: {
+      format: string;
+      includeEvidence: boolean;
+    }
+  ): Promise<any> {
     try {
       const history = await this.getSessionAnalysisHistory(sessionId, {
         page: 1,
-        limit: 10000 // Get all data
+        limit: 10000, // Get all data
       });
 
       const riskAssessment = await this.calculateSessionRiskAssessment(sessionId);
@@ -765,7 +768,7 @@ export class AIAnalysisController {
         overallRisk: riskAssessment.overall,
         recommendation: riskAssessment.recommendation,
         keyFindings: this.extractKeyFindings(history.items),
-        timeline: this.generateTimeline(history.items)
+        timeline: this.generateTimeline(history.items),
       };
 
       // Generate detailed analysis
@@ -773,7 +776,7 @@ export class AIAnalysisController {
         riskAssessment,
         violations: this.aggregateViolations(history.items),
         patterns: this.identifyPatterns(history.items),
-        recommendations: this.generateRecommendations(riskAssessment, history.items)
+        recommendations: this.generateRecommendations(riskAssessment, history.items),
       };
 
       const report = {
@@ -785,13 +788,12 @@ export class AIAnalysisController {
           includesEvidence: options.includeEvidence,
           dataRange: {
             from: history.items[history.items.length - 1]?.timestamp,
-            to: history.items[0]?.timestamp
-          }
-        }
+            to: history.items[0]?.timestamp,
+          },
+        },
       };
 
       return report;
-
     } catch (error) {
       logger.error('Failed to generate comprehensive report', { sessionId, error });
       throw error;
@@ -812,16 +814,19 @@ export class AIAnalysisController {
     // Analyze face detection
     const faceDetectionResults = items.filter(item => item.results.faceDetection);
     if (faceDetectionResults.length > 0) {
-      const avgConfidence = faceDetectionResults.reduce((sum, item) => 
-        sum + item.results.faceDetection.confidence, 0) / faceDetectionResults.length;
-      
+      const avgConfidence =
+        faceDetectionResults.reduce((sum, item) => sum + item.results.faceDetection.confidence, 0) /
+        faceDetectionResults.length;
+
       findings.push(`Face detection confidence: ${(avgConfidence * 100).toFixed(1)}%`);
     }
 
     // Analyze violations
-    const totalViolations = items.reduce((sum, item) => 
-      sum + (item.results.aggregated.violationsSummary.total || 0), 0);
-    
+    const totalViolations = items.reduce(
+      (sum, item) => sum + (item.results.aggregated.violationsSummary.total || 0),
+      0
+    );
+
     if (totalViolations > 0) {
       findings.push(`Total violations detected: ${totalViolations}`);
     } else {
@@ -835,12 +840,14 @@ export class AIAnalysisController {
    * Generate timeline from analysis items
    */
   private generateTimeline(items: any[]): any[] {
-    return items.map(item => ({
-      timestamp: item.timestamp,
-      riskScore: item.results.aggregated.overallRiskScore,
-      violations: item.results.aggregated.violationsSummary.total,
-      actions: item.results.aggregated.recommendedActions.length
-    })).slice(0, 100); // Limit timeline entries
+    return items
+      .map(item => ({
+        timestamp: item.timestamp,
+        riskScore: item.results.aggregated.overallRiskScore,
+        violations: item.results.aggregated.violationsSummary.total,
+        actions: item.results.aggregated.recommendedActions.length,
+      }))
+      .slice(0, 100); // Limit timeline entries
   }
 
   /**
@@ -851,15 +858,16 @@ export class AIAnalysisController {
       total: 0,
       bySeverity: { low: 0, medium: 0, high: 0, critical: 0 },
       byType: {} as Record<string, number>,
-      timeline: [] as any[]
+      timeline: [] as any[],
     };
 
     items.forEach(item => {
       const summary = item.results.aggregated.violationsSummary;
       aggregated.total += summary.total || 0;
-      
+
       Object.keys(summary.bySeverity || {}).forEach(severity => {
-        aggregated.bySeverity[severity as keyof typeof aggregated.bySeverity] += summary.bySeverity[severity] || 0;
+        aggregated.bySeverity[severity as keyof typeof aggregated.bySeverity] +=
+          summary.bySeverity[severity] || 0;
       });
 
       Object.keys(summary.byType || {}).forEach(type => {
@@ -888,7 +896,7 @@ export class AIAnalysisController {
     // Analyze risk score patterns
     const riskScores = items.map(item => item.results.aggregated.overallRiskScore || 0);
     const variance = this.calculateVariance(riskScores);
-    
+
     if (variance < 10) {
       patterns.push('Consistent risk levels throughout session');
     } else if (variance > 50) {
@@ -927,8 +935,10 @@ export class AIAnalysisController {
    * Calculate variance of a number array
    */
   private calculateVariance(numbers: number[]): number {
-    if (numbers.length === 0) return 0;
-    
+    if (numbers.length === 0) {
+      return 0;
+    }
+
     const mean = numbers.reduce((sum, num) => sum + num, 0) / numbers.length;
     const squaredDiffs = numbers.map(num => Math.pow(num - mean, 2));
     return squaredDiffs.reduce((sum, diff) => sum + diff, 0) / numbers.length;
@@ -939,7 +949,7 @@ export class AIAnalysisController {
    */
   async cleanup(): Promise<void> {
     logger.info('Cleaning up AI Analysis Controller');
-    
+
     if (this.aiEngine) {
       await this.aiEngine.cleanup();
     }

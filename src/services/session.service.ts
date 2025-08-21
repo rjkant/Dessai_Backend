@@ -9,7 +9,7 @@ const redisMock = {
   isRedisEnabled: () => false,
   setSession: async (_id: string, _data: any, _ttl?: number) => {},
   getSession: async <T>(_id: string): Promise<T | null> => null,
-  updateSessionData: async (_id: string, _data: any) => {}
+  updateSessionData: async (_id: string, _data: any) => {},
 };
 
 export interface CreateSessionData {
@@ -76,12 +76,12 @@ export class SessionService {
     // Check if assessment exists
     const assessment = await this.prisma.assessment.findUnique({
       where: { id: data.assessmentId },
-      include: { 
+      include: {
         questions: {
           include: { question: true },
-          orderBy: { order: 'asc' }
-        }
-      }
+          orderBy: { order: 'asc' },
+        },
+      },
     });
 
     if (!assessment) {
@@ -93,8 +93,8 @@ export class SessionService {
       where: {
         assessmentId: data.assessmentId,
         userId: data.candidateId,
-        status: { in: ['INVITED', 'IN_PROGRESS'] }
-      }
+        status: { in: ['INVITED', 'IN_PROGRESS'] },
+      },
     });
 
     if (existingParticipation) {
@@ -110,7 +110,7 @@ export class SessionService {
       autoSubmit: true,
       randomizeOptions: false,
       preventTabSwitch: false,
-      maxTabSwitches: 3
+      maxTabSwitches: 3,
     };
 
     const sessionConfig = { ...defaultConfig, ...data.configuration };
@@ -124,7 +124,7 @@ export class SessionService {
       currentQuestionIndex: 0,
       timeSpent: 0,
       answeredQuestions: 0,
-      sessionToken: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      sessionToken: `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     };
 
     // Create assessment participation (our session)
@@ -133,12 +133,12 @@ export class SessionService {
         assessmentId: data.assessmentId,
         userId: data.candidateId,
         status: 'INVITED',
-        metadata: sessionMetadata
+        metadata: sessionMetadata,
       },
       include: {
         assessment: { include: { questions: { include: { question: true } } } },
-        user: true
-      }
+        user: true,
+      },
     });
 
     // Create collaboration session for real-time features
@@ -150,21 +150,25 @@ export class SessionService {
         settings: {
           enableRealTimeSync: true,
           maxParticipants: 1,
-          allowSpectators: true
-        }
-      }
+          allowSpectators: true,
+        },
+      },
     });
 
     // Store in Redis for fast access
     if (this.redis.isRedisEnabled()) {
-      await this.redis.setSession(participation.id, {
-        participationId: participation.id,
-        collaborationSessionId: collaborationSession.id,
-        status: participation.status,
-        currentQuestionIndex: 0,
-        timeSpent: 0,
-        metadata: sessionMetadata
-      }, sessionConfig.timeLimit);
+      await this.redis.setSession(
+        participation.id,
+        {
+          participationId: participation.id,
+          collaborationSessionId: collaborationSession.id,
+          status: participation.status,
+          currentQuestionIndex: 0,
+          timeSpent: 0,
+          metadata: sessionMetadata,
+        },
+        sessionConfig.timeLimit
+      );
     }
 
     return {
@@ -173,7 +177,7 @@ export class SessionService {
       status: participation.status,
       expiresAt: sessionMetadata.expiresAt,
       totalQuestions: assessment.questions.length,
-      configuration: sessionConfig
+      configuration: sessionConfig,
     };
   }
 
@@ -183,10 +187,10 @@ export class SessionService {
   async startSession(sessionId: string) {
     const participation = await this.prisma.assessmentParticipation.findUnique({
       where: { id: sessionId },
-      include: { 
+      include: {
         assessment: { include: { questions: { include: { question: true } } } },
-        user: true
-      }
+        user: true,
+      },
     });
 
     if (!participation) {
@@ -199,7 +203,7 @@ export class SessionService {
 
     const sessionMetadata = participation.metadata as any;
     const expiresAt = new Date(sessionMetadata.expiresAt);
-    
+
     if (expiresAt < new Date()) {
       await this.updateSessionStatus(sessionId, 'EXPIRED');
       throw new Error('Session has expired');
@@ -209,12 +213,12 @@ export class SessionService {
       where: { id: sessionId },
       data: {
         status: 'IN_PROGRESS',
-        startedAt: new Date()
+        startedAt: new Date(),
       },
       include: {
         assessment: { include: { questions: { include: { question: true } } } },
-        user: true
-      }
+        user: true,
+      },
     });
 
     // Update Redis cache
@@ -225,7 +229,7 @@ export class SessionService {
         startedAt: new Date(),
         currentQuestionIndex: sessionMetadata.currentQuestionIndex || 0,
         timeSpent: sessionMetadata.timeSpent || 0,
-        metadata: sessionMetadata
+        metadata: sessionMetadata,
       });
     }
 
@@ -234,7 +238,7 @@ export class SessionService {
       status: updatedParticipation.status,
       startedAt: updatedParticipation.startedAt,
       totalQuestions: updatedParticipation.assessment.questions.length,
-      currentQuestionIndex: sessionMetadata.currentQuestionIndex || 0
+      currentQuestionIndex: sessionMetadata.currentQuestionIndex || 0,
     };
   }
 
@@ -244,11 +248,11 @@ export class SessionService {
   async completeSession(sessionId: string) {
     const participation = await this.prisma.assessmentParticipation.findUnique({
       where: { id: sessionId },
-      include: { 
+      include: {
         assessment: { include: { questions: { include: { question: true } } } },
         user: true,
-        submissions: true
-      }
+        submissions: true,
+      },
     });
 
     if (!participation) {
@@ -266,7 +270,7 @@ export class SessionService {
 
     // Calculate time spent
     const sessionMetadata = participation.metadata as any;
-    const timeSpent = participation.startedAt 
+    const timeSpent = participation.startedAt
       ? Math.floor((Date.now() - participation.startedAt.getTime()) / 1000)
       : sessionMetadata.timeSpent || 0;
 
@@ -280,15 +284,17 @@ export class SessionService {
           ...sessionMetadata,
           timeSpent,
           finalScore: totalScore,
-          completionPercentage: Math.round((participation.submissions.length / participation.assessment.questions.length) * 100)
-        }
-      }
+          completionPercentage: Math.round(
+            (participation.submissions.length / participation.assessment.questions.length) * 100
+          ),
+        },
+      },
     });
 
     // Deactivate collaboration session
     await this.prisma.collaborationSession.updateMany({
       where: { participationId: sessionId },
-      data: { isActive: false }
+      data: { isActive: false },
     });
 
     // Update Redis cache
@@ -299,7 +305,7 @@ export class SessionService {
         completedAt: new Date(),
         score: totalScore,
         timeSpent,
-        metadata: updatedParticipation.metadata
+        metadata: updatedParticipation.metadata,
       });
     }
 
@@ -308,7 +314,7 @@ export class SessionService {
       status: updatedParticipation.status,
       completedAt: updatedParticipation.completedAt,
       score: totalScore,
-      timeSpent
+      timeSpent,
     };
   }
 
@@ -322,9 +328,9 @@ export class SessionService {
   async navigateToQuestion(sessionId: string, request: NavigationRequest) {
     const participation = await this.prisma.assessmentParticipation.findUnique({
       where: { id: sessionId },
-      include: { 
-        assessment: { include: { questions: { include: { question: true } } } }
-      }
+      include: {
+        assessment: { include: { questions: { include: { question: true } } } },
+      },
     });
 
     if (!participation) {
@@ -376,9 +382,9 @@ export class SessionService {
         metadata: {
           ...sessionMetadata,
           currentQuestionIndex: newIndex,
-          lastActivity: new Date()
-        }
-      }
+          lastActivity: new Date(),
+        },
+      },
     });
 
     // Update Redis cache
@@ -388,7 +394,7 @@ export class SessionService {
         await this.redis.setSession(sessionId, {
           ...(cachedSession as any),
           currentQuestionIndex: newIndex,
-          lastActivity: new Date()
+          lastActivity: new Date(),
         });
       }
     }
@@ -397,7 +403,7 @@ export class SessionService {
       currentIndex: newIndex,
       totalQuestions,
       canGoNext: newIndex < totalQuestions - 1,
-      canGoPrevious: config.allowBackNavigation && newIndex > 0
+      canGoPrevious: config.allowBackNavigation && newIndex > 0,
     };
   }
 
@@ -409,8 +415,8 @@ export class SessionService {
       where: { id: sessionId },
       include: {
         assessment: { include: { questions: true } },
-        submissions: true
-      }
+        submissions: true,
+      },
     });
 
     if (!participation) {
@@ -419,12 +425,12 @@ export class SessionService {
 
     const sessionMetadata = participation.metadata as any;
     const config = sessionMetadata.configuration as SessionConfiguration;
-    
+
     const totalQuestions = participation.assessment.questions.length;
     const currentIndex = sessionMetadata.currentQuestionIndex || 0;
     const answered = participation.submissions.length;
     const flagged = participation.submissions.filter(s => (s.metadata as any)?.flagged).length;
-    
+
     const timeSpent = sessionMetadata.timeSpent || 0;
     const timeRemaining = Math.max(0, config.timeLimit - timeSpent);
     const progressPercentage = Math.round((currentIndex / totalQuestions) * 100);
@@ -438,7 +444,7 @@ export class SessionService {
       flagged,
       timeSpent,
       timeRemaining,
-      progressPercentage
+      progressPercentage,
     };
   }
 
@@ -452,9 +458,9 @@ export class SessionService {
   async submitAnswer(sessionId: string, request: AnswerSubmissionRequest) {
     const participation = await this.prisma.assessmentParticipation.findUnique({
       where: { id: sessionId },
-      include: { 
-        assessment: { include: { questions: { include: { question: true } } } }
-      }
+      include: {
+        assessment: { include: { questions: { include: { question: true } } } },
+      },
     });
 
     if (!participation) {
@@ -469,8 +475,8 @@ export class SessionService {
     const existingSubmission = await this.prisma.submission.findFirst({
       where: {
         participationId: sessionId,
-        questionId: request.questionId
-      }
+        questionId: request.questionId,
+      },
     });
 
     const sessionMetadata = participation.metadata as any;
@@ -491,10 +497,10 @@ export class SessionService {
               flagged: request.flagged || false,
               confidence: request.confidence,
               attemptCount: ((existingSubmission.metadata as any)?.attemptCount || 0) + 1,
-              submittedAt: new Date()
-            }
+              submittedAt: new Date(),
+            },
           },
-          include: { question: true }
+          include: { question: true },
         })
       : await this.prisma.submission.create({
           data: {
@@ -506,10 +512,10 @@ export class SessionService {
               flagged: request.flagged || false,
               confidence: request.confidence,
               attemptCount: 1,
-              submittedAt: new Date()
-            }
+              submittedAt: new Date(),
+            },
           },
-          include: { question: true }
+          include: { question: true },
         });
 
     // Update session time and metadata
@@ -524,9 +530,9 @@ export class SessionService {
           ...sessionMetadata,
           timeSpent: newTimeSpent,
           lastActivity: new Date(),
-          answeredQuestions: existingSubmission ? answeredQuestions : answeredQuestions + 1
-        }
-      }
+          answeredQuestions: existingSubmission ? answeredQuestions : answeredQuestions + 1,
+        },
+      },
     });
 
     // Update Redis cache
@@ -537,7 +543,7 @@ export class SessionService {
           ...(cachedSession as any),
           timeSpent: newTimeSpent,
           lastActivity: new Date(),
-          answeredQuestions: existingSubmission ? answeredQuestions : answeredQuestions + 1
+          answeredQuestions: existingSubmission ? answeredQuestions : answeredQuestions + 1,
         });
       }
     }
@@ -547,7 +553,7 @@ export class SessionService {
       questionId: request.questionId,
       submittedAt: new Date(),
       timeSpent: request.timeSpent,
-      flagged: request.flagged || false
+      flagged: request.flagged || false,
     };
   }
 
@@ -572,8 +578,8 @@ export class SessionService {
       include: {
         assessment: { include: { questions: { include: { question: true } } } },
         user: true,
-        submissions: true
-      }
+        submissions: true,
+      },
     });
 
     if (!participation) {
@@ -595,7 +601,7 @@ export class SessionService {
       timeSpent: sessionMetadata.timeSpent || 0,
       answeredQuestions: sessionMetadata.answeredQuestions || 0,
       configuration: sessionMetadata.configuration,
-      expiresAt: new Date(sessionMetadata.expiresAt)
+      expiresAt: new Date(sessionMetadata.expiresAt),
     };
   }
 
@@ -604,7 +610,7 @@ export class SessionService {
    */
   async listActiveSessions(assessmentId?: string) {
     const where: any = {
-      status: { in: ['INVITED', 'IN_PROGRESS'] }
+      status: { in: ['INVITED', 'IN_PROGRESS'] },
     };
 
     if (assessmentId) {
@@ -615,9 +621,9 @@ export class SessionService {
       where,
       include: {
         assessment: { select: { title: true } },
-        user: { select: { firstName: true, lastName: true, email: true } }
+        user: { select: { firstName: true, lastName: true, email: true } },
       },
-      orderBy: { invitedAt: 'desc' }
+      orderBy: { invitedAt: 'desc' },
     });
 
     return participations.map(p => {
@@ -633,7 +639,7 @@ export class SessionService {
         startedAt: p.startedAt,
         expiresAt: new Date(metadata?.expiresAt),
         timeSpent: metadata?.timeSpent || 0,
-        currentQuestionIndex: metadata?.currentQuestionIndex || 0
+        currentQuestionIndex: metadata?.currentQuestionIndex || 0,
       };
     });
   }
@@ -645,7 +651,7 @@ export class SessionService {
   private async updateSessionStatus(sessionId: string, status: string) {
     await this.prisma.assessmentParticipation.update({
       where: { id: sessionId },
-      data: { status: status as any }
+      data: { status: status as any },
     });
 
     if (this.redis.isRedisEnabled()) {
@@ -653,7 +659,7 @@ export class SessionService {
       if (cachedSession && typeof cachedSession === 'object') {
         await this.redis.setSession(sessionId, {
           ...(cachedSession as any),
-          status
+          status,
         });
       }
     }
@@ -665,8 +671,8 @@ export class SessionService {
   async cleanupExpiredSessions() {
     const expiredParticipations = await this.prisma.assessmentParticipation.findMany({
       where: {
-        status: { in: ['INVITED', 'IN_PROGRESS'] }
-      }
+        status: { in: ['INVITED', 'IN_PROGRESS'] },
+      },
     });
 
     const now = new Date();

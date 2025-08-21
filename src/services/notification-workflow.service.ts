@@ -1,9 +1,9 @@
 /**
  * Epic 6 Task 6.1: Advanced Notification Workflows
- * 
+ *
  * Enterprise-grade notification system with multi-step sequences,
  * conditional logic, escalation workflows, and priority-based routing.
- * 
+ *
  * Features:
  * - Multi-step notification sequences for assessment lifecycle
  * - Conditional notification logic based on user roles and preferences
@@ -22,7 +22,7 @@ export enum NotificationPriority {
   MEDIUM = 'MEDIUM',
   HIGH = 'HIGH',
   CRITICAL = 'CRITICAL',
-  URGENT = 'URGENT'
+  URGENT = 'URGENT',
 }
 
 export enum NotificationChannel {
@@ -32,7 +32,7 @@ export enum NotificationChannel {
   IN_APP = 'IN_APP',
   WEBHOOK = 'WEBHOOK',
   SLACK = 'SLACK',
-  TEAMS = 'TEAMS'
+  TEAMS = 'TEAMS',
 }
 
 export enum WorkflowStatus {
@@ -41,7 +41,7 @@ export enum WorkflowStatus {
   COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
   CANCELLED = 'CANCELLED',
-  PAUSED = 'PAUSED'
+  PAUSED = 'PAUSED',
 }
 
 export enum TriggerType {
@@ -49,7 +49,7 @@ export enum TriggerType {
   SCHEDULED = 'SCHEDULED',
   CONDITIONAL = 'CONDITIONAL',
   EVENT_BASED = 'EVENT_BASED',
-  RECURRING = 'RECURRING'
+  RECURRING = 'RECURRING',
 }
 
 // Workflow step definition
@@ -165,13 +165,13 @@ export class AdvancedNotificationWorkflowService {
   private async initializeService(): Promise<void> {
     try {
       logger.info('Initializing Advanced Notification Workflow Service');
-      
+
       // Resume any pending executions from database
       await this.resumePendingExecutions();
-      
+
       // Initialize default workflows
       await this.setupDefaultWorkflows();
-      
+
       logger.info('Advanced Notification Workflow Service initialized successfully');
     } catch (error) {
       logger.error('Failed to initialize Advanced Notification Workflow Service', error as Error);
@@ -182,10 +182,12 @@ export class AdvancedNotificationWorkflowService {
   /**
    * Create a new notification workflow
    */
-  async createWorkflow(workflow: Omit<NotificationWorkflow, 'id' | 'metadata'>): Promise<NotificationWorkflow> {
+  async createWorkflow(
+    workflow: Omit<NotificationWorkflow, 'id' | 'metadata'>
+  ): Promise<NotificationWorkflow> {
     try {
       const workflowId = `wf_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
+
       const newWorkflow: NotificationWorkflow = {
         ...workflow,
         id: workflowId,
@@ -194,8 +196,8 @@ export class AdvancedNotificationWorkflowService {
           createdAt: new Date(),
           updatedAt: new Date(),
           version: 1,
-          tags: []
-        }
+          tags: [],
+        },
       };
 
       // Validate workflow
@@ -205,7 +207,7 @@ export class AdvancedNotificationWorkflowService {
       logger.info(`Created notification workflow: ${workflowId}`, {
         name: newWorkflow.name,
         steps: newWorkflow.steps.length,
-        escalationRules: newWorkflow.escalationRules.length
+        escalationRules: newWorkflow.escalationRules.length,
       });
 
       return newWorkflow;
@@ -219,8 +221,8 @@ export class AdvancedNotificationWorkflowService {
    * Trigger a notification workflow
    */
   async triggerWorkflow(
-    workflowId: string, 
-    triggerEvent: string, 
+    workflowId: string,
+    triggerEvent: string,
     context: Record<string, any>
   ): Promise<WorkflowExecution> {
     try {
@@ -244,7 +246,11 @@ export class AdvancedNotificationWorkflowService {
 
       // Check for duplicates and throttling
       if (!workflow.settings.allowDuplicates) {
-        const recentExecution = await this.checkRecentExecution(workflowId, context, workflow.settings.throttleWindow);
+        const recentExecution = await this.checkRecentExecution(
+          workflowId,
+          context,
+          workflow.settings.throttleWindow
+        );
         if (recentExecution) {
           logger.info(`Workflow throttled due to recent execution: ${workflowId}`);
           return recentExecution;
@@ -260,7 +266,7 @@ export class AdvancedNotificationWorkflowService {
         status: WorkflowStatus.RUNNING,
         currentStep: 0,
         startedAt: new Date(),
-        executedSteps: []
+        executedSteps: [],
       };
 
       this.activeExecutions.set(execution.id, execution);
@@ -278,11 +284,14 @@ export class AdvancedNotificationWorkflowService {
   /**
    * Execute workflow steps
    */
-  private async executeWorkflow(execution: WorkflowExecution, workflow: NotificationWorkflow): Promise<void> {
+  private async executeWorkflow(
+    execution: WorkflowExecution,
+    workflow: NotificationWorkflow
+  ): Promise<void> {
     try {
       logger.info(`Starting workflow execution: ${execution.id}`, {
         workflowId: workflow.id,
-        triggerEvent: execution.triggerEvent
+        triggerEvent: execution.triggerEvent,
       });
 
       for (let i = 0; i < workflow.steps.length; i++) {
@@ -301,7 +310,7 @@ export class AdvancedNotificationWorkflowService {
             stepId: step.id,
             status: 'SKIPPED',
             executedAt: new Date(),
-            deliveryResults: []
+            deliveryResults: [],
           });
           continue;
         }
@@ -337,9 +346,8 @@ export class AdvancedNotificationWorkflowService {
 
       logger.info(`Workflow execution completed: ${execution.id}`, {
         duration: execution.completedAt.getTime() - execution.startedAt.getTime(),
-        stepsExecuted: execution.executedSteps.length
+        stepsExecuted: execution.executedSteps.length,
       });
-
     } catch (error) {
       execution.status = WorkflowStatus.FAILED;
       execution.errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -348,7 +356,7 @@ export class AdvancedNotificationWorkflowService {
 
       logger.error('Workflow execution failed', error as Error, {
         executionId: execution.id,
-        workflowId: workflow.id
+        workflowId: workflow.id,
       });
       throw error;
     }
@@ -362,7 +370,7 @@ export class AdvancedNotificationWorkflowService {
       logger.info(`Executing workflow step: ${step.name}`, {
         stepId: step.id,
         channels: step.channels,
-        priority: step.priority
+        priority: step.priority,
       });
 
       const deliveryResults = [];
@@ -373,7 +381,7 @@ export class AdvancedNotificationWorkflowService {
       // Send notifications through each channel
       for (const channel of step.channels) {
         let result;
-        
+
         switch (channel) {
           case NotificationChannel.EMAIL:
             result = await this.sendEmailNotification(processedTemplate, context, step);
@@ -394,7 +402,7 @@ export class AdvancedNotificationWorkflowService {
             result = {
               channel,
               success: false,
-              errorMessage: `Unsupported channel: ${channel}`
+              errorMessage: `Unsupported channel: ${channel}`,
             };
         }
 
@@ -405,20 +413,21 @@ export class AdvancedNotificationWorkflowService {
         stepId: step.id,
         status: deliveryResults.some(r => r.success) ? 'SUCCESS' : 'FAILED',
         executedAt: new Date(),
-        deliveryResults
+        deliveryResults,
       };
-
     } catch (error) {
       logger.error('Failed to execute workflow step', error as Error);
       return {
         stepId: step.id,
         status: 'FAILED',
         executedAt: new Date(),
-        deliveryResults: [{
-          channel: step.channels[0],
-          success: false,
-          errorMessage: error instanceof Error ? error.message : 'Unknown error'
-        }]
+        deliveryResults: [
+          {
+            channel: step.channels[0],
+            success: false,
+            errorMessage: error instanceof Error ? error.message : 'Unknown error',
+          },
+        ],
       };
     }
   }
@@ -436,7 +445,7 @@ export class AdvancedNotificationWorkflowService {
     return {
       subject: processString(template.subject),
       body: processString(template.body),
-      variables: { ...template.variables, ...context }
+      variables: { ...template.variables, ...context },
     };
   }
 
@@ -444,8 +453,8 @@ export class AdvancedNotificationWorkflowService {
    * Setup escalation rules
    */
   private setupEscalation(
-    execution: WorkflowExecution, 
-    escalationRules: EscalationRule[], 
+    execution: WorkflowExecution,
+    escalationRules: EscalationRule[],
     step: NotificationStep
   ): void {
     escalationRules.forEach(rule => {
@@ -462,14 +471,14 @@ export class AdvancedNotificationWorkflowService {
    * Execute escalation
    */
   private async executeEscalation(
-    execution: WorkflowExecution, 
-    rule: EscalationRule, 
+    execution: WorkflowExecution,
+    rule: EscalationRule,
     originalStep: NotificationStep
   ): Promise<void> {
     try {
       logger.warn(`Executing escalation rule: ${rule.id}`, {
         executionId: execution.id,
-        escalateTo: rule.escalateTo
+        escalateTo: rule.escalateTo,
       });
 
       // Create escalation notification
@@ -482,7 +491,6 @@ export class AdvancedNotificationWorkflowService {
           logger.info(`Escalating to ${target} via ${channel}`);
         }
       }
-
     } catch (error) {
       logger.error('Failed to execute escalation', error as Error);
     }
@@ -491,48 +499,68 @@ export class AdvancedNotificationWorkflowService {
   /**
    * Channel-specific notification methods
    */
-  private async sendEmailNotification(template: any, context: Record<string, any>, step: NotificationStep): Promise<any> {
+  private async sendEmailNotification(
+    template: any,
+    context: Record<string, any>,
+    step: NotificationStep
+  ): Promise<any> {
     // Integration with existing email service
     return {
       channel: NotificationChannel.EMAIL,
       success: true,
-      messageId: `email_${Date.now()}`
+      messageId: `email_${Date.now()}`,
     };
   }
 
-  private async sendSMSNotification(template: any, context: Record<string, any>, step: NotificationStep): Promise<any> {
+  private async sendSMSNotification(
+    template: any,
+    context: Record<string, any>,
+    step: NotificationStep
+  ): Promise<any> {
     // Integration with existing SMS service
     return {
       channel: NotificationChannel.SMS,
       success: true,
-      messageId: `sms_${Date.now()}`
+      messageId: `sms_${Date.now()}`,
     };
   }
 
-  private async sendPushNotification(template: any, context: Record<string, any>, step: NotificationStep): Promise<any> {
+  private async sendPushNotification(
+    template: any,
+    context: Record<string, any>,
+    step: NotificationStep
+  ): Promise<any> {
     // Integration with push notification service
     return {
       channel: NotificationChannel.PUSH,
       success: true,
-      messageId: `push_${Date.now()}`
+      messageId: `push_${Date.now()}`,
     };
   }
 
-  private async sendInAppNotification(template: any, context: Record<string, any>, step: NotificationStep): Promise<any> {
+  private async sendInAppNotification(
+    template: any,
+    context: Record<string, any>,
+    step: NotificationStep
+  ): Promise<any> {
     // Integration with in-app notification system
     return {
       channel: NotificationChannel.IN_APP,
       success: true,
-      messageId: `inapp_${Date.now()}`
+      messageId: `inapp_${Date.now()}`,
     };
   }
 
-  private async sendWebhookNotification(template: any, context: Record<string, any>, step: NotificationStep): Promise<any> {
+  private async sendWebhookNotification(
+    template: any,
+    context: Record<string, any>,
+    step: NotificationStep
+  ): Promise<any> {
     // Integration with webhook system
     return {
       channel: NotificationChannel.WEBHOOK,
       success: true,
-      messageId: `webhook_${Date.now()}`
+      messageId: `webhook_${Date.now()}`,
     };
   }
 
@@ -556,7 +584,10 @@ export class AdvancedNotificationWorkflowService {
     return true;
   }
 
-  private async evaluateStepConditions(step: NotificationStep, context: Record<string, any>): Promise<boolean> {
+  private async evaluateStepConditions(
+    step: NotificationStep,
+    context: Record<string, any>
+  ): Promise<boolean> {
     if (!step.conditions || step.conditions.length === 0) {
       return true;
     }
@@ -587,12 +618,20 @@ export class AdvancedNotificationWorkflowService {
     return this.getDefaultBiasDetectionWorkflow();
   }
 
-  private async checkRecentExecution(workflowId: string, context: Record<string, any>, throttleWindow: number): Promise<WorkflowExecution | null> {
+  private async checkRecentExecution(
+    workflowId: string,
+    context: Record<string, any>,
+    throttleWindow: number
+  ): Promise<WorkflowExecution | null> {
     // Simplified throttling check
     return null;
   }
 
-  private createSkippedExecution(workflowId: string, triggerEvent: string, context: Record<string, any>): WorkflowExecution {
+  private createSkippedExecution(
+    workflowId: string,
+    triggerEvent: string,
+    context: Record<string, any>
+  ): WorkflowExecution {
     return {
       id: `skip_${Date.now()}`,
       workflowId,
@@ -602,7 +641,7 @@ export class AdvancedNotificationWorkflowService {
       currentStep: 0,
       startedAt: new Date(),
       completedAt: new Date(),
-      executedSteps: []
+      executedSteps: [],
     };
   }
 
@@ -613,7 +652,7 @@ export class AdvancedNotificationWorkflowService {
 
   private async setupDefaultWorkflows(): Promise<void> {
     logger.info('Setting up default notification workflows');
-    
+
     // Create bias detection workflow
     const biasDetectionWorkflow = this.getDefaultBiasDetectionWorkflow();
     logger.info('Created default bias detection notification workflow');
@@ -637,13 +676,13 @@ export class AdvancedNotificationWorkflowService {
           template: {
             subject: 'URGENT: Bias Detected in Assessment {{assessmentId}}',
             body: 'Bias has been detected in assessment {{assessmentId}}. Immediate review required.',
-            variables: {}
+            variables: {},
           },
           retryPolicy: {
             maxAttempts: 3,
             backoffMultiplier: 2,
-            initialDelay: 1000
-          }
+            initialDelay: 1000,
+          },
         },
         {
           id: 'step_management_notification',
@@ -657,14 +696,14 @@ export class AdvancedNotificationWorkflowService {
           template: {
             subject: 'Bias Detection Alert - Management Review Required',
             body: 'A bias detection event requires management attention for assessment {{assessmentId}}.',
-            variables: {}
+            variables: {},
           },
           retryPolicy: {
             maxAttempts: 5,
             backoffMultiplier: 2,
-            initialDelay: 2000
-          }
-        }
+            initialDelay: 2000,
+          },
+        },
       ],
       escalationRules: [
         {
@@ -675,10 +714,10 @@ export class AdvancedNotificationWorkflowService {
           priority: NotificationPriority.URGENT,
           template: {
             subject: 'CRITICAL: Unresolved Bias Detection Alert',
-            body: 'A critical bias detection alert has not been resolved after 30 minutes.'
+            body: 'A critical bias detection alert has not been resolved after 30 minutes.',
           },
-          stopOnAcknowledge: true
-        }
+          stopOnAcknowledge: true,
+        },
       ],
       status: WorkflowStatus.PENDING,
       metadata: {
@@ -686,20 +725,20 @@ export class AdvancedNotificationWorkflowService {
         createdAt: new Date(),
         updatedAt: new Date(),
         version: 1,
-        tags: ['bias-detection', 'compliance', 'critical']
+        tags: ['bias-detection', 'compliance', 'critical'],
       },
       targeting: {
         userRoles: ['HR_MANAGER', 'ADMIN', 'COMPLIANCE_OFFICER'],
         specificUsers: [],
-        conditions: []
+        conditions: [],
       },
       settings: {
         allowDuplicates: false,
         throttleWindow: 60, // 1 hour
         respectQuietHours: false, // Critical alerts ignore quiet hours
         timeZone: 'UTC',
-        expiresAfter: 24 // 24 hours
-      }
+        expiresAfter: 24, // 24 hours
+      },
     };
   }
 
@@ -720,10 +759,11 @@ export class AdvancedNotificationWorkflowService {
       execution.status = WorkflowStatus.CANCELLED;
       execution.completedAt = new Date();
       this.activeExecutions.delete(executionId);
-      
+
       // Cancel any pending escalations
-      const escalationKeys = Array.from(this.escalationTimers.keys())
-        .filter(key => key.startsWith(executionId));
+      const escalationKeys = Array.from(this.escalationTimers.keys()).filter(key =>
+        key.startsWith(executionId)
+      );
       escalationKeys.forEach(key => {
         const timer = this.escalationTimers.get(key);
         if (timer) {
@@ -731,7 +771,7 @@ export class AdvancedNotificationWorkflowService {
           this.escalationTimers.delete(key);
         }
       });
-      
+
       return true;
     }
     return false;
@@ -742,4 +782,6 @@ export class AdvancedNotificationWorkflowService {
   }
 }
 
-export const advancedNotificationWorkflowService = new AdvancedNotificationWorkflowService(new PrismaClient());
+export const advancedNotificationWorkflowService = new AdvancedNotificationWorkflowService(
+  new PrismaClient()
+);

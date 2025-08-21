@@ -5,7 +5,7 @@ import {
   CreateUserProfileRequest,
   UpdateUserProfileRequest,
   UserSearchOptions,
-  UserPreferences
+  UserPreferences,
 } from '../types/user.types';
 
 export class UserController {
@@ -17,13 +17,13 @@ export class UserController {
   async createUser(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const userData: CreateUserProfileRequest = req.body;
-      
+
       const user = await this.userService.createProfile(userData);
-      
+
       res.status(201).json({
         success: true,
         message: 'User profile created successfully',
-        data: user
+        data: user,
       });
     } catch (error) {
       next(error);
@@ -36,16 +36,16 @@ export class UserController {
   async getUserById(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
-      
+
       const user = await this.userService.getProfileById(id);
-      
+
       if (!user) {
         throw new AppError('User not found', 404);
       }
-      
+
       res.status(200).json({
         success: true,
-        data: user
+        data: user,
       });
     } catch (error) {
       next(error);
@@ -58,16 +58,16 @@ export class UserController {
   async getUserByEmail(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email } = req.params;
-      
+
       const user = await this.userService.getProfileByEmail(email);
-      
+
       if (!user) {
         throw new AppError('User not found', 404);
       }
-      
+
       res.status(200).json({
         success: true,
-        data: user
+        data: user,
       });
     } catch (error) {
       next(error);
@@ -81,13 +81,13 @@ export class UserController {
     try {
       const { id } = req.params;
       const updateData: UpdateUserProfileRequest = req.body;
-      
+
       const user = await this.userService.updateProfile(id, updateData);
-      
+
       res.status(200).json({
         success: true,
         message: 'User profile updated successfully',
-        data: user
+        data: user,
       });
     } catch (error) {
       next(error);
@@ -100,12 +100,12 @@ export class UserController {
   async deleteUser(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
-      
+
       await this.userService.deleteProfile(id);
-      
+
       res.status(200).json({
         success: true,
-        message: 'User profile deleted successfully'
+        message: 'User profile deleted successfully',
       });
     } catch (error) {
       next(error);
@@ -118,7 +118,7 @@ export class UserController {
   async searchUsers(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const searchOptions: UserSearchOptions = {};
-      
+
       if (req.query['search']) {
         searchOptions.search = req.query['search'] as string;
       }
@@ -134,14 +134,15 @@ export class UserController {
       if (req.query['emailVerified'] !== undefined) {
         searchOptions.emailVerified = req.query['emailVerified'] === 'true';
       }
-      
+
       searchOptions.page = req.query['page'] ? parseInt(req.query['page'] as string) : 1;
       searchOptions.limit = req.query['limit'] ? parseInt(req.query['limit'] as string) : 10;
-      searchOptions.sortBy = (req.query['sortBy'] as 'name' | 'email' | 'createdAt' | 'lastLoginAt') || 'createdAt';
+      searchOptions.sortBy =
+        (req.query['sortBy'] as 'name' | 'email' | 'createdAt' | 'lastLoginAt') || 'createdAt';
       searchOptions.sortOrder = (req.query['sortOrder'] as 'asc' | 'desc') || 'desc';
-      
+
       const result = await this.userService.searchUsers(searchOptions);
-      
+
       res.status(200).json({
         success: true,
         data: result.users,
@@ -151,8 +152,8 @@ export class UserController {
           total: result.pagination.total,
           totalPages: result.pagination.totalPages,
           hasNext: result.pagination.hasNext,
-          hasPrev: result.pagination.hasPrev
-        }
+          hasPrev: result.pagination.hasPrev,
+        },
       });
     } catch (error) {
       next(error);
@@ -165,16 +166,16 @@ export class UserController {
   async getUserPreferences(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
-      
+
       const user = await this.userService.getProfileById(id);
-      
+
       if (!user) {
         throw new AppError('User not found', 404);
       }
-      
+
       res.status(200).json({
         success: true,
-        data: user.preferences
+        data: user.preferences,
       });
     } catch (error) {
       next(error);
@@ -188,13 +189,13 @@ export class UserController {
     try {
       const { id } = req.params;
       const preferences: Partial<UserPreferences> = req.body;
-      
+
       const user = await this.userService.updatePreferences(id, preferences);
-      
+
       res.status(200).json({
         success: true,
         message: 'User preferences updated successfully',
-        data: user.preferences
+        data: user.preferences,
       });
     } catch (error) {
       next(error);
@@ -207,13 +208,13 @@ export class UserController {
   async verifyEmail(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
-      
+
       const user = await this.userService.verifyEmail(id);
-      
+
       res.status(200).json({
         success: true,
         message: 'Email verified successfully',
-        data: user
+        data: user,
       });
     } catch (error) {
       next(error);
@@ -226,12 +227,12 @@ export class UserController {
   async getUserActivity(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
-      
+
       const activities = await this.userService.getUserActivity(id);
-      
+
       res.status(200).json({
         success: true,
-        data: activities
+        data: activities,
       });
     } catch (error) {
       next(error);
@@ -245,20 +246,20 @@ export class UserController {
     try {
       // Assuming user ID is available in req.user from auth middleware
       const userId = (req as any).user?.id;
-      
+
       if (!userId) {
         throw new AppError('User not authenticated', 401);
       }
-      
+
       const user = await this.userService.getProfileById(userId);
-      
+
       if (!user) {
         throw new AppError('User not found', 404);
       }
-      
+
       res.status(200).json({
         success: true,
-        data: user
+        data: user,
       });
     } catch (error) {
       next(error);
@@ -271,19 +272,19 @@ export class UserController {
   async updateCurrentUser(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const userId = (req as any).user?.id;
-      
+
       if (!userId) {
         throw new AppError('User not authenticated', 401);
       }
-      
+
       const updateData: UpdateUserProfileRequest = req.body;
-      
+
       const user = await this.userService.updateProfile(userId, updateData);
-      
+
       res.status(200).json({
         success: true,
         message: 'Profile updated successfully',
-        data: user
+        data: user,
       });
     } catch (error) {
       next(error);

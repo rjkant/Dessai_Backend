@@ -1,10 +1,10 @@
 /**
  * Performance Analytics Controller
- * 
+ *
  * HTTP API controller for performance analytics, candidate profiling,
  * comparative analysis, trend analysis, and dashboard management.
  * Provides comprehensive REST endpoints for analytics operations.
- * 
+ *
  * @author Senior Software Engineer
  * @version Epic 5 Task 5.2: Performance Analytics
  */
@@ -18,12 +18,12 @@ import {
   AnalysisPeriod,
   PerformanceAnalyticsConfig,
   DashboardConfig,
-  DateRange
+  DateRange,
 } from '../types/performance-analytics.types';
 
 /**
  * Performance Analytics HTTP API Controller
- * 
+ *
  * Handles REST API endpoints for:
  * - Performance metrics calculation and retrieval
  * - Candidate performance profiling
@@ -50,11 +50,11 @@ export class PerformanceAnalyticsController {
   async calculateMetrics(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { candidateId, assessmentId, period } = req.body;
-      
+
       if (!candidateId) {
         res.status(400).json({
           success: false,
-          error: 'Candidate ID is required'
+          error: 'Candidate ID is required',
         });
         return;
       }
@@ -64,7 +64,7 @@ export class PerformanceAnalyticsController {
       if (period) {
         dateRange = {
           startDate: new Date(period.startDate),
-          endDate: new Date(period.endDate)
+          endDate: new Date(period.endDate),
         };
       }
 
@@ -81,10 +81,9 @@ export class PerformanceAnalyticsController {
           assessmentId,
           period: dateRange,
           metrics,
-          calculatedAt: new Date()
-        }
+          calculatedAt: new Date(),
+        },
       });
-
     } catch (error) {
       this.logger.error('Error calculating metrics:', error);
       next(error);
@@ -97,28 +96,28 @@ export class PerformanceAnalyticsController {
    */
   async getAggregatedMetrics(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { 
-        metricType, 
-        aggregationType, 
-        period, 
-        organizationId,
-        assessmentId,
-        skillLevel 
-      } = req.query;
+      const { metricType, aggregationType, period, organizationId, assessmentId, skillLevel } =
+        req.query;
 
       if (!metricType || !aggregationType || !period) {
         res.status(400).json({
           success: false,
-          error: 'Metric type, aggregation type, and period are required'
+          error: 'Metric type, aggregation type, and period are required',
         });
         return;
       }
 
       // Build filters
       const filters: Record<string, any> = {};
-      if (organizationId) filters.organizationId = organizationId;
-      if (assessmentId) filters.assessmentId = assessmentId;
-      if (skillLevel) filters.skillLevel = skillLevel;
+      if (organizationId) {
+        filters.organizationId = organizationId;
+      }
+      if (assessmentId) {
+        filters.assessmentId = assessmentId;
+      }
+      if (skillLevel) {
+        filters.skillLevel = skillLevel;
+      }
 
       const aggregatedMetrics = await this.performanceAnalytics.aggregateMetrics(
         metricType as PerformanceMetricType,
@@ -129,9 +128,8 @@ export class PerformanceAnalyticsController {
 
       res.status(200).json({
         success: true,
-        data: aggregatedMetrics
+        data: aggregatedMetrics,
       });
-
     } catch (error) {
       this.logger.error('Error getting aggregated metrics:', error);
       next(error);
@@ -147,11 +145,11 @@ export class PerformanceAnalyticsController {
   async generateProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { candidateId } = req.params;
-      
+
       if (!candidateId) {
         res.status(400).json({
           success: false,
-          error: 'Candidate ID is required'
+          error: 'Candidate ID is required',
         });
         return;
       }
@@ -160,9 +158,8 @@ export class PerformanceAnalyticsController {
 
       res.status(200).json({
         success: true,
-        data: profile
+        data: profile,
       });
-
     } catch (error) {
       this.logger.error('Error generating candidate profile:', error);
       next(error);
@@ -176,16 +173,15 @@ export class PerformanceAnalyticsController {
   async getProfile(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { candidateId } = req.params;
-      
+
       // In a real implementation, this would retrieve stored profile
       // For now, generate a fresh profile
       const profile = await this.performanceAnalytics.generateCandidateProfile(candidateId);
 
       res.status(200).json({
         success: true,
-        data: profile
+        data: profile,
       });
-
     } catch (error) {
       this.logger.error('Error getting candidate profile:', error);
       next(error);
@@ -199,20 +195,18 @@ export class PerformanceAnalyticsController {
   async compareCandidates(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { candidateIds, metrics } = req.body;
-      
+
       if (!candidateIds || !Array.isArray(candidateIds) || candidateIds.length < 2) {
         res.status(400).json({
           success: false,
-          error: 'At least two candidate IDs are required for comparison'
+          error: 'At least two candidate IDs are required for comparison',
         });
         return;
       }
 
       // Generate profiles for all candidates
       const profiles = await Promise.all(
-        candidateIds.map((id: string) => 
-          this.performanceAnalytics.generateCandidateProfile(id)
-        )
+        candidateIds.map((id: string) => this.performanceAnalytics.generateCandidateProfile(id))
       );
 
       // Perform comparison analysis
@@ -224,10 +218,9 @@ export class PerformanceAnalyticsController {
           candidates: candidateIds,
           profiles,
           comparison,
-          comparedAt: new Date()
-        }
+          comparedAt: new Date(),
+        },
       });
-
     } catch (error) {
       this.logger.error('Error comparing candidates:', error);
       next(error);
@@ -243,11 +236,11 @@ export class PerformanceAnalyticsController {
   async analyzeTrends(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { candidateId, metricType, period } = req.body;
-      
+
       if (!candidateId || !metricType || !period) {
         res.status(400).json({
           success: false,
-          error: 'Candidate ID, metric type, and period are required'
+          error: 'Candidate ID, metric type, and period are required',
         });
         return;
       }
@@ -260,9 +253,8 @@ export class PerformanceAnalyticsController {
 
       res.status(200).json({
         success: true,
-        data: trendAnalysis
+        data: trendAnalysis,
       });
-
     } catch (error) {
       this.logger.error('Error analyzing trends:', error);
       next(error);
@@ -276,29 +268,29 @@ export class PerformanceAnalyticsController {
   async getOrganizationTrends(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { organizationId, period, metricTypes } = req.query;
-      
+
       if (!organizationId) {
         res.status(400).json({
           success: false,
-          error: 'Organization ID is required'
+          error: 'Organization ID is required',
         });
         return;
       }
 
       // Get trends for specified metrics or all metrics
-      const metricsToAnalyze = metricTypes 
-        ? (metricTypes as string).split(',') as PerformanceMetricType[]
+      const metricsToAnalyze = metricTypes
+        ? ((metricTypes as string).split(',') as PerformanceMetricType[])
         : Object.values(PerformanceMetricType);
 
       const trends = await Promise.all(
-        metricsToAnalyze.map(async (metricType) => {
+        metricsToAnalyze.map(async metricType => {
           // This would aggregate trends across the organization
           // For now, return a simplified response
           return {
             metricType,
             organizationTrend: 'IMPROVING', // Simplified
             averageImprovement: 15.5,
-            period: period || AnalysisPeriod.MONTHLY
+            period: period || AnalysisPeriod.MONTHLY,
           };
         })
       );
@@ -309,10 +301,9 @@ export class PerformanceAnalyticsController {
           organizationId,
           period: period || AnalysisPeriod.MONTHLY,
           trends,
-          analyzedAt: new Date()
-        }
+          analyzedAt: new Date(),
+        },
       });
-
     } catch (error) {
       this.logger.error('Error getting organization trends:', error);
       next(error);
@@ -328,11 +319,11 @@ export class PerformanceAnalyticsController {
   async getAssessmentSummary(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { assessmentId, candidateId } = req.params;
-      
+
       if (!assessmentId || !candidateId) {
         res.status(400).json({
           success: false,
-          error: 'Assessment ID and candidate ID are required'
+          error: 'Assessment ID and candidate ID are required',
         });
         return;
       }
@@ -344,9 +335,8 @@ export class PerformanceAnalyticsController {
 
       res.status(200).json({
         success: true,
-        data: summary
+        data: summary,
       });
-
     } catch (error) {
       this.logger.error('Error getting assessment summary:', error);
       next(error);
@@ -361,11 +351,11 @@ export class PerformanceAnalyticsController {
     try {
       const { organizationId } = req.params;
       const { period, assessmentType } = req.query;
-      
+
       if (!organizationId) {
         res.status(400).json({
           success: false,
-          error: 'Organization ID is required'
+          error: 'Organization ID is required',
         });
         return;
       }
@@ -379,9 +369,8 @@ export class PerformanceAnalyticsController {
 
       res.status(200).json({
         success: true,
-        data: analytics
+        data: analytics,
       });
-
     } catch (error) {
       this.logger.error('Error getting assessment analytics:', error);
       next(error);
@@ -397,11 +386,11 @@ export class PerformanceAnalyticsController {
   async generatePrediction(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { candidateId, modelType } = req.body;
-      
+
       if (!candidateId || !modelType) {
         res.status(400).json({
           success: false,
-          error: 'Candidate ID and model type are required'
+          error: 'Candidate ID and model type are required',
         });
         return;
       }
@@ -413,9 +402,8 @@ export class PerformanceAnalyticsController {
 
       res.status(200).json({
         success: true,
-        data: prediction
+        data: prediction,
       });
-
     } catch (error) {
       this.logger.error('Error generating prediction:', error);
       next(error);
@@ -429,7 +417,7 @@ export class PerformanceAnalyticsController {
   async getPredictionAccuracy(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { modelType, period } = req.query;
-      
+
       // Get prediction accuracy metrics
       const accuracy = await this.getPredictionAccuracyMetrics(
         modelType as string,
@@ -438,9 +426,8 @@ export class PerformanceAnalyticsController {
 
       res.status(200).json({
         success: true,
-        data: accuracy
+        data: accuracy,
       });
-
     } catch (error) {
       this.logger.error('Error getting prediction accuracy:', error);
       next(error);
@@ -456,11 +443,11 @@ export class PerformanceAnalyticsController {
   async createDashboard(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const dashboardConfig: DashboardConfig = req.body;
-      
+
       if (!dashboardConfig.name || !dashboardConfig.organizationId) {
         res.status(400).json({
           success: false,
-          error: 'Dashboard name and organization ID are required'
+          error: 'Dashboard name and organization ID are required',
         });
         return;
       }
@@ -471,10 +458,9 @@ export class PerformanceAnalyticsController {
         success: true,
         data: {
           dashboardId,
-          message: 'Dashboard created successfully'
-        }
+          message: 'Dashboard created successfully',
+        },
       });
-
     } catch (error) {
       this.logger.error('Error creating dashboard:', error);
       next(error);
@@ -488,11 +474,11 @@ export class PerformanceAnalyticsController {
   async getDashboard(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { dashboardId } = req.params;
-      
+
       if (!dashboardId) {
         res.status(400).json({
           success: false,
-          error: 'Dashboard ID is required'
+          error: 'Dashboard ID is required',
         });
         return;
       }
@@ -502,9 +488,8 @@ export class PerformanceAnalyticsController {
 
       res.status(200).json({
         success: true,
-        data: dashboardData
+        data: dashboardData,
       });
-
     } catch (error) {
       this.logger.error('Error getting dashboard:', error);
       next(error);
@@ -519,11 +504,11 @@ export class PerformanceAnalyticsController {
     try {
       const { dashboardId } = req.params;
       const updates = req.body;
-      
+
       if (!dashboardId) {
         res.status(400).json({
           success: false,
-          error: 'Dashboard ID is required'
+          error: 'Dashboard ID is required',
         });
         return;
       }
@@ -532,9 +517,8 @@ export class PerformanceAnalyticsController {
 
       res.status(200).json({
         success: true,
-        message: 'Dashboard updated successfully'
+        message: 'Dashboard updated successfully',
       });
-
     } catch (error) {
       this.logger.error('Error updating dashboard:', error);
       next(error);
@@ -548,11 +532,11 @@ export class PerformanceAnalyticsController {
   async deleteDashboard(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { dashboardId } = req.params;
-      
+
       if (!dashboardId) {
         res.status(400).json({
           success: false,
-          error: 'Dashboard ID is required'
+          error: 'Dashboard ID is required',
         });
         return;
       }
@@ -561,9 +545,8 @@ export class PerformanceAnalyticsController {
 
       res.status(200).json({
         success: true,
-        message: 'Dashboard deleted successfully'
+        message: 'Dashboard deleted successfully',
       });
-
     } catch (error) {
       this.logger.error('Error deleting dashboard:', error);
       next(error);
@@ -578,19 +561,12 @@ export class PerformanceAnalyticsController {
    */
   async generateReport(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { 
-        reportType, 
-        organizationId, 
-        period, 
-        candidateIds, 
-        assessmentIds,
-        format 
-      } = req.body;
-      
+      const { reportType, organizationId, period, candidateIds, assessmentIds, format } = req.body;
+
       if (!reportType || !organizationId) {
         res.status(400).json({
           success: false,
-          error: 'Report type and organization ID are required'
+          error: 'Report type and organization ID are required',
         });
         return;
       }
@@ -601,14 +577,13 @@ export class PerformanceAnalyticsController {
         period,
         candidateIds,
         assessmentIds,
-        format: format || 'json'
+        format: format || 'json',
       });
 
       res.status(200).json({
         success: true,
-        data: report
+        data: report,
       });
-
     } catch (error) {
       this.logger.error('Error generating report:', error);
       next(error);
@@ -621,18 +596,12 @@ export class PerformanceAnalyticsController {
    */
   async exportAnalytics(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { 
-        organizationId, 
-        format, 
-        dataTypes, 
-        period,
-        filters 
-      } = req.query;
-      
+      const { organizationId, format, dataTypes, period, filters } = req.query;
+
       if (!organizationId) {
         res.status(400).json({
           success: false,
-          error: 'Organization ID is required'
+          error: 'Organization ID is required',
         });
         return;
       }
@@ -642,7 +611,7 @@ export class PerformanceAnalyticsController {
         format: (format as string) || 'csv',
         dataTypes: dataTypes ? (dataTypes as string).split(',') : ['metrics', 'profiles'],
         period: period as string,
-        filters: filters ? JSON.parse(filters as string) : {}
+        filters: filters ? JSON.parse(filters as string) : {},
       });
 
       // Set appropriate headers for file download
@@ -651,7 +620,6 @@ export class PerformanceAnalyticsController {
       res.setHeader('Content-Type', this.getContentType(format as string));
 
       res.status(200).send(exportData);
-
     } catch (error) {
       this.logger.error('Error exporting analytics:', error);
       next(error);
@@ -666,17 +634,12 @@ export class PerformanceAnalyticsController {
    */
   async getBenchmarks(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { 
-        organizationId, 
-        industryId, 
-        skillLevel, 
-        metricTypes 
-      } = req.query;
-      
+      const { organizationId, industryId, skillLevel, metricTypes } = req.query;
+
       if (!organizationId) {
         res.status(400).json({
           success: false,
-          error: 'Organization ID is required'
+          error: 'Organization ID is required',
         });
         return;
       }
@@ -685,14 +648,13 @@ export class PerformanceAnalyticsController {
         organizationId: organizationId as string,
         industryId: industryId as string,
         skillLevel: skillLevel as string,
-        metricTypes: metricTypes ? (metricTypes as string).split(',') : undefined
+        metricTypes: metricTypes ? (metricTypes as string).split(',') : undefined,
       });
 
       res.status(200).json({
         success: true,
-        data: benchmarks
+        data: benchmarks,
       });
-
     } catch (error) {
       this.logger.error('Error getting benchmarks:', error);
       next(error);
@@ -706,11 +668,11 @@ export class PerformanceAnalyticsController {
   async updateBenchmarks(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { organizationId, force } = req.body;
-      
+
       if (!organizationId) {
         res.status(400).json({
           success: false,
-          error: 'Organization ID is required'
+          error: 'Organization ID is required',
         });
         return;
       }
@@ -719,9 +681,8 @@ export class PerformanceAnalyticsController {
 
       res.status(200).json({
         success: true,
-        message: 'Benchmarks updated successfully'
+        message: 'Benchmarks updated successfully',
       });
-
     } catch (error) {
       this.logger.error('Error updating benchmarks:', error);
       next(error);
@@ -746,25 +707,24 @@ export class PerformanceAnalyticsController {
           calculationsPerformed: 0, // Would track actual metrics
           profilesGenerated: 0,
           predictionsGenerated: 0,
-          dashboardsActive: 0
+          dashboardsActive: 0,
         },
         services: {
           database: 'connected',
           redis: 'connected',
-          mlModels: 'loaded'
-        }
+          mlModels: 'loaded',
+        },
       };
 
       res.status(200).json({
         success: true,
-        data: health
+        data: health,
       });
-
     } catch (error) {
       this.logger.error('Error getting health status:', error);
       res.status(503).json({
         success: false,
-        error: 'Service unavailable'
+        error: 'Service unavailable',
       });
     }
   }
@@ -783,13 +743,13 @@ export class PerformanceAnalyticsController {
         rank: index + 1,
         overallScore: profile.overallScore,
         strengths: profile.strengths?.slice(0, 3) || [],
-        weaknesses: profile.weaknesses?.slice(0, 3) || []
+        weaknesses: profile.weaknesses?.slice(0, 3) || [],
       })),
       insights: [
         'Candidate performance varies significantly in technical skills',
         'Time management shows consistent patterns across candidates',
-        'Communication skills require further assessment'
-      ]
+        'Communication skills require further assessment',
+      ],
     };
   }
 
@@ -815,18 +775,15 @@ export class PerformanceAnalyticsController {
       trends: {
         scoresTrend: 'improving',
         completionRateTrend: 'stable',
-        participationTrend: 'increasing'
-      }
+        participationTrend: 'increasing',
+      },
     };
   }
 
   /**
    * Get prediction accuracy metrics
    */
-  private async getPredictionAccuracyMetrics(
-    modelType?: string,
-    period?: string
-  ): Promise<any> {
+  private async getPredictionAccuracyMetrics(modelType?: string, period?: string): Promise<any> {
     // This would analyze actual prediction accuracy
     return {
       modelType: modelType || 'all_models',
@@ -840,8 +797,8 @@ export class PerformanceAnalyticsController {
       modelPerformance: {
         performanceForecasting: { accuracy: 0.834, count: 456 },
         skillLevelPrediction: { accuracy: 0.867, count: 398 },
-        hiringRecommendation: { accuracy: 0.812, count: 393 }
-      }
+        hiringRecommendation: { accuracy: 0.812, count: 393 },
+      },
     };
   }
 
@@ -860,16 +817,16 @@ export class PerformanceAnalyticsController {
           title: 'Average Performance Score',
           value: 73.5,
           trend: 'up',
-          change: '+2.3%'
+          change: '+2.3%',
         },
         {
           id: 'widget-2',
           type: 'LINE_CHART',
           title: 'Performance Trends',
-          data: [] // Would contain actual chart data
-        }
+          data: [], // Would contain actual chart data
+        },
       ],
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
   }
 
@@ -903,13 +860,13 @@ export class PerformanceAnalyticsController {
         totalCandidates: 89,
         averageScore: 73.5,
         topPerformer: 'candidate_123',
-        improvementRate: 15.2
+        improvementRate: 15.2,
       },
       recommendations: [
         'Focus on improving time management skills',
         'Enhance technical screening process',
-        'Implement regular skill assessments'
-      ]
+        'Implement regular skill assessments',
+      ],
     };
   }
 
@@ -921,13 +878,13 @@ export class PerformanceAnalyticsController {
     if (options.format === 'csv') {
       return 'candidateId,overallScore,technicalSkills,problemSolving\ncandidate1,75,80,70\ncandidate2,82,85,78';
     }
-    
+
     return JSON.stringify({
       exportId: `export_${Date.now()}`,
       organizationId: options.organizationId,
       dataTypes: options.dataTypes,
       recordCount: 150,
-      exportedAt: new Date()
+      exportedAt: new Date(),
     });
   }
 
@@ -936,12 +893,12 @@ export class PerformanceAnalyticsController {
    */
   private getContentType(format: string): string {
     const contentTypes: Record<string, string> = {
-      'csv': 'text/csv',
-      'json': 'application/json',
-      'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'pdf': 'application/pdf'
+      csv: 'text/csv',
+      json: 'application/json',
+      xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      pdf: 'application/pdf',
     };
-    
+
     return contentTypes[format] || 'text/plain';
   }
 
@@ -957,14 +914,14 @@ export class PerformanceAnalyticsController {
       benchmarks: {
         overall: { average: 72.3, percentile75: 84.2, percentile90: 91.5 },
         technical: { average: 68.9, percentile75: 82.1, percentile90: 89.3 },
-        problemSolving: { average: 74.7, percentile75: 86.8, percentile90: 93.2 }
+        problemSolving: { average: 74.7, percentile75: 86.8, percentile90: 93.2 },
       },
       industryComparison: {
         aboveAverage: true,
         percentileRank: 67.8,
-        competitivePosition: 'strong'
+        competitivePosition: 'strong',
       },
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
   }
 

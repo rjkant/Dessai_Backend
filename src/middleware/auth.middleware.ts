@@ -5,7 +5,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { JWTUtil } from '../utils/jwt.util';
-import { AuthService } from '../services/auth.service'; 
+import { AuthService } from '../services/auth.service';
 import { UserRole, User } from '../types/auth.types';
 
 export interface AuthRequest extends Request {
@@ -29,7 +29,7 @@ export class AuthMiddleware {
   /**
    * JWT Authentication Middleware
    */
-  static authenticate = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  static authenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       const authHeader = req.headers.authorization;
 
@@ -58,7 +58,7 @@ export class AuthMiddleware {
       }
 
       // Add user to request object (excluding sensitive fields)
-      req.user = {
+      (req as AuthRequest).user = {
         id: user.id,
         organizationId: user.organizationId,
         email: user.email,
@@ -78,14 +78,16 @@ export class AuthMiddleware {
         message: error instanceof Error ? error.message : 'Authentication failed',
       });
     }
-  }
+  };
 
   /**
    * Role-based authorization middleware
    */
   static authorize(roles: UserRole[]) {
-    return (req: AuthRequest, res: Response, next: NextFunction): void => {
-      if (!req.user) {
+    return (req: Request, res: Response, next: NextFunction): void => {
+      const authReq = req as AuthRequest;
+
+      if (!authReq.user) {
         res.status(401).json({
           success: false,
           message: 'Authentication required',
@@ -93,7 +95,7 @@ export class AuthMiddleware {
         return;
       }
 
-      const userRoleName = req.user.role as UserRole;
+      const userRoleName = authReq.user.role as UserRole;
       if (!userRoleName || !roles.includes(userRoleName)) {
         res.status(403).json({
           success: false,
@@ -109,7 +111,7 @@ export class AuthMiddleware {
   /**
    * Optional authentication middleware (user can be authenticated or not)
    */
-  static async optionalAuth(req: AuthRequest, _res: Response, next: NextFunction): Promise<void> {
+  static async optionalAuth(req: Request, _res: Response, next: NextFunction): Promise<void> {
     try {
       const authHeader = req.headers.authorization;
 
@@ -121,7 +123,7 @@ export class AuthMiddleware {
           const user = await this.authService.validateJWTPayload(payload);
 
           if (user) {
-            req.user = {
+            (req as AuthRequest).user = {
               id: user.id,
               organizationId: user.organizationId,
               email: user.email,
@@ -173,8 +175,10 @@ export class AuthMiddleware {
    * Account ownership verification (user can only access their own data)
    */
   static requireOwnership(userIdParam: string = 'userId') {
-    return (req: AuthRequest, res: Response, next: NextFunction): void => {
-      if (!req.user) {
+    return (req: Request, res: Response, next: NextFunction): void => {
+      const authReq = req as AuthRequest;
+
+      if (!authReq.user) {
         res.status(401).json({
           success: false,
           message: 'Authentication required',
@@ -183,7 +187,7 @@ export class AuthMiddleware {
       }
 
       const requestedUserId = req.params[userIdParam];
-      const userRoleName = req.user.role as UserRole;
+      const userRoleName = authReq.user.role as UserRole;
 
       // Super admins and admins can access any user's data
       if (userRoleName && [UserRole.SUPER_ADMIN, UserRole.ADMIN].includes(userRoleName)) {
@@ -192,7 +196,7 @@ export class AuthMiddleware {
       }
 
       // Users can only access their own data
-      if (req.user.id !== requestedUserId) {
+      if (authReq.user.id !== requestedUserId) {
         res.status(403).json({
           success: false,
           message: 'Access denied - can only access your own data',
@@ -220,8 +224,10 @@ export class AuthMiddleware {
   /**
    * MFA verification middleware for sensitive operations
    */
-  static requireMFA(req: AuthRequest, res: Response, next: NextFunction): void {
-    if (!req.user) {
+  static requireMFA(req: Request, res: Response, next: NextFunction): void {
+    const authReq = req as AuthRequest;
+
+    if (!authReq.user) {
       res.status(401).json({
         success: false,
         message: 'Authentication required',
@@ -231,7 +237,7 @@ export class AuthMiddleware {
 
     const mfaToken = req.headers['x-mfa-token'] as string;
 
-    if (req.user.mfaEnabled && !mfaToken) {
+    if (authReq.user.mfaEnabled && !mfaToken) {
       res.status(403).json({
         success: false,
         message: 'MFA token required for this operation',

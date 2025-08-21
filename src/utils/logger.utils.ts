@@ -2,7 +2,7 @@
  * Logger Utility
  * TASK-CG-005: Assessment Management Core
  * Persona: Senior Software Engineer
- * 
+ *
  * Simple logging utility for structured logging across the application.
  */
 
@@ -20,7 +20,7 @@ export class Logger {
       level,
       context: this.context,
       message,
-      ...(meta && { meta })
+      ...(meta && { meta }),
     };
     return JSON.stringify(logObject);
   }
@@ -30,11 +30,14 @@ export class Logger {
   }
 
   error(message: string, error?: any): void {
-    const errorMeta = error instanceof Error ? {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
-    } : error;
+    const errorMeta =
+      error instanceof Error
+        ? {
+            message: error.message,
+            stack: error.stack,
+            name: error.name,
+          }
+        : error;
     console.error(this.formatMessage('ERROR', message, errorMeta));
   }
 

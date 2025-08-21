@@ -26,7 +26,7 @@ import {
   SecurityAction,
   QueuedRequest,
   ExecutionPriority,
-  ExecutionProgress
+  ExecutionProgress,
 } from '../types/execution.types';
 
 export class CodeExecutionService {
@@ -48,7 +48,12 @@ export class CodeExecutionService {
 
   private initializeLanguageConfigs(): void {
     // Simplified language configs for compilation
-    const createConfig = (lang: ProgrammingLanguage, ext: string, image: string, cmd: string): LanguageConfig => ({
+    const createConfig = (
+      lang: ProgrammingLanguage,
+      ext: string,
+      image: string,
+      cmd: string
+    ): LanguageConfig => ({
       language: lang,
       version: '1.0',
       runCommand: cmd,
@@ -58,15 +63,44 @@ export class CodeExecutionService {
       defaultMemoryLimit: 128,
       maxFileSize: 1024 * 1024,
       supportedFeatures: [] as any,
-      securityRestrictions: [] as any
+      securityRestrictions: [] as any,
     });
-    
+
     this.languageConfigs = new Map([
-      [ProgrammingLanguage.PYTHON, createConfig(ProgrammingLanguage.PYTHON, '.py', 'python:3.11-alpine', 'python main.py')],
-      [ProgrammingLanguage.JAVASCRIPT, createConfig(ProgrammingLanguage.JAVASCRIPT, '.js', 'node:18-alpine', 'node main.js')],
-      [ProgrammingLanguage.TYPESCRIPT, { ...createConfig(ProgrammingLanguage.TYPESCRIPT, '.ts', 'node:18-alpine', 'node dist/main.js'), compileCommand: 'tsc main.ts --outDir ./dist' }],
-      [ProgrammingLanguage.JAVA, { ...createConfig(ProgrammingLanguage.JAVA, '.java', 'openjdk:17-alpine', 'java Main'), compileCommand: 'javac Main.java' }],
-      [ProgrammingLanguage.CPP, { ...createConfig(ProgrammingLanguage.CPP, '.cpp', 'gcc:latest', './main'), compileCommand: 'g++ -o main main.cpp' }]
+      [
+        ProgrammingLanguage.PYTHON,
+        createConfig(ProgrammingLanguage.PYTHON, '.py', 'python:3.11-alpine', 'python main.py'),
+      ],
+      [
+        ProgrammingLanguage.JAVASCRIPT,
+        createConfig(ProgrammingLanguage.JAVASCRIPT, '.js', 'node:18-alpine', 'node main.js'),
+      ],
+      [
+        ProgrammingLanguage.TYPESCRIPT,
+        {
+          ...createConfig(
+            ProgrammingLanguage.TYPESCRIPT,
+            '.ts',
+            'node:18-alpine',
+            'node dist/main.js'
+          ),
+          compileCommand: 'tsc main.ts --outDir ./dist',
+        },
+      ],
+      [
+        ProgrammingLanguage.JAVA,
+        {
+          ...createConfig(ProgrammingLanguage.JAVA, '.java', 'openjdk:17-alpine', 'java Main'),
+          compileCommand: 'javac Main.java',
+        },
+      ],
+      [
+        ProgrammingLanguage.CPP,
+        {
+          ...createConfig(ProgrammingLanguage.CPP, '.cpp', 'gcc:latest', './main'),
+          compileCommand: 'g++ -o main main.cpp',
+        },
+      ],
     ]);
   }
 
@@ -83,7 +117,8 @@ export class CodeExecutionService {
       const executionRequest = this.createExecutionRequest(request);
 
       // Check queue capacity
-      if (this.executionQueue.size >= 100) { // Max queue size
+      if (this.executionQueue.size >= 100) {
+        // Max queue size
         return {
           success: false,
           executionId: '',
@@ -92,36 +127,36 @@ export class CodeExecutionService {
             message: 'Execution queue is full. Please try again later.',
             timestamp: new Date(),
             recoverable: true,
-            suggestion: 'Wait a few minutes and retry the request.'
-          }
+            suggestion: 'Wait a few minutes and retry the request.',
+          },
         };
       }
 
       // Add to queue or execute immediately
-      if (this.processing.size < 5) { // Max concurrent executions
+      if (this.processing.size < 5) {
+        // Max concurrent executions
         return await this.executeImmediately(executionRequest);
       } else {
         return this.queueExecution(executionRequest, request.priority || ExecutionPriority.NORMAL);
       }
-
     } catch (error) {
       return {
         success: false,
         executionId: '',
-        error: this.createExecutionError(error, ExecutionErrorCode.RUNTIME_ERROR)
+        error: this.createExecutionError(error, ExecutionErrorCode.RUNTIME_ERROR),
       };
     }
   }
 
   private async executeImmediately(request: CodeExecutionRequest): Promise<ExecuteCodeResponse> {
     const executionId = request.id;
-    
+
     try {
       // Mark as processing
       this.processing.set(executionId, {
         request,
         startedAt: new Date(),
-        stage: ExecutionStage.INITIALIZING
+        stage: ExecutionStage.INITIALIZING,
       });
 
       // Execute the code
@@ -133,26 +168,28 @@ export class CodeExecutionService {
       return {
         success: true,
         executionId,
-        result
+        result,
       };
-
     } catch (error) {
       this.processing.delete(executionId);
       return {
         success: false,
         executionId,
-        error: this.createExecutionError(error, ExecutionErrorCode.RUNTIME_ERROR)
+        error: this.createExecutionError(error, ExecutionErrorCode.RUNTIME_ERROR),
       };
     }
   }
 
-  private queueExecution(request: CodeExecutionRequest, priority: ExecutionPriority): ExecuteCodeResponse {
+  private queueExecution(
+    request: CodeExecutionRequest,
+    priority: ExecutionPriority
+  ): ExecuteCodeResponse {
     const queuedRequest: QueuedRequest = {
       id: request.id,
       request,
       priority,
       queuedAt: new Date(),
-      estimatedWaitTime: this.calculateEstimatedWaitTime()
+      estimatedWaitTime: this.calculateEstimatedWaitTime(),
     };
 
     this.executionQueue.set(request.id, queuedRequest);
@@ -161,7 +198,7 @@ export class CodeExecutionService {
       success: true,
       executionId: request.id,
       queuePosition: this.getQueuePosition(request.id),
-      estimatedWaitTime: queuedRequest.estimatedWaitTime
+      estimatedWaitTime: queuedRequest.estimatedWaitTime,
     };
   }
 
@@ -172,7 +209,7 @@ export class CodeExecutionService {
   private async performExecution(request: CodeExecutionRequest): Promise<CodeExecutionResult> {
     const startTime = Date.now();
     const languageConfig = this.languageConfigs.get(request.language);
-    
+
     if (!languageConfig) {
       throw new Error(`Unsupported language: ${request.language}`);
     }
@@ -217,11 +254,10 @@ export class CodeExecutionService {
         testResults: testResults || undefined,
         compilationOutput: compilationResult || undefined,
         securityViolations,
-        createdAt: new Date()
+        createdAt: new Date(),
       };
 
       return result;
-
     } finally {
       // Cleanup
       await this.cleanup(containerId, workDir);
@@ -232,7 +268,10 @@ export class CodeExecutionService {
   // CONTAINER MANAGEMENT
   // ============================================================================
 
-  private async createContainer(request: CodeExecutionRequest, config: LanguageConfig): Promise<string> {
+  private async createContainer(
+    request: CodeExecutionRequest,
+    config: LanguageConfig
+  ): Promise<string> {
     const containerConfig = {
       Image: config.dockerImage,
       WorkingDir: '/workspace',
@@ -244,22 +283,19 @@ export class CodeExecutionService {
         PidsLimit: 50, // Limit number of processes
         ReadonlyRootfs: false,
         Tmpfs: {
-          '/tmp': 'rw,noexec,nosuid,size=10m'
+          '/tmp': 'rw,noexec,nosuid,size=10m',
         },
         SecurityOpt: [
           'no-new-privileges:true',
-          'apparmor:unconfined' // TODO: Create custom AppArmor profile
-        ]
+          'apparmor:unconfined', // TODO: Create custom AppArmor profile
+        ],
       },
-      Env: [
-        'HOME=/workspace',
-        'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
-      ]
+      Env: ['HOME=/workspace', 'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'],
     };
 
     const container = await this.docker.createContainer(containerConfig);
     await container.start();
-    
+
     return container.id;
   }
 
@@ -269,7 +305,11 @@ export class CodeExecutionService {
     return workDir;
   }
 
-  private async writeCodeToFile(code: string, workDir: string, config: LanguageConfig): Promise<void> {
+  private async writeCodeToFile(
+    code: string,
+    workDir: string,
+    config: LanguageConfig
+  ): Promise<void> {
     const fileName = this.getMainFileName(config);
     const filePath = path.join(workDir, fileName);
     await fs.writeFile(filePath, code, 'utf8');
@@ -288,26 +328,29 @@ export class CodeExecutionService {
   // COMPILATION & EXECUTION
   // ============================================================================
 
-  private async compileCode(containerId: string, config: LanguageConfig): Promise<CompilationResult> {
+  private async compileCode(
+    containerId: string,
+    config: LanguageConfig
+  ): Promise<CompilationResult> {
     if (!config.compileCommand) {
       return { success: true, output: '', errors: '', warnings: '', executionTime: 0 };
     }
 
     const startTime = Date.now();
-    
+
     try {
       const container = this.docker.getContainer(containerId);
-      
+
       const exec = await container.exec({
         Cmd: ['sh', '-c', config.compileCommand],
         WorkingDir: '/workspace',
         AttachStdout: true,
-        AttachStderr: true
+        AttachStderr: true,
       });
 
       const stream = await exec.start({});
       const output = await this.streamToString(stream);
-      
+
       const inspect = await exec.inspect();
       const success = inspect.ExitCode === 0;
 
@@ -316,21 +359,24 @@ export class CodeExecutionService {
         output: success ? output : '',
         errors: success ? '' : output,
         warnings: '',
-        executionTime: Date.now() - startTime
+        executionTime: Date.now() - startTime,
       };
-
     } catch (error) {
       return {
         success: false,
         output: '',
         errors: error instanceof Error ? error.message : 'Compilation failed',
         warnings: '',
-        executionTime: Date.now() - startTime
+        executionTime: Date.now() - startTime,
       };
     }
   }
 
-  private async runCode(containerId: string, request: CodeExecutionRequest, config: LanguageConfig): Promise<any> {
+  private async runCode(
+    containerId: string,
+    request: CodeExecutionRequest,
+    config: LanguageConfig
+  ): Promise<any> {
     const container = this.docker.getContainer(containerId);
     const timeLimit = request.timeLimit || config.defaultTimeLimit;
 
@@ -339,11 +385,11 @@ export class CodeExecutionService {
       WorkingDir: '/workspace',
       AttachStdout: true,
       AttachStderr: true,
-      AttachStdin: !!request.stdin
+      AttachStdin: !!request.stdin,
     });
 
     const stream = await exec.start({});
-    
+
     // Set timeout
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error('Time limit exceeded')), timeLimit);
@@ -352,16 +398,15 @@ export class CodeExecutionService {
     try {
       const resultPromise = this.executeWithInput(stream, request.stdin);
       const output = await Promise.race([resultPromise, timeoutPromise]);
-      
+
       const inspect = await exec.inspect();
-      
+
       return {
         exitCode: inspect.ExitCode || 0,
         stdout: (output as { stdout: string; stderr: string }).stdout,
         stderr: (output as { stdout: string; stderr: string }).stderr,
-        memoryUsed: 0 // TODO: Get actual memory usage from container stats
+        memoryUsed: 0, // TODO: Get actual memory usage from container stats
       };
-
     } catch (error) {
       if (error instanceof Error && error.message === 'Time limit exceeded') {
         // Kill the execution
@@ -372,7 +417,10 @@ export class CodeExecutionService {
     }
   }
 
-  private async executeWithInput(stream: any, stdin?: string): Promise<{ stdout: string; stderr: string }> {
+  private async executeWithInput(
+    stream: any,
+    stdin?: string
+  ): Promise<{ stdout: string; stderr: string }> {
     return new Promise((resolve, reject) => {
       let stdout = '';
       let stderr = '';
@@ -405,12 +453,21 @@ export class CodeExecutionService {
   // TEST EXECUTION
   // ============================================================================
 
-  private async runTestCases(containerId: string, request: CodeExecutionRequest, config: LanguageConfig): Promise<TestCaseResult[]> {
+  private async runTestCases(
+    containerId: string,
+    request: CodeExecutionRequest,
+    config: LanguageConfig
+  ): Promise<TestCaseResult[]> {
     const results: TestCaseResult[] = [];
 
     for (const testCase of request.testCases || []) {
       try {
-        const testResult = await this.runSingleTestCase(containerId, testCase, config, request.code);
+        const testResult = await this.runSingleTestCase(
+          containerId,
+          testCase,
+          config,
+          request.code
+        );
         results.push(testResult);
       } catch (error) {
         results.push({
@@ -422,7 +479,7 @@ export class CodeExecutionService {
           memoryUsed: 0,
           error: error instanceof Error ? error.message : 'Test execution failed',
           points: 0,
-          maxPoints: testCase.points
+          maxPoints: testCase.points,
         });
       }
     }
@@ -430,15 +487,20 @@ export class CodeExecutionService {
     return results;
   }
 
-  private async runSingleTestCase(containerId: string, testCase: any, config: LanguageConfig, code: string): Promise<TestCaseResult> {
+  private async runSingleTestCase(
+    containerId: string,
+    testCase: any,
+    config: LanguageConfig,
+    code: string
+  ): Promise<TestCaseResult> {
     const startTime = Date.now();
-    
+
     // Create a modified request with test input
     const testRequest = {
       language: config.language,
       code,
       stdin: testCase.input,
-      timeLimit: testCase.timeLimit || config.defaultTimeLimit
+      timeLimit: testCase.timeLimit || config.defaultTimeLimit,
     };
 
     const result = await this.runCode(containerId, testRequest as CodeExecutionRequest, config);
@@ -456,7 +518,7 @@ export class CodeExecutionService {
       executionTime,
       memoryUsed: result.memoryUsed || 0,
       points: passed ? testCase.points : 0,
-      maxPoints: testCase.points
+      maxPoints: testCase.points,
     };
   }
 
@@ -464,7 +526,10 @@ export class CodeExecutionService {
   // SECURITY & MONITORING
   // ============================================================================
 
-  private async checkSecurityViolations(executionResult: any, request: CodeExecutionRequest): Promise<SecurityViolation[]> {
+  private async checkSecurityViolations(
+    executionResult: any,
+    request: CodeExecutionRequest
+  ): Promise<SecurityViolation[]> {
     const violations: SecurityViolation[] = [];
 
     // Check for time limit violations
@@ -475,7 +540,7 @@ export class CodeExecutionService {
         description: 'Execution time exceeded the allowed limit',
         timestamp: new Date(),
         details: { timeLimit: request.timeLimit, actualTime: executionResult.executionTime },
-        action: SecurityAction.TERMINATE
+        action: SecurityAction.TERMINATE,
       });
     }
 
@@ -489,7 +554,7 @@ export class CodeExecutionService {
       /require\(['"]child_process['"]\)/,
       /#include\s*<sys\//,
       /system\s*\(/,
-      /exec\s*\(/
+      /exec\s*\(/,
     ];
 
     for (const pattern of suspiciousPatterns) {
@@ -500,7 +565,7 @@ export class CodeExecutionService {
           description: `Suspicious pattern detected: ${pattern.source}`,
           timestamp: new Date(),
           details: { pattern: pattern.source },
-          action: SecurityAction.LOG
+          action: SecurityAction.LOG,
         });
       }
     }
@@ -547,8 +612,8 @@ export class CodeExecutionService {
         ipAddress: '', // TODO: Get from request context
         userAgent: '', // TODO: Get from request context
         attempt: 1,
-        codeHash: createHash('sha256').update(request.code).digest('hex')
-      }
+        codeHash: createHash('sha256').update(request.code).digest('hex'),
+      },
     };
   }
 
@@ -558,7 +623,7 @@ export class CodeExecutionService {
       message: error instanceof Error ? error.message : 'Unknown error occurred',
       timestamp: new Date(),
       recoverable: code !== ExecutionErrorCode.SECURITY_VIOLATION,
-      suggestion: this.getErrorSuggestion(code)
+      suggestion: this.getErrorSuggestion(code),
     };
   }
 
@@ -586,7 +651,7 @@ export class CodeExecutionService {
       exitCode: 1,
       stdout: '',
       stderr: details,
-      createdAt: new Date()
+      createdAt: new Date(),
     };
   }
 
@@ -657,12 +722,14 @@ export class CodeExecutionService {
         [ExecutionPriority.URGENT]: 0,
         [ExecutionPriority.HIGH]: 1,
         [ExecutionPriority.NORMAL]: 2,
-        [ExecutionPriority.LOW]: 3
+        [ExecutionPriority.LOW]: 3,
       };
-      
+
       const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
-      if (priorityDiff !== 0) return priorityDiff;
-      
+      if (priorityDiff !== 0) {
+        return priorityDiff;
+      }
+
       // If same priority, use FIFO
       return a.queuedAt.getTime() - b.queuedAt.getTime();
     });
@@ -674,7 +741,10 @@ export class CodeExecutionService {
   // STATUS & MONITORING
   // ============================================================================
 
-  public getExecutionStatus(executionId: string): { stage: ExecutionStage; progress?: ExecutionProgress } {
+  public getExecutionStatus(executionId: string): {
+    stage: ExecutionStage;
+    progress?: ExecutionProgress;
+  } {
     if (this.processing.has(executionId)) {
       const processing = this.processing.get(executionId);
       return {
@@ -683,8 +753,11 @@ export class CodeExecutionService {
           stage: processing.stage,
           percentage: this.getStageProgress(processing.stage),
           currentStep: this.getStageDescription(processing.stage),
-          estimatedTimeRemaining: this.calculateRemainingTime(processing.startedAt, processing.stage)
-        }
+          estimatedTimeRemaining: this.calculateRemainingTime(
+            processing.startedAt,
+            processing.stage
+          ),
+        },
       };
     }
 
@@ -704,7 +777,7 @@ export class CodeExecutionService {
       [ExecutionStage.TESTING]: 80,
       [ExecutionStage.ANALYZING]: 90,
       [ExecutionStage.COMPLETED]: 100,
-      [ExecutionStage.FAILED]: 100
+      [ExecutionStage.FAILED]: 100,
     };
     return progressMap[stage] || 0;
   }
@@ -718,7 +791,7 @@ export class CodeExecutionService {
       [ExecutionStage.TESTING]: 'Running test cases',
       [ExecutionStage.ANALYZING]: 'Analyzing results',
       [ExecutionStage.COMPLETED]: 'Execution completed',
-      [ExecutionStage.FAILED]: 'Execution failed'
+      [ExecutionStage.FAILED]: 'Execution failed',
     };
     return descriptions[stage] || 'Unknown stage';
   }
@@ -726,9 +799,11 @@ export class CodeExecutionService {
   private calculateRemainingTime(startedAt: Date, currentStage: ExecutionStage): number {
     const elapsed = Date.now() - startedAt.getTime();
     const progress = this.getStageProgress(currentStage);
-    
-    if (progress === 0) return 30000; // Default 30 seconds
-    
+
+    if (progress === 0) {
+      return 30000;
+    } // Default 30 seconds
+
     const estimated = (elapsed / progress) * 100;
     return Math.max(0, estimated - elapsed);
   }

@@ -18,7 +18,7 @@ import {
   AnalyticsQuery,
   DataExportConfig,
   DataImportConfig,
-  DataCollectionConfig
+  DataCollectionConfig,
 } from '../types/analytics.types';
 
 const logger = new Logger('AnalyticsController');
@@ -31,11 +31,7 @@ export class AnalyticsController {
     private redisService: RedisService,
     config: Partial<DataCollectionConfig> = {}
   ) {
-    this.dataCollectionService = new DataCollectionService(
-      prisma,
-      redisService,
-      config
-    );
+    this.dataCollectionService = new DataCollectionService(prisma, redisService, config);
     this.setupEventListeners();
   }
 
@@ -51,15 +47,15 @@ export class AnalyticsController {
       logger.info('Data Collection Service stopped');
     });
 
-    this.dataCollectionService.on('event-collected', (event) => {
+    this.dataCollectionService.on('event-collected', event => {
       logger.debug('Event collected', {
         eventId: event.id,
         type: event.type,
-        category: event.category
+        category: event.category,
       });
     });
 
-    this.dataCollectionService.on('error', (error) => {
+    this.dataCollectionService.on('error', error => {
       logger.error('Data Collection Service error', { error });
     });
   }
@@ -89,7 +85,7 @@ export class AnalyticsController {
       logger.info('Collecting analytics event', {
         userId: req.user.id,
         eventType: eventData.type,
-        category: eventData.category
+        category: eventData.category,
       });
 
       // Validate required fields
@@ -97,7 +93,7 @@ export class AnalyticsController {
         res.status(400).json({
           success: false,
           message: 'Missing required fields: type, category, severity',
-          code: 'INVALID_EVENT_DATA'
+          code: 'INVALID_EVENT_DATA',
         });
         return;
       }
@@ -112,8 +108,8 @@ export class AnalyticsController {
           version: '1.0.0',
           environment: process.env['NODE_ENV'] || 'development',
           userAgent: req.headers['user-agent'],
-          ipAddress: req.ip || req.connection.remoteAddress
-        }
+          ipAddress: req.ip || req.connection.remoteAddress,
+        },
       };
 
       // Collect the event
@@ -122,7 +118,7 @@ export class AnalyticsController {
       logger.info('Analytics event collected successfully', {
         eventId,
         userId: req.user.id,
-        type: eventData.type
+        type: eventData.type,
       });
 
       res.status(201).json({
@@ -130,22 +126,21 @@ export class AnalyticsController {
         data: {
           eventId,
           message: 'Event collected successfully',
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       });
-
     } catch (error) {
       logger.error('Failed to collect analytics event', {
         error: (error as any).message,
         userId: req.user.id,
-        eventData: req.body
+        eventData: req.body,
       });
 
       res.status(500).json({
         success: false,
         message: 'Failed to collect event',
         code: 'EVENT_COLLECTION_ERROR',
-        error: (error as any).message
+        error: (error as any).message,
       });
     }
   }
@@ -162,7 +157,7 @@ export class AnalyticsController {
         res.status(400).json({
           success: false,
           message: 'Events must be a non-empty array',
-          code: 'INVALID_BATCH_DATA'
+          code: 'INVALID_BATCH_DATA',
         });
         return;
       }
@@ -171,14 +166,14 @@ export class AnalyticsController {
         res.status(400).json({
           success: false,
           message: 'Batch size cannot exceed 100 events',
-          code: 'BATCH_SIZE_EXCEEDED'
+          code: 'BATCH_SIZE_EXCEEDED',
         });
         return;
       }
 
       logger.info('Collecting analytics events batch', {
         userId: req.user.id,
-        eventCount: events.length
+        eventCount: events.length,
       });
 
       // Enrich all events with user context
@@ -191,8 +186,8 @@ export class AnalyticsController {
           version: '1.0.0',
           environment: process.env['NODE_ENV'] || 'development',
           userAgent: req.headers['user-agent'],
-          ipAddress: req.ip || req.connection.remoteAddress
-        }
+          ipAddress: req.ip || req.connection.remoteAddress,
+        },
       }));
 
       // Collect all events
@@ -201,7 +196,7 @@ export class AnalyticsController {
       logger.info('Analytics events batch collected successfully', {
         eventIds: eventIds.length,
         userId: req.user.id,
-        totalEvents: events.length
+        totalEvents: events.length,
       });
 
       res.status(201).json({
@@ -211,22 +206,21 @@ export class AnalyticsController {
           collectedCount: eventIds.length,
           totalCount: events.length,
           message: 'Events batch collected successfully',
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       });
-
     } catch (error) {
       logger.error('Failed to collect analytics events batch', {
         error: (error as any).message,
         userId: req.user.id,
-        eventCount: req.body.events?.length || 0
+        eventCount: req.body.events?.length || 0,
       });
 
       res.status(500).json({
         success: false,
         message: 'Failed to collect events batch',
         code: 'BATCH_COLLECTION_ERROR',
-        error: (error as any).message
+        error: (error as any).message,
       });
     }
   }
@@ -242,7 +236,7 @@ export class AnalyticsController {
       logger.info('Executing analytics query', {
         userId: req.user.id,
         queryId: queryData.id,
-        timeRange: queryData.timeRange
+        timeRange: queryData.timeRange,
       });
 
       // Validate query data
@@ -250,7 +244,7 @@ export class AnalyticsController {
         res.status(400).json({
           success: false,
           message: 'Time range with start and end dates is required',
-          code: 'INVALID_QUERY_DATA'
+          code: 'INVALID_QUERY_DATA',
         });
         return;
       }
@@ -260,12 +254,12 @@ export class AnalyticsController {
         ...queryData,
         filters: {
           ...queryData.filters,
-          organizationIds: [req.user.organizationId] // Override to ensure data isolation
+          organizationIds: [req.user.organizationId], // Override to ensure data isolation
         },
         timeRange: {
           start: new Date(queryData.timeRange.start),
-          end: new Date(queryData.timeRange.end)
-        }
+          end: new Date(queryData.timeRange.end),
+        },
       };
 
       // Execute query
@@ -275,26 +269,25 @@ export class AnalyticsController {
         userId: req.user.id,
         queryId: query.id,
         totalRecords: result.metadata.totalRecords,
-        executionTime: result.metadata.executionTime
+        executionTime: result.metadata.executionTime,
       });
 
       res.status(200).json({
         success: true,
-        data: result
+        data: result,
       });
-
     } catch (error) {
       logger.error('Failed to execute analytics query', {
         error: (error as any).message,
         userId: req.user.id,
-        queryData: req.body
+        queryData: req.body,
       });
 
       res.status(500).json({
         success: false,
         message: 'Failed to execute query',
         code: 'QUERY_EXECUTION_ERROR',
-        error: (error as any).message
+        error: (error as any).message,
       });
     }
   }
@@ -306,7 +299,7 @@ export class AnalyticsController {
   async getStatistics(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       logger.info('Getting analytics statistics', {
-        userId: req.user.id
+        userId: req.user.id,
       });
 
       const statistics = await this.dataCollectionService.getStatistics();
@@ -315,21 +308,20 @@ export class AnalyticsController {
         success: true,
         data: {
           statistics,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       });
-
     } catch (error) {
       logger.error('Failed to get analytics statistics', {
         error: (error as any).message,
-        userId: req.user.id
+        userId: req.user.id,
       });
 
       res.status(500).json({
         success: false,
         message: 'Failed to get statistics',
         code: 'STATISTICS_ERROR',
-        error: (error as any).message
+        error: (error as any).message,
       });
     }
   }
@@ -341,7 +333,7 @@ export class AnalyticsController {
   async getPipelineStatus(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       logger.info('Getting pipeline status', {
-        userId: req.user.id
+        userId: req.user.id,
       });
 
       const status = await this.dataCollectionService.getPipelineStatus();
@@ -350,21 +342,20 @@ export class AnalyticsController {
         success: true,
         data: {
           pipeline: status,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       });
-
     } catch (error) {
       logger.error('Failed to get pipeline status', {
         error: (error as any).message,
-        userId: req.user.id
+        userId: req.user.id,
       });
 
       res.status(500).json({
         success: false,
         message: 'Failed to get pipeline status',
         code: 'PIPELINE_STATUS_ERROR',
-        error: (error as any).message
+        error: (error as any).message,
       });
     }
   }
@@ -380,7 +371,7 @@ export class AnalyticsController {
       logger.info('Starting analytics data export', {
         userId: req.user.id,
         format: exportConfig.format,
-        timeRange: exportConfig.filters.timeRange
+        timeRange: exportConfig.filters.timeRange,
       });
 
       // Validate export configuration
@@ -388,7 +379,7 @@ export class AnalyticsController {
         res.status(400).json({
           success: false,
           message: 'Missing required export configuration: format, destination, filters',
-          code: 'INVALID_EXPORT_CONFIG'
+          code: 'INVALID_EXPORT_CONFIG',
         });
         return;
       }
@@ -406,7 +397,7 @@ export class AnalyticsController {
       logger.info('Analytics data export started', {
         userId: req.user.id,
         jobId,
-        format: exportConfig.format
+        format: exportConfig.format,
       });
 
       res.status(202).json({
@@ -415,22 +406,21 @@ export class AnalyticsController {
           jobId,
           status: 'started',
           message: 'Export job started successfully',
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       });
-
     } catch (error) {
       logger.error('Failed to start analytics data export', {
         error: (error as any).message,
         userId: req.user.id,
-        exportConfig: req.body
+        exportConfig: req.body,
       });
 
       res.status(500).json({
         success: false,
         message: 'Failed to start export',
         code: 'EXPORT_START_ERROR',
-        error: (error as any).message
+        error: (error as any).message,
       });
     }
   }
@@ -446,7 +436,7 @@ export class AnalyticsController {
       logger.info('Starting analytics data import', {
         userId: req.user.id,
         sourceType: importConfig.source.type,
-        format: importConfig.format
+        format: importConfig.format,
       });
 
       // Validate import configuration
@@ -454,7 +444,7 @@ export class AnalyticsController {
         res.status(400).json({
           success: false,
           message: 'Missing required import configuration: source, format, mapping',
-          code: 'INVALID_IMPORT_CONFIG'
+          code: 'INVALID_IMPORT_CONFIG',
         });
         return;
       }
@@ -465,7 +455,7 @@ export class AnalyticsController {
       logger.info('Analytics data import started', {
         userId: req.user.id,
         jobId,
-        format: importConfig.format
+        format: importConfig.format,
       });
 
       res.status(202).json({
@@ -474,22 +464,21 @@ export class AnalyticsController {
           jobId,
           status: 'started',
           message: 'Import job started successfully',
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       });
-
     } catch (error) {
       logger.error('Failed to start analytics data import', {
         error: (error as any).message,
         userId: req.user.id,
-        importConfig: req.body
+        importConfig: req.body,
       });
 
       res.status(500).json({
         success: false,
         message: 'Failed to start import',
         code: 'IMPORT_START_ERROR',
-        error: (error as any).message
+        error: (error as any).message,
       });
     }
   }
@@ -504,7 +493,7 @@ export class AnalyticsController {
 
       logger.info('Getting job status', {
         userId: req.user.id,
-        jobId
+        jobId,
       });
 
       const job = await this.dataCollectionService.getJobStatus(jobId);
@@ -513,7 +502,7 @@ export class AnalyticsController {
         res.status(404).json({
           success: false,
           message: 'Job not found',
-          code: 'JOB_NOT_FOUND'
+          code: 'JOB_NOT_FOUND',
         });
         return;
       }
@@ -522,22 +511,21 @@ export class AnalyticsController {
         success: true,
         data: {
           job,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       });
-
     } catch (error) {
       logger.error('Failed to get job status', {
         error: (error as any).message,
         userId: req.user.id,
-        jobId: req.params['jobId']
+        jobId: req.params['jobId'],
       });
 
       res.status(500).json({
         success: false,
         message: 'Failed to get job status',
         code: 'JOB_STATUS_ERROR',
-        error: (error as any).message
+        error: (error as any).message,
       });
     }
   }
@@ -549,7 +537,7 @@ export class AnalyticsController {
   async getMetadata(req: AuthRequest, res: Response, next: NextFunction): Promise<void> {
     try {
       logger.info('Getting analytics metadata', {
-        userId: req.user.id
+        userId: req.user.id,
       });
 
       const metadata = {
@@ -564,30 +552,29 @@ export class AnalyticsController {
           aggregatedData: {
             minutely: '7 days',
             hourly: '30 days',
-            daily: '365 days'
-          }
-        }
+            daily: '365 days',
+          },
+        },
       };
 
       res.status(200).json({
         success: true,
         data: {
           metadata,
-          timestamp: new Date()
-        }
+          timestamp: new Date(),
+        },
       });
-
     } catch (error) {
       logger.error('Failed to get analytics metadata', {
         error: (error as any).message,
-        userId: req.user.id
+        userId: req.user.id,
       });
 
       res.status(500).json({
         success: false,
         message: 'Failed to get metadata',
         code: 'METADATA_ERROR',
-        error: (error as any).message
+        error: (error as any).message,
       });
     }
   }
@@ -608,33 +595,32 @@ export class AnalyticsController {
           status: pipelineStatus.status,
           uptime: pipelineStatus.uptime,
           throughput: pipelineStatus.performance.throughput,
-          errorRate: pipelineStatus.performance.errorRate
+          errorRate: pipelineStatus.performance.errorRate,
         },
         statistics: {
           totalEvents: statistics.totalEvents,
           averageEventSize: statistics.averageEventSize,
-          storageUsage: statistics.storageUsage.raw
+          storageUsage: statistics.storageUsage.raw,
         },
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
       const httpStatus = health.status === 'healthy' ? 200 : 503;
 
       res.status(httpStatus).json({
         success: health.status === 'healthy',
-        data: health
+        data: health,
       });
-
     } catch (error) {
       logger.error('Health check failed', {
-        error: (error as any).message
+        error: (error as any).message,
       });
 
       res.status(503).json({
         success: false,
         message: 'Health check failed',
         code: 'HEALTH_CHECK_ERROR',
-        error: (error as any).message
+        error: (error as any).message,
       });
     }
   }
@@ -644,7 +630,7 @@ export class AnalyticsController {
    */
   async cleanup(): Promise<void> {
     logger.info('Cleaning up Analytics Controller');
-    
+
     if (this.dataCollectionService) {
       await this.dataCollectionService.cleanup();
     }

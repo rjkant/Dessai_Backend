@@ -79,7 +79,7 @@ export enum ProgrammingLanguage {
   KOTLIN = 'kotlin',
   SWIFT = 'swift',
   SCALA = 'scala',
-  SQL = 'sql'
+  SQL = 'sql',
 }
 
 export interface LanguageConfig {
@@ -102,7 +102,7 @@ export enum LanguageFeature {
   PACKAGE_MANAGEMENT = 'package_management',
   TESTING_FRAMEWORK = 'testing_framework',
   DEBUGGING = 'debugging',
-  PROFILING = 'profiling'
+  PROFILING = 'profiling',
 }
 
 export interface SecurityRestriction {
@@ -117,7 +117,7 @@ export enum SecurityRestrictionType {
   PROCESS_CREATION = 'process_creation',
   SYSTEM_CALLS = 'system_calls',
   MEMORY_ALLOCATION = 'memory_allocation',
-  EXECUTION_TIME = 'execution_time'
+  EXECUTION_TIME = 'execution_time',
 }
 
 // ============================================================================
@@ -210,21 +210,21 @@ export enum SecurityViolationType {
   TIME_LIMIT_EXCEEDED = 'time_limit_exceeded',
   PROCESS_LIMIT_EXCEEDED = 'process_limit_exceeded',
   MALICIOUS_CODE_DETECTED = 'malicious_code_detected',
-  RESOURCE_EXHAUSTION = 'resource_exhaustion'
+  RESOURCE_EXHAUSTION = 'resource_exhaustion',
 }
 
 export enum ViolationSeverity {
   LOW = 'low',
   MEDIUM = 'medium',
   HIGH = 'high',
-  CRITICAL = 'critical'
+  CRITICAL = 'critical',
 }
 
 export enum SecurityAction {
   LOG = 'log',
   WARN = 'warn',
   TERMINATE = 'terminate',
-  BLOCK = 'block'
+  BLOCK = 'block',
 }
 
 // ============================================================================
@@ -268,14 +268,14 @@ export enum SuggestionType {
   MAINTAINABILITY = 'maintainability',
   BEST_PRACTICE = 'best_practice',
   BUG_RISK = 'bug_risk',
-  SECURITY = 'security'
+  SECURITY = 'security',
 }
 
 export enum SuggestionSeverity {
   INFO = 'info',
   MINOR = 'minor',
   MAJOR = 'major',
-  CRITICAL = 'critical'
+  CRITICAL = 'critical',
 }
 
 export interface ComplexityAnalysis {
@@ -380,7 +380,7 @@ export enum ExecutionPriority {
   LOW = 'low',
   NORMAL = 'normal',
   HIGH = 'high',
-  URGENT = 'urgent'
+  URGENT = 'urgent',
 }
 
 export interface ExecutionProgress {
@@ -398,7 +398,7 @@ export enum ExecutionStage {
   TESTING = 'testing',
   ANALYZING = 'analyzing',
   COMPLETED = 'completed',
-  FAILED = 'failed'
+  FAILED = 'failed',
 }
 
 export interface QueueStatistics {
@@ -430,33 +430,33 @@ export enum ExecutionErrorCode {
   COMPILATION_FAILED = 'compilation_failed',
   SYNTAX_ERROR = 'syntax_error',
   DEPENDENCY_ERROR = 'dependency_error',
-  
+
   // Runtime Errors
   RUNTIME_ERROR = 'runtime_error',
   TIME_LIMIT_EXCEEDED = 'time_limit_exceeded',
   MEMORY_LIMIT_EXCEEDED = 'memory_limit_exceeded',
   OUTPUT_LIMIT_EXCEEDED = 'output_limit_exceeded',
-  
+
   // Security Errors
   SECURITY_VIOLATION = 'security_violation',
   UNAUTHORIZED_ACCESS = 'unauthorized_access',
   MALICIOUS_CODE = 'malicious_code',
-  
+
   // System Errors
   CONTAINER_ERROR = 'container_error',
   NETWORK_ERROR = 'network_error',
   STORAGE_ERROR = 'storage_error',
   RESOURCE_UNAVAILABLE = 'resource_unavailable',
-  
+
   // Validation Errors
   INVALID_CODE = 'invalid_code',
   INVALID_LANGUAGE = 'invalid_language',
   INVALID_TEST_CASE = 'invalid_test_case',
-  
+
   // Queue Errors
   QUEUE_FULL = 'queue_full',
   EXECUTION_TIMEOUT = 'execution_timeout',
-  SYSTEM_OVERLOAD = 'system_overload'
+  SYSTEM_OVERLOAD = 'system_overload',
 }
 
 // ============================================================================

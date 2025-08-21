@@ -15,11 +15,11 @@ const roleGuard = (allowedRoles: string[]) => {
     if (!(req as any).user) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-    
+
     if (!allowedRoles.includes((req as any).user.role)) {
       return res.status(403).json({ error: 'Forbidden' });
     }
-    
+
     next();
   };
 };
@@ -36,31 +36,21 @@ router.use(AuthMiddleware.authenticate as any);
  * Create a new assessment session
  * Access: Recruiter, Admin
  */
-router.post(
-  '/',
-  roleGuard(['RECRUITER', 'ADMIN']) as any,
-  sessionController.createSession
-);
+router.post('/', roleGuard(['RECRUITER', 'ADMIN']) as any, sessionController.createSession);
 
 /**
  * POST /api/sessions/:sessionId/start
  * Start an assessment session
  * Access: Candidate (own session), Recruiter, Admin
  */
-router.post(
-  '/:sessionId/start',
-  sessionController.startSession
-);
+router.post('/:sessionId/start', sessionController.startSession);
 
 /**
  * POST /api/sessions/:sessionId/complete
  * Complete an assessment session
  * Access: Candidate (own session), Recruiter, Admin
  */
-router.post(
-  '/:sessionId/complete',
-  sessionController.completeSession
-);
+router.post('/:sessionId/complete', sessionController.completeSession);
 
 // ============================================================================
 // SESSION STATE ROUTES
@@ -71,31 +61,21 @@ router.post(
  * Get session details
  * Access: Candidate (own session), Recruiter, Admin
  */
-router.get(
-  '/:sessionId',
-  sessionController.getSession
-);
+router.get('/:sessionId', sessionController.getSession);
 
 /**
  * GET /api/sessions/:sessionId/progress
  * Get session progress
  * Access: Candidate (own session), Recruiter, Admin
  */
-router.get(
-  '/:sessionId/progress',
-  sessionController.getSessionProgress
-);
+router.get('/:sessionId/progress', sessionController.getSessionProgress);
 
 /**
  * GET /api/sessions
  * List sessions with filtering and pagination
  * Access: Recruiter, Admin
  */
-router.get(
-  '/',
-  roleGuard(['RECRUITER', 'ADMIN']) as any,
-  sessionController.listActiveSessions
-);
+router.get('/', roleGuard(['RECRUITER', 'ADMIN']) as any, sessionController.listActiveSessions);
 
 // ============================================================================
 // ANSWER SUBMISSION ROUTES
@@ -106,9 +86,6 @@ router.get(
  * Submit an answer for a question
  * Access: Candidate (own session)
  */
-router.post(
-  '/:sessionId/answers',
-  sessionController.submitAnswer
-);
+router.post('/:sessionId/answers', sessionController.submitAnswer);
 
 export { router as sessionRoutes };

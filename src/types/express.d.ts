@@ -1,7 +1,7 @@
 /**
  * Express.js Type Augmentation
  * Persona: Senior Software Engineer
- * 
+ *
  * Extends Express Request interface to include user authentication data
  */
 

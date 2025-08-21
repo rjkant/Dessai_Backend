@@ -1,9 +1,9 @@
 /**
  * Epic 6 Task 6.2: Enhanced Template Management
- * 
+ *
  * Dynamic template engine with variable substitution, brand customization,
  * multi-language support, and rich content capabilities.
- * 
+ *
  * Features:
  * - Dynamic template engine with variable substitution
  * - Brand customization for enterprise customers
@@ -21,7 +21,7 @@ export enum TemplateType {
   SMS = 'SMS',
   PUSH = 'PUSH',
   IN_APP = 'IN_APP',
-  WEBHOOK = 'WEBHOOK'
+  WEBHOOK = 'WEBHOOK',
 }
 
 export enum ContentFormat {
@@ -29,14 +29,14 @@ export enum ContentFormat {
   HTML = 'HTML',
   MARKDOWN = 'MARKDOWN',
   JSON = 'JSON',
-  RICH_TEXT = 'RICH_TEXT'
+  RICH_TEXT = 'RICH_TEXT',
 }
 
 export enum TemplateStatus {
   DRAFT = 'DRAFT',
   ACTIVE = 'ACTIVE',
   ARCHIVED = 'ARCHIVED',
-  DEPRECATED = 'DEPRECATED'
+  DEPRECATED = 'DEPRECATED',
 }
 
 export interface TemplateVariable {
@@ -105,17 +105,17 @@ export interface NotificationTemplate {
   type: TemplateType;
   category: string;
   status: TemplateStatus;
-  
+
   // Content structure
   content: {
     format: ContentFormat;
     localizedContent: LocalizedContent[];
     defaultLanguage: string;
   };
-  
+
   // Variable definitions
   variables: TemplateVariable[];
-  
+
   // Brand and styling
   brandId?: string;
   customStyling?: {
@@ -123,7 +123,7 @@ export interface NotificationTemplate {
     inlineStyles?: Record<string, string>;
     layoutTemplate?: string;
   };
-  
+
   // A/B testing
   abTesting?: {
     enabled: boolean;
@@ -135,7 +135,7 @@ export interface NotificationTemplate {
     }>;
     metrics: string[];
   };
-  
+
   // Metadata
   metadata: {
     createdBy: string;
@@ -148,7 +148,7 @@ export interface NotificationTemplate {
       lastUsed?: Date;
     };
   };
-  
+
   // Validation and settings
   settings: {
     allowVariableInheritance: boolean;
@@ -199,7 +199,7 @@ export class EnhancedTemplateService {
   private templateCache: Map<string, NotificationTemplate> = new Map();
   private brandCache: Map<string, BrandConfiguration> = new Map();
   private renderCache: Map<string, RenderedTemplate> = new Map();
-  
+
   constructor(prisma: PrismaClient) {
     this.prisma = prisma;
     this.initializeService();
@@ -208,13 +208,13 @@ export class EnhancedTemplateService {
   private async initializeService(): Promise<void> {
     try {
       logger.info('Initializing Enhanced Template Service');
-      
+
       // Load default templates
       await this.loadDefaultTemplates();
-      
+
       // Setup cache cleanup
       this.setupCacheCleanup();
-      
+
       logger.info('Enhanced Template Service initialized successfully');
     } catch (error) {
       logger.error('Failed to initialize Enhanced Template Service', error as Error);
@@ -225,10 +225,12 @@ export class EnhancedTemplateService {
   /**
    * Create a new notification template
    */
-  async createTemplate(templateData: Omit<NotificationTemplate, 'id' | 'metadata'>): Promise<NotificationTemplate> {
+  async createTemplate(
+    templateData: Omit<NotificationTemplate, 'id' | 'metadata'>
+  ): Promise<NotificationTemplate> {
     try {
       const templateId = `tpl_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
+
       const template: NotificationTemplate = {
         ...templateData,
         id: templateId,
@@ -239,9 +241,9 @@ export class EnhancedTemplateService {
           version: 1,
           tags: [],
           usage: {
-            totalSent: 0
-          }
-        }
+            totalSent: 0,
+          },
+        },
       };
 
       // Validate template
@@ -253,7 +255,7 @@ export class EnhancedTemplateService {
       logger.info(`Created notification template: ${templateId}`, {
         name: template.name,
         type: template.type,
-        languages: template.content.localizedContent.length
+        languages: template.content.localizedContent.length,
       });
 
       return template;
@@ -266,9 +268,12 @@ export class EnhancedTemplateService {
   /**
    * Render template with given context
    */
-  async renderTemplate(templateId: string, context: TemplateRenderContext): Promise<RenderedTemplate> {
+  async renderTemplate(
+    templateId: string,
+    context: TemplateRenderContext
+  ): Promise<RenderedTemplate> {
     const startTime = Date.now();
-    
+
     try {
       // Check cache first
       const cacheKey = this.generateCacheKey(templateId, context);
@@ -286,15 +291,15 @@ export class EnhancedTemplateService {
       // Get brand configuration if specified
       let brand: BrandConfiguration | undefined;
       if (context.brandId) {
-        brand = await this.getBrandConfiguration(context.brandId) || undefined;
+        brand = (await this.getBrandConfiguration(context.brandId)) || undefined;
       }
 
       // Determine content variant (A/B testing)
       const variant = this.selectABTestVariant(template, context.abTestVariant);
-      
+
       // Get localized content
       const localizedContent = this.getLocalizedContent(
-        template, 
+        template,
         context.language || template.content.defaultLanguage,
         context.country,
         variant
@@ -326,8 +331,8 @@ export class EnhancedTemplateService {
           abTestVariant: variant?.id,
           renderedAt: new Date(),
           renderTime,
-          variables: processedVariables
-        }
+          variables: processedVariables,
+        },
       };
 
       // Add tracking if enabled
@@ -345,15 +350,14 @@ export class EnhancedTemplateService {
       logger.info(`Rendered template: ${templateId}`, {
         language: result.metadata.language,
         renderTime,
-        brandId: context.brandId
+        brandId: context.brandId,
       });
 
       return result;
-
     } catch (error) {
       logger.error('Failed to render template', error as Error, {
         templateId,
-        language: context.language
+        language: context.language,
       });
       throw error;
     }
@@ -362,20 +366,22 @@ export class EnhancedTemplateService {
   /**
    * Create brand configuration
    */
-  async createBrandConfiguration(brandData: Omit<BrandConfiguration, 'id'>): Promise<BrandConfiguration> {
+  async createBrandConfiguration(
+    brandData: Omit<BrandConfiguration, 'id'>
+  ): Promise<BrandConfiguration> {
     try {
       const brandId = `brand_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
+
       const brand: BrandConfiguration = {
         ...brandData,
-        id: brandId
+        id: brandId,
       };
 
       this.brandCache.set(brandId, brand);
 
       logger.info(`Created brand configuration: ${brandId}`, {
         name: brand.name,
-        organizationId: brand.organizationId
+        organizationId: brand.organizationId,
       });
 
       return brand;
@@ -396,7 +402,7 @@ export class EnhancedTemplateService {
     }
 
     // Load from database (simplified for now)
-    template = await this.loadTemplateFromStorage(templateId) || undefined;
+    template = (await this.loadTemplateFromStorage(templateId)) || undefined;
     if (template) {
       this.templateCache.set(templateId, template);
     }
@@ -415,7 +421,7 @@ export class EnhancedTemplateService {
     }
 
     // Load from database (simplified for now)
-    brand = await this.loadBrandFromStorage(brandId) || undefined;
+    brand = (await this.loadBrandFromStorage(brandId)) || undefined;
     if (brand) {
       this.brandCache.set(brandId, brand);
     }
@@ -427,7 +433,7 @@ export class EnhancedTemplateService {
    * Process template variables
    */
   private async processVariables(
-    template: NotificationTemplate, 
+    template: NotificationTemplate,
     inputVariables: Record<string, any>
   ): Promise<Record<string, any>> {
     const processed: Record<string, any> = {};
@@ -467,7 +473,6 @@ export class EnhancedTemplateService {
     brand?: BrandConfiguration,
     context?: TemplateRenderContext
   ): Promise<{ subject?: string; body: string; preheader?: string }> {
-    
     // Create rendering context
     const renderContext = {
       ...variables,
@@ -476,18 +481,26 @@ export class EnhancedTemplateService {
       // Add utility functions
       formatDate: (date: Date, format?: string) => this.formatDate(date, format),
       formatCurrency: (amount: number, currency?: string) => this.formatCurrency(amount, currency),
-      formatNumber: (num: number, decimals?: number) => this.formatNumber(num, decimals)
+      formatNumber: (num: number, decimals?: number) => this.formatNumber(num, decimals),
     };
 
     // Render each field
     const result = {
-      subject: localizedContent.subject ? this.renderString(localizedContent.subject, renderContext) : undefined,
+      subject: localizedContent.subject
+        ? this.renderString(localizedContent.subject, renderContext)
+        : undefined,
       body: this.renderString(localizedContent.body, renderContext),
-      preheader: localizedContent.preheader ? this.renderString(localizedContent.preheader, renderContext) : undefined
+      preheader: localizedContent.preheader
+        ? this.renderString(localizedContent.preheader, renderContext)
+        : undefined,
     };
 
     // Apply brand styling if applicable
-    if (brand && template.type === TemplateType.EMAIL && template.content.format === ContentFormat.HTML) {
+    if (
+      brand &&
+      template.type === TemplateType.EMAIL &&
+      template.content.format === ContentFormat.HTML
+    ) {
       result.body = this.applyBrandStyling(result.body, brand);
     }
 
@@ -525,7 +538,9 @@ export class EnhancedTemplateService {
       const [, funcName, args] = functionMatch;
       if (context[funcName] && typeof context[funcName] === 'function') {
         try {
-          const argValues = args ? args.split(',').map(arg => this.evaluateExpression(arg.trim(), context)) : [];
+          const argValues = args
+            ? args.split(',').map(arg => this.evaluateExpression(arg.trim(), context))
+            : [];
           return context[funcName](...argValues);
         } catch (error) {
           logger.warn(`Failed to execute function: ${funcName}`, error as Error);
@@ -592,10 +607,12 @@ export class EnhancedTemplateService {
   }
 
   private validateVariable(value: any, variable: TemplateVariable): void {
-    if (!variable.validation) return;
+    if (!variable.validation) {
+      return;
+    }
 
     const validation = variable.validation;
-    
+
     if (typeof value === 'string') {
       if (validation.pattern && !new RegExp(validation.pattern).test(value)) {
         throw new Error(`Variable ${variable.name} does not match pattern: ${validation.pattern}`);
@@ -607,7 +624,7 @@ export class EnhancedTemplateService {
         throw new Error(`Variable ${variable.name} is too long (max: ${validation.maxLength})`);
       }
     }
-    
+
     if (typeof value === 'number') {
       if (validation.min !== undefined && value < validation.min) {
         throw new Error(`Variable ${variable.name} is too small (min: ${validation.min})`);
@@ -619,31 +636,37 @@ export class EnhancedTemplateService {
   }
 
   private getLocalizedContent(
-    template: NotificationTemplate, 
-    language: string, 
-    country?: string, 
+    template: NotificationTemplate,
+    language: string,
+    country?: string,
     variant?: any
   ): LocalizedContent {
-    let content = variant?.content || template.content.localizedContent;
-    
+    const content = variant?.content || template.content.localizedContent;
+
     // Try exact match (language + country)
     if (country) {
-      const exact = content.find((c: LocalizedContent) => 
-        c.language === language && c.country === country
+      const exact = content.find(
+        (c: LocalizedContent) => c.language === language && c.country === country
       );
-      if (exact) return exact;
+      if (exact) {
+        return exact;
+      }
     }
-    
+
     // Try language match
     const langMatch = content.find((c: LocalizedContent) => c.language === language);
-    if (langMatch) return langMatch;
-    
+    if (langMatch) {
+      return langMatch;
+    }
+
     // Fallback to default language
-    const defaultMatch = content.find((c: LocalizedContent) => 
-      c.language === template.content.defaultLanguage
+    const defaultMatch = content.find(
+      (c: LocalizedContent) => c.language === template.content.defaultLanguage
     );
-    if (defaultMatch) return defaultMatch;
-    
+    if (defaultMatch) {
+      return defaultMatch;
+    }
+
     // Last resort - first available
     return content[0];
   }
@@ -672,11 +695,14 @@ export class EnhancedTemplateService {
     return template.abTesting.variants[0]; // Fallback
   }
 
-  private generateTrackingInfo(template: NotificationTemplate, context: TemplateRenderContext): any {
+  private generateTrackingInfo(
+    template: NotificationTemplate,
+    context: TemplateRenderContext
+  ): any {
     return {
       trackingPixel: `https://track.example.com/pixel/${template.id}/${context.userId}`,
       clickTrackingEnabled: true,
-      unsubscribeLink: `https://unsubscribe.example.com/${context.userId}`
+      unsubscribeLink: `https://unsubscribe.example.com/${context.userId}`,
     };
   }
 
@@ -686,7 +712,7 @@ export class EnhancedTemplateService {
       context.language || 'default',
       context.brandId || 'default',
       context.abTestVariant || 'default',
-      JSON.stringify(context.variables)
+      JSON.stringify(context.variables),
     ];
     return keyParts.join('|');
   }
@@ -714,7 +740,7 @@ export class EnhancedTemplateService {
     // Load bias detection template
     const biasTemplate = this.getDefaultBiasDetectionTemplate();
     this.templateCache.set(biasTemplate.id, biasTemplate);
-    
+
     logger.info('Loaded default notification templates');
   }
 
@@ -754,47 +780,47 @@ export class EnhancedTemplateService {
                 </body>
               </html>
             `,
-            preheader: 'Bias detected in assessment - immediate review required'
-          }
-        ]
+            preheader: 'Bias detected in assessment - immediate review required',
+          },
+        ],
       },
       variables: [
         {
           name: 'recipientName',
           type: 'string',
           required: true,
-          description: 'Name of the notification recipient'
+          description: 'Name of the notification recipient',
         },
         {
           name: 'assessmentId',
           type: 'string',
           required: true,
-          description: 'Unique identifier for the assessment'
+          description: 'Unique identifier for the assessment',
         },
         {
           name: 'assessmentTitle',
           type: 'string',
           required: true,
-          description: 'Title of the assessment'
+          description: 'Title of the assessment',
         },
         {
           name: 'biasType',
           type: 'string',
           required: true,
-          description: 'Type of bias detected'
+          description: 'Type of bias detected',
         },
         {
           name: 'biasSeverity',
           type: 'string',
           required: true,
-          description: 'Severity level of the bias'
+          description: 'Severity level of the bias',
         },
         {
           name: 'detectedAt',
           type: 'date',
           required: true,
-          description: 'Timestamp when bias was detected'
-        }
+          description: 'Timestamp when bias was detected',
+        },
       ],
       metadata: {
         createdBy: 'system',
@@ -803,23 +829,26 @@ export class EnhancedTemplateService {
         version: 1,
         tags: ['bias-detection', 'compliance', 'alert'],
         usage: {
-          totalSent: 0
-        }
+          totalSent: 0,
+        },
       },
       settings: {
         allowVariableInheritance: true,
         validateVariables: true,
         cacheTTL: 300, // 5 minutes
-        maxRenderTime: 5000 // 5 seconds
-      }
+        maxRenderTime: 5000, // 5 seconds
+      },
     };
   }
 
   private setupCacheCleanup(): void {
     // Clean cache every 30 minutes
-    setInterval(() => {
-      this.cleanupCache();
-    }, 30 * 60 * 1000);
+    setInterval(
+      () => {
+        this.cleanupCache();
+      },
+      30 * 60 * 1000
+    );
   }
 
   private cleanupCache(): void {
@@ -829,7 +858,8 @@ export class EnhancedTemplateService {
     // Clean render cache
     for (const [key, cached] of this.renderCache.entries()) {
       const age = now - cached.metadata.renderedAt.getTime();
-      if (age > 30 * 60 * 1000) { // 30 minutes
+      if (age > 30 * 60 * 1000) {
+        // 30 minutes
         this.renderCache.delete(key);
         cleaned++;
       }
@@ -848,7 +878,7 @@ export class EnhancedTemplateService {
   private formatCurrency(amount: number, currency = 'USD'): string {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency
+      currency,
     }).format(amount);
   }
 

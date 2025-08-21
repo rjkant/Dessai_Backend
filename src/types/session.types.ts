@@ -87,13 +87,13 @@ export enum SessionStatus {
   COMPLETED = 'COMPLETED',
   EXPIRED = 'EXPIRED',
   TERMINATED = 'TERMINATED',
-  CANCELLED = 'CANCELLED'
+  CANCELLED = 'CANCELLED',
 }
 
 export enum QuestionOrderType {
   SEQUENTIAL = 'SEQUENTIAL',
   RANDOM = 'RANDOM',
-  ADAPTIVE = 'ADAPTIVE'
+  ADAPTIVE = 'ADAPTIVE',
 }
 
 export interface SessionStateUpdate {
@@ -135,7 +135,7 @@ export enum NavigationDirection {
   PREVIOUS = 'PREVIOUS',
   JUMP = 'JUMP',
   FIRST = 'FIRST',
-  LAST = 'LAST'
+  LAST = 'LAST',
 }
 
 export interface NavigationState {
@@ -168,25 +168,25 @@ export interface AnswerSubmission {
 export interface AnswerData {
   // Multiple Choice
   selectedOptions?: string[];
-  
+
   // Coding Questions
   code?: string;
   language?: string;
   testResults?: TestResult[];
-  
+
   // System Design
   diagram?: string;
   explanation?: string;
   components?: SystemComponent[];
-  
+
   // Database
   query?: string;
   schema?: string;
-  
+
   // Algorithm
   algorithm?: string;
   complexity?: ComplexityAnalysis;
-  
+
   // Common fields
   confidence?: number; // 1-5 scale
   timeToFirstEdit?: number;
@@ -265,7 +265,7 @@ export enum ProctoringStatus {
   ACTIVE = 'ACTIVE',
   PAUSED = 'PAUSED',
   COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED'
+  FAILED = 'FAILED',
 }
 
 export interface ProctoringViolation {
@@ -289,14 +289,14 @@ export enum ViolationType {
   UNAUTHORIZED_APPLICATION = 'UNAUTHORIZED_APPLICATION',
   AUDIO_DETECTED = 'AUDIO_DETECTED',
   MOBILE_PHONE = 'MOBILE_PHONE',
-  SUSPICIOUS_BEHAVIOR = 'SUSPICIOUS_BEHAVIOR'
+  SUSPICIOUS_BEHAVIOR = 'SUSPICIOUS_BEHAVIOR',
 }
 
 export enum ViolationSeverity {
   LOW = 'LOW',
   MEDIUM = 'MEDIUM',
   HIGH = 'HIGH',
-  CRITICAL = 'CRITICAL'
+  CRITICAL = 'CRITICAL',
 }
 
 export interface ProctoringRecording {
@@ -459,32 +459,32 @@ export enum SessionErrorCode {
   SESSION_ALREADY_COMPLETED = 'SESSION_ALREADY_COMPLETED',
   SESSION_NOT_STARTED = 'SESSION_NOT_STARTED',
   SESSION_TERMINATED = 'SESSION_TERMINATED',
-  
+
   // Navigation
   INVALID_NAVIGATION = 'INVALID_NAVIGATION',
   NAVIGATION_NOT_ALLOWED = 'NAVIGATION_NOT_ALLOWED',
   QUESTION_INDEX_OUT_OF_BOUNDS = 'QUESTION_INDEX_OUT_OF_BOUNDS',
-  
+
   // Submission
   ANSWER_ALREADY_SUBMITTED = 'ANSWER_ALREADY_SUBMITTED',
   INVALID_ANSWER_FORMAT = 'INVALID_ANSWER_FORMAT',
   SUBMISSION_TIMEOUT = 'SUBMISSION_TIMEOUT',
-  
+
   // Security
   PROCTORING_VIOLATION = 'PROCTORING_VIOLATION',
   UNAUTHORIZED_ACCESS = 'UNAUTHORIZED_ACCESS',
   SESSION_INTEGRITY_COMPROMISED = 'SESSION_INTEGRITY_COMPROMISED',
-  
+
   // System
   QUESTION_LOADING_FAILED = 'QUESTION_LOADING_FAILED',
   AUTO_SAVE_FAILED = 'AUTO_SAVE_FAILED',
   NETWORK_ERROR = 'NETWORK_ERROR',
-  
+
   // Validation
   REQUIRED_FIELD = 'REQUIRED_FIELD',
   INVALID_TYPE = 'INVALID_TYPE',
   INVALID_VALUE = 'INVALID_VALUE',
-  INVALID_CONFIGURATION = 'INVALID_CONFIGURATION'
+  INVALID_CONFIGURATION = 'INVALID_CONFIGURATION',
 }
 
 export interface SessionError {
@@ -514,28 +514,33 @@ export enum SessionEventType {
   SESSION_RESUMED = 'SESSION_RESUMED',
   SESSION_COMPLETED = 'SESSION_COMPLETED',
   SESSION_TERMINATED = 'SESSION_TERMINATED',
-  
+
   QUESTION_VIEWED = 'QUESTION_VIEWED',
   QUESTION_ANSWERED = 'QUESTION_ANSWERED',
   QUESTION_FLAGGED = 'QUESTION_FLAGGED',
-  
+
   NAVIGATION_ATTEMPTED = 'NAVIGATION_ATTEMPTED',
-  
+
   TIME_WARNING = 'TIME_WARNING',
   TIME_EXPIRED = 'TIME_EXPIRED',
-  
+
   PROCTORING_VIOLATION = 'PROCTORING_VIOLATION',
   PROCTORING_WARNING = 'PROCTORING_WARNING',
-  
+
   AUTO_SAVE = 'AUTO_SAVE',
-  SYSTEM_ERROR = 'SYSTEM_ERROR'
+  SYSTEM_ERROR = 'SYSTEM_ERROR',
 }
 
 // ============================================================================
 // HELPER TYPES
 // ============================================================================
 
-export type QuestionType = 'CODING' | 'MULTIPLE_CHOICE' | 'SYSTEM_DESIGN' | 'DATABASE' | 'ALGORITHM';
+export type QuestionType =
+  | 'CODING'
+  | 'MULTIPLE_CHOICE'
+  | 'SYSTEM_DESIGN'
+  | 'DATABASE'
+  | 'ALGORITHM';
 export type DifficultyLevel = 'EASY' | 'MEDIUM' | 'HARD';
 
 export interface PaginatedResponse<T> {

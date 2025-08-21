@@ -1,10 +1,10 @@
 /**
  * Rate Limiting Middleware
- * 
+ *
  * Provides rate limiting functionality for API endpoints using Redis as backend
  * Supports different rate limiting strategies:
  * - Fixed window rate limiting
- * - Sliding window rate limiting  
+ * - Sliding window rate limiting
  * - Token bucket rate limiting
  */
 
@@ -36,7 +36,7 @@ export interface RateLimitConfig {
 
 export class RateLimitMiddleware {
   private static redis: Redis;
-  
+
   /**
    * Initialize Redis connection for rate limiting
    */
@@ -72,7 +72,7 @@ export class RateLimitMiddleware {
       message: 'Too many requests, please try again later.',
       code: 'RATE_LIMIT_EXCEEDED',
       retryAfter: Math.ceil(60), // Default 1 minute
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -85,19 +85,19 @@ export class RateLimitMiddleware {
   ): Promise<{ allowed: boolean; totalHits: number; remainingPoints: number }> {
     const redis = this.getRedisClient();
     const windowKey = `${key}:${Math.floor(Date.now() / config.windowMs)}`;
-    
+
     const multi = redis.multi();
     multi.incr(windowKey);
     multi.expire(windowKey, Math.ceil(config.windowMs / 1000));
-    
+
     const results = await multi.exec();
-    const totalHits = results?.[0]?.[1] as number || 0;
+    const totalHits = (results?.[0]?.[1] as number) || 0;
     const remainingPoints = Math.max(0, config.max - totalHits);
-    
+
     return {
       allowed: totalHits <= config.max,
       totalHits,
-      remainingPoints
+      remainingPoints,
     };
   }
 
@@ -111,21 +111,21 @@ export class RateLimitMiddleware {
     const redis = this.getRedisClient();
     const now = Date.now();
     const windowStart = now - config.windowMs;
-    
+
     const multi = redis.multi();
     multi.zremrangebyscore(key, 0, windowStart);
     multi.zadd(key, now, `${now}-${Math.random()}`);
     multi.zcard(key);
     multi.expire(key, Math.ceil(config.windowMs / 1000));
-    
+
     const results = await multi.exec();
-    const totalHits = results?.[2]?.[1] as number || 0;
+    const totalHits = (results?.[2]?.[1] as number) || 0;
     const remainingPoints = Math.max(0, config.max - totalHits);
-    
+
     return {
       allowed: totalHits <= config.max,
       totalHits,
-      remainingPoints
+      remainingPoints,
     };
   }
 
@@ -139,7 +139,7 @@ export class RateLimitMiddleware {
     const redis = this.getRedisClient();
     const now = Date.now();
     const refillRate = config.max / (config.windowMs / 1000); // tokens per second
-    
+
     const lua = `
       local key = KEYS[1]
       local capacity = tonumber(ARGV[1])
@@ -166,13 +166,13 @@ export class RateLimitMiddleware {
       
       return {allowed and 1 or 0, current_tokens, capacity - current_tokens}
     `;
-    
-    const result = await redis.eval(lua, 1, key, config.max, 1, config.windowMs, now) as number[];
-    
+
+    const result = (await redis.eval(lua, 1, key, config.max, 1, config.windowMs, now)) as number[];
+
     return {
       allowed: result[0] === 1,
       totalHits: config.max - result[1],
-      remainingPoints: result[1]
+      remainingPoints: result[1],
     };
   }
 
@@ -190,7 +190,7 @@ export class RateLimitMiddleware {
       handler = this.defaultHandler,
       standardHeaders = true,
       legacyHeaders = false,
-      skip
+      skip,
     } = config;
 
     return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -225,7 +225,7 @@ export class RateLimitMiddleware {
             'RateLimit-Limit': max.toString(),
             'RateLimit-Remaining': remainingPoints.toString(),
             'RateLimit-Reset': new Date(Date.now() + windowMs).toISOString(),
-            'RateLimit-Policy': `${max};w=${Math.floor(windowMs / 1000)}`
+            'RateLimit-Policy': `${max};w=${Math.floor(windowMs / 1000)}`,
           });
         }
 
@@ -234,7 +234,7 @@ export class RateLimitMiddleware {
           res.set({
             'X-RateLimit-Limit': max.toString(),
             'X-RateLimit-Remaining': remainingPoints.toString(),
-            'X-RateLimit-Reset': Math.ceil((Date.now() + windowMs) / 1000).toString()
+            'X-RateLimit-Reset': Math.ceil((Date.now() + windowMs) / 1000).toString(),
           });
         }
 
@@ -247,40 +247,38 @@ export class RateLimitMiddleware {
         // Handle response counting
         const originalSend = res.send;
         const originalJson = res.json;
-        
+
         // Override send method to track response status
-        res.send = function(body: any) {
+        res.send = function (body: any) {
           const statusCode = res.statusCode;
-          const shouldSkip = (
+          const shouldSkip =
             (skipSuccessfulRequests && statusCode < 400) ||
-            (skipFailedRequests && statusCode >= 400)
-          );
-          
+            (skipFailedRequests && statusCode >= 400);
+
           if (shouldSkip) {
             // Decrement count if we should skip this request
             const redis = RateLimitMiddleware.getRedisClient();
             const windowKey = `${key}:${Math.floor(Date.now() / windowMs)}`;
             redis.decr(windowKey).catch(() => {}); // Ignore errors
           }
-          
+
           return originalSend.call(this, body);
         };
 
         // Override json method to track response status
-        res.json = function(body: any) {
+        res.json = function (body: any) {
           const statusCode = res.statusCode;
-          const shouldSkip = (
+          const shouldSkip =
             (skipSuccessfulRequests && statusCode < 400) ||
-            (skipFailedRequests && statusCode >= 400)
-          );
-          
+            (skipFailedRequests && statusCode >= 400);
+
           if (shouldSkip) {
             // Decrement count if we should skip this request
             const redis = RateLimitMiddleware.getRedisClient();
             const windowKey = `${key}:${Math.floor(Date.now() / windowMs)}`;
             redis.decr(windowKey).catch(() => {}); // Ignore errors
           }
-          
+
           return originalJson.call(this, body);
         };
 
@@ -307,7 +305,10 @@ export class RateLimitMiddleware {
   /**
    * Get current rate limit status for a key
    */
-  static async getStatus(key: string, config: RateLimitConfig): Promise<{
+  static async getStatus(
+    key: string,
+    config: RateLimitConfig
+  ): Promise<{
     totalHits: number;
     remainingPoints: number;
     resetTime: Date;
@@ -315,13 +316,13 @@ export class RateLimitMiddleware {
     const redis = this.getRedisClient();
     const windowKey = `${key}:${Math.floor(Date.now() / config.windowMs)}`;
     const totalHits = await redis.get(windowKey);
-    const remainingPoints = Math.max(0, config.max - (parseInt(totalHits || '0')));
+    const remainingPoints = Math.max(0, config.max - parseInt(totalHits || '0'));
     const resetTime = new Date(Math.ceil(Date.now() / config.windowMs) * config.windowMs);
-    
+
     return {
       totalHits: parseInt(totalHits || '0'),
       remainingPoints,
-      resetTime
+      resetTime,
     };
   }
 
@@ -331,10 +332,11 @@ export class RateLimitMiddleware {
   static async cleanup(): Promise<void> {
     const redis = this.getRedisClient();
     const keys = await redis.keys('rate_limit:*');
-    
+
     for (const key of keys) {
       const ttl = await redis.ttl(key);
-      if (ttl === -1) { // Key exists but has no expiration
+      if (ttl === -1) {
+        // Key exists but has no expiration
         await redis.del(key);
       }
     }
@@ -356,34 +358,34 @@ export const CommonRateLimits = {
   auth: rateLimitMiddleware({
     max: 5,
     windowMs: 15 * 60 * 1000, // 15 minutes
-    strategy: 'sliding-window'
+    strategy: 'sliding-window',
   }),
 
   /** API rate limit for general endpoints */
   api: rateLimitMiddleware({
     max: 100,
     windowMs: 60 * 1000, // 1 minute
-    strategy: 'fixed-window'
+    strategy: 'fixed-window',
   }),
 
   /** Upload rate limit for file uploads */
   upload: rateLimitMiddleware({
     max: 10,
     windowMs: 60 * 1000, // 1 minute
-    strategy: 'token-bucket'
+    strategy: 'token-bucket',
   }),
 
   /** Webhook rate limit for incoming webhooks */
   webhook: rateLimitMiddleware({
     max: 1000,
     windowMs: 60 * 1000, // 1 minute
-    strategy: 'fixed-window'
+    strategy: 'fixed-window',
   }),
 
   /** Admin rate limit for administrative actions */
   admin: rateLimitMiddleware({
     max: 20,
     windowMs: 60 * 1000, // 1 minute
-    strategy: 'sliding-window'
-  })
+    strategy: 'sliding-window',
+  }),
 };

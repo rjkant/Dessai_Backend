@@ -1,6 +1,6 @@
 /**
  * Enhanced Notification Routes - Epic 6: Advanced Notification & Communication
- * 
+ *
  * Comprehensive notification system with workflows, templates, and multi-channel support:
  * - Advanced notification workflows with conditional logic
  * - Dynamic template engine with variable substitution
@@ -35,7 +35,7 @@ export function createNotificationRoutes(
       path: req.path,
       query: req.query,
       userAgent: req.get('User-Agent'),
-      ip: req.ip
+      ip: req.ip,
     });
     next();
   });
@@ -175,7 +175,7 @@ export function createNotificationRoutes(
       method: req.method,
       path: req.path,
       body: req.body,
-      query: req.query
+      query: req.query,
     });
 
     // Handle specific notification errors
@@ -185,8 +185,8 @@ export function createNotificationRoutes(
         error: {
           code: err.code,
           message: err.message,
-          metadata: err.metadata
-        }
+          metadata: err.metadata,
+        },
       });
     }
 
@@ -196,8 +196,8 @@ export function createNotificationRoutes(
         error: {
           code: 'TEMPLATE_ERROR',
           message: err.message,
-          metadata: err.metadata
-        }
+          metadata: err.metadata,
+        },
       });
     }
 
@@ -207,8 +207,8 @@ export function createNotificationRoutes(
         error: {
           code: 'DELIVERY_ERROR',
           message: err.message,
-          metadata: err.metadata
-        }
+          metadata: err.metadata,
+        },
       });
     }
 
@@ -218,8 +218,8 @@ export function createNotificationRoutes(
         error: {
           code: 'RATE_LIMIT_EXCEEDED',
           message: err.message,
-          metadata: err.metadata
-        }
+          metadata: err.metadata,
+        },
       });
     }
 
@@ -229,8 +229,8 @@ export function createNotificationRoutes(
         error: {
           code: 'CONSENT_REQUIRED',
           message: err.message,
-          metadata: err.metadata
-        }
+          metadata: err.metadata,
+        },
       });
     }
 
@@ -241,8 +241,8 @@ export function createNotificationRoutes(
         error: {
           code: 'VALIDATION_ERROR',
           message: err.message,
-          details: err.details
-        }
+          details: err.details,
+        },
       });
     }
 
@@ -252,8 +252,8 @@ export function createNotificationRoutes(
         success: false,
         error: {
           code: 'UNAUTHORIZED',
-          message: 'Authentication required'
-        }
+          message: 'Authentication required',
+        },
       });
     }
 
@@ -263,8 +263,8 @@ export function createNotificationRoutes(
         success: false,
         error: {
           code: 'FORBIDDEN',
-          message: 'Insufficient permissions'
-        }
+          message: 'Insufficient permissions',
+        },
       });
     }
 
@@ -273,8 +273,8 @@ export function createNotificationRoutes(
       success: false,
       error: {
         code: 'INTERNAL_SERVER_ERROR',
-        message: 'An unexpected error occurred'
-      }
+        message: 'An unexpected error occurred',
+      },
     });
   });
 

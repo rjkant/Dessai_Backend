@@ -1,9 +1,9 @@
 /**
  * Compliance Validation Utility
- * 
+ *
  * Comprehensive compliance validation system for bias detection
  * supporting multiple regulatory frameworks and international standards.
- * 
+ *
  * Features:
  * - EEOC compliance validation (4/5ths rule, statistical significance)
  * - GDPR data protection compliance
@@ -20,7 +20,7 @@ import {
   StatisticalTestResult,
   ProtectedCharacteristic,
   BiasSeverity,
-  DemographicGroup
+  DemographicGroup,
 } from '../types/bias-detection.types';
 import { Logger } from './logger.util';
 
@@ -101,7 +101,12 @@ export interface RemediationRecommendation {
   id: string;
   type: 'immediate' | 'short-term' | 'long-term';
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-  category: 'question-modification' | 'process-improvement' | 'training' | 'policy-change' | 'assessment-design';
+  category:
+    | 'question-modification'
+    | 'process-improvement'
+    | 'training'
+    | 'policy-change'
+    | 'assessment-design';
   title: string;
   description: string;
   specificActions: string[];
@@ -184,7 +189,7 @@ export class ComplianceValidationUtil {
       try {
         const result = rule.validator({
           disparateImpactAnalyses,
-          demographicAnalyses
+          demographicAnalyses,
         });
         validationResults.push(result);
       } catch (error) {
@@ -194,12 +199,15 @@ export class ComplianceValidationUtil {
           compliant: false,
           severity: 'ERROR',
           message: `Validation failed: ${error}`,
-          details: { error: error }
+          details: { error: error },
         });
       }
     }
 
-    return this.generateComplianceReport(ComplianceFramework.EEOC_UNIFORM_GUIDELINES, validationResults);
+    return this.generateComplianceReport(
+      ComplianceFramework.EEOC_UNIFORM_GUIDELINES,
+      validationResults
+    );
   }
 
   /**
@@ -216,7 +224,7 @@ export class ComplianceValidationUtil {
       try {
         const result = rule.validator({
           dataProcessingDetails,
-          demographicData
+          demographicData,
         });
         validationResults.push(result);
       } catch (error) {
@@ -226,7 +234,7 @@ export class ComplianceValidationUtil {
           compliant: false,
           severity: 'ERROR',
           message: `GDPR validation failed: ${error}`,
-          details: { error: error }
+          details: { error: error },
         });
       }
     }
@@ -248,7 +256,7 @@ export class ComplianceValidationUtil {
       try {
         const result = rule.validator({
           aiSystemDetails,
-          biasAnalysisResults
+          biasAnalysisResults,
         });
         validationResults.push(result);
       } catch (error) {
@@ -258,7 +266,7 @@ export class ComplianceValidationUtil {
           compliant: false,
           severity: 'ERROR',
           message: `EU AI Act validation failed: ${error}`,
-          details: { error: error }
+          details: { error: error },
         });
       }
     }
@@ -276,10 +284,11 @@ export class ComplianceValidationUtil {
         framework: ComplianceFramework.EEOC_UNIFORM_GUIDELINES,
         ruleId: 'EEOC_4_5_RULE',
         title: '4/5ths Rule Compliance',
-        description: 'Selection rate for protected group must be at least 80% of selection rate for non-protected group',
+        description:
+          'Selection rate for protected group must be at least 80% of selection rate for non-protected group',
         severity: 'CRITICAL',
         references: ['29 CFR 1607.4(D)', 'EEOC Uniform Guidelines'],
-        validator: (data) => this.validate4FifthsRule(data.disparateImpactAnalyses)
+        validator: data => this.validate4FifthsRule(data.disparateImpactAnalyses),
       },
       {
         framework: ComplianceFramework.EEOC_UNIFORM_GUIDELINES,
@@ -288,16 +297,17 @@ export class ComplianceValidationUtil {
         description: 'Statistical significance test should not show bias (p-value > 0.05)',
         severity: 'ERROR',
         references: ['29 CFR 1607.4(D)', 'EEOC Technical Guidelines'],
-        validator: (data) => this.validateStatisticalSignificance(data.disparateImpactAnalyses)
+        validator: data => this.validateStatisticalSignificance(data.disparateImpactAnalyses),
       },
       {
         framework: ComplianceFramework.EEOC_UNIFORM_GUIDELINES,
         ruleId: 'EEOC_SAMPLE_SIZE',
         title: 'Adequate Sample Size',
-        description: 'Sample sizes must be adequate for statistical analysis (minimum 30 per group)',
+        description:
+          'Sample sizes must be adequate for statistical analysis (minimum 30 per group)',
         severity: 'WARNING',
         references: ['EEOC Technical Guidelines'],
-        validator: (data) => this.validateSampleSize(data.disparateImpactAnalyses)
+        validator: data => this.validateSampleSize(data.disparateImpactAnalyses),
       },
       {
         framework: ComplianceFramework.EEOC_UNIFORM_GUIDELINES,
@@ -306,8 +316,8 @@ export class ComplianceValidationUtil {
         description: 'Adequate documentation of validation process and results',
         severity: 'ERROR',
         references: ['29 CFR 1607.15'],
-        validator: (data) => this.validateDocumentation(data)
-      }
+        validator: data => this.validateDocumentation(data),
+      },
     ];
 
     // GDPR Rules
@@ -319,7 +329,7 @@ export class ComplianceValidationUtil {
         description: 'Must have lawful basis for processing demographic data',
         severity: 'CRITICAL',
         references: ['GDPR Article 6', 'GDPR Article 9'],
-        validator: (data) => this.validateLawfulBasis(data)
+        validator: data => this.validateLawfulBasis(data),
       },
       {
         framework: ComplianceFramework.GDPR,
@@ -328,7 +338,7 @@ export class ComplianceValidationUtil {
         description: 'Explicit consent required for processing special category personal data',
         severity: 'CRITICAL',
         references: ['GDPR Article 9'],
-        validator: (data) => this.validateExplicitConsent(data)
+        validator: data => this.validateExplicitConsent(data),
       },
       {
         framework: ComplianceFramework.GDPR,
@@ -337,7 +347,7 @@ export class ComplianceValidationUtil {
         description: 'Only collect and process necessary demographic data',
         severity: 'ERROR',
         references: ['GDPR Article 5(1)(c)'],
-        validator: (data) => this.validateDataMinimization(data)
+        validator: data => this.validateDataMinimization(data),
       },
       {
         framework: ComplianceFramework.GDPR,
@@ -346,8 +356,8 @@ export class ComplianceValidationUtil {
         description: 'Demographic data must not be retained longer than necessary',
         severity: 'ERROR',
         references: ['GDPR Article 5(1)(e)'],
-        validator: (data) => this.validateDataRetention(data)
-      }
+        validator: data => this.validateDataRetention(data),
+      },
     ];
 
     // EU AI Act Rules
@@ -359,7 +369,7 @@ export class ComplianceValidationUtil {
         description: 'High-risk AI systems must monitor for bias and discrimination',
         severity: 'CRITICAL',
         references: ['EU AI Act Article 9'],
-        validator: (data) => this.validateBiasMonitoring(data)
+        validator: data => this.validateBiasMonitoring(data),
       },
       {
         framework: ComplianceFramework.EU_AI_ACT,
@@ -368,7 +378,7 @@ export class ComplianceValidationUtil {
         description: 'Must have risk management system for bias and discrimination',
         severity: 'CRITICAL',
         references: ['EU AI Act Article 9'],
-        validator: (data) => this.validateRiskManagement(data)
+        validator: data => this.validateRiskManagement(data),
       },
       {
         framework: ComplianceFramework.EU_AI_ACT,
@@ -377,8 +387,8 @@ export class ComplianceValidationUtil {
         description: 'Training data must be representative and free from bias',
         severity: 'ERROR',
         references: ['EU AI Act Article 10'],
-        validator: (data) => this.validateTrainingDataQuality(data)
-      }
+        validator: data => this.validateTrainingDataQuality(data),
+      },
     ];
 
     this.complianceRules.set(ComplianceFramework.EEOC_UNIFORM_GUIDELINES, eeocRules);
@@ -391,14 +401,14 @@ export class ComplianceValidationUtil {
    */
   private validate4FifthsRule(analyses: DisparateImpactAnalysis[]): ComplianceValidationResult {
     const violations = analyses.filter(a => !a.fourFifthsRule.compliant);
-    
+
     if (violations.length === 0) {
       return {
         ruleId: 'EEOC_4_5_RULE',
         compliant: true,
         severity: 'CRITICAL',
         message: '4/5ths rule compliance verified for all protected groups',
-        details: { totalAnalyses: analyses.length, violations: 0 }
+        details: { totalAnalyses: analyses.length, violations: 0 },
       };
     }
 
@@ -407,30 +417,32 @@ export class ComplianceValidationUtil {
       compliant: false,
       severity: 'CRITICAL',
       message: `4/5ths rule violations detected in ${violations.length} protected group(s)`,
-      details: { 
+      details: {
         violations: violations.map(v => ({
           protectedGroup: v.protectedGroup,
           impactRatio: v.impactRatio,
-          threshold: v.fourFifthsRule.threshold
-        }))
+          threshold: v.fourFifthsRule.threshold,
+        })),
       },
-      recommendation: 'Immediate review and remediation required for disparate impact violations'
+      recommendation: 'Immediate review and remediation required for disparate impact violations',
     };
   }
 
   /**
    * Validate statistical significance requirements
    */
-  private validateStatisticalSignificance(analyses: DisparateImpactAnalysis[]): ComplianceValidationResult {
+  private validateStatisticalSignificance(
+    analyses: DisparateImpactAnalysis[]
+  ): ComplianceValidationResult {
     const significantBias = analyses.filter(a => a.statisticalTest.isSignificant);
-    
+
     if (significantBias.length === 0) {
       return {
         ruleId: 'EEOC_STATISTICAL_SIGNIFICANCE',
         compliant: true,
         severity: 'ERROR',
         message: 'No statistically significant bias detected',
-        details: { totalAnalyses: analyses.length, significantBias: 0 }
+        details: { totalAnalyses: analyses.length, significantBias: 0 },
       };
     }
 
@@ -443,10 +455,10 @@ export class ComplianceValidationUtil {
         significantBias: significantBias.map(s => ({
           protectedGroup: s.protectedGroup,
           pValue: s.statisticalTest.pValue,
-          testStatistic: s.statisticalTest.testStatistic
-        }))
+          testStatistic: s.statisticalTest.testStatistic,
+        })),
       },
-      recommendation: 'Review assessment methods and consider bias remediation measures'
+      recommendation: 'Review assessment methods and consider bias remediation measures',
     };
   }
 
@@ -454,17 +466,17 @@ export class ComplianceValidationUtil {
    * Validate adequate sample sizes
    */
   private validateSampleSize(analyses: DisparateImpactAnalysis[]): ComplianceValidationResult {
-    const inadequateSamples = analyses.filter(a => 
-      a.sampleSizes.protectedGroup < 30 || a.sampleSizes.nonProtectedGroup < 30
+    const inadequateSamples = analyses.filter(
+      a => a.sampleSizes.protectedGroup < 30 || a.sampleSizes.nonProtectedGroup < 30
     );
-    
+
     if (inadequateSamples.length === 0) {
       return {
         ruleId: 'EEOC_SAMPLE_SIZE',
         compliant: true,
         severity: 'WARNING',
         message: 'Adequate sample sizes for all analyses',
-        details: { totalAnalyses: analyses.length, inadequateSamples: 0 }
+        details: { totalAnalyses: analyses.length, inadequateSamples: 0 },
       };
     }
 
@@ -477,10 +489,10 @@ export class ComplianceValidationUtil {
         inadequateSamples: inadequateSamples.map(i => ({
           protectedGroup: i.protectedGroup,
           protectedSample: i.sampleSizes.protectedGroup,
-          nonProtectedSample: i.sampleSizes.nonProtectedGroup
-        }))
+          nonProtectedSample: i.sampleSizes.nonProtectedGroup,
+        })),
       },
-      recommendation: 'Increase sample sizes or interpret results with caution'
+      recommendation: 'Increase sample sizes or interpret results with caution',
     };
   }
 
@@ -493,9 +505,13 @@ export class ComplianceValidationUtil {
   ): ComplianceReport {
     const passedRules = validationResults.filter(r => r.compliant).length;
     const failedRules = validationResults.filter(r => !r.compliant).length;
-    const warningCount = validationResults.filter(r => r.severity === 'WARNING' && !r.compliant).length;
+    const warningCount = validationResults.filter(
+      r => r.severity === 'WARNING' && !r.compliant
+    ).length;
     const errorCount = validationResults.filter(r => r.severity === 'ERROR' && !r.compliant).length;
-    const criticalCount = validationResults.filter(r => r.severity === 'CRITICAL' && !r.compliant).length;
+    const criticalCount = validationResults.filter(
+      r => r.severity === 'CRITICAL' && !r.compliant
+    ).length;
 
     let overallStatus: 'COMPLIANT' | 'NON_COMPLIANT' | 'REQUIRES_REVIEW';
     if (criticalCount > 0 || errorCount > 0) {
@@ -520,15 +536,15 @@ export class ComplianceValidationUtil {
         failedRules,
         warningCount,
         errorCount,
-        criticalCount
+        criticalCount,
       },
       recommendations,
       auditTrail: {
         validatedAt: new Date(),
         validatedBy: 'system',
         version: '1.0.0',
-        dataSource: 'bias-analysis-results'
-      }
+        dataSource: 'bias-analysis-results',
+      },
     };
   }
 
@@ -539,7 +555,7 @@ export class ComplianceValidationUtil {
       compliant: true,
       severity: 'ERROR',
       message: 'Documentation requirements satisfied',
-      details: {}
+      details: {},
     };
   }
 
@@ -549,7 +565,7 @@ export class ComplianceValidationUtil {
       compliant: true,
       severity: 'CRITICAL',
       message: 'Lawful basis for processing established',
-      details: {}
+      details: {},
     };
   }
 
@@ -559,7 +575,7 @@ export class ComplianceValidationUtil {
       compliant: true,
       severity: 'CRITICAL',
       message: 'Explicit consent obtained for special category data',
-      details: {}
+      details: {},
     };
   }
 
@@ -569,7 +585,7 @@ export class ComplianceValidationUtil {
       compliant: true,
       severity: 'ERROR',
       message: 'Data minimization principle followed',
-      details: {}
+      details: {},
     };
   }
 
@@ -579,7 +595,7 @@ export class ComplianceValidationUtil {
       compliant: true,
       severity: 'ERROR',
       message: 'Data retention limits observed',
-      details: {}
+      details: {},
     };
   }
 
@@ -589,7 +605,7 @@ export class ComplianceValidationUtil {
       compliant: true,
       severity: 'CRITICAL',
       message: 'Bias monitoring system implemented',
-      details: {}
+      details: {},
     };
   }
 
@@ -599,7 +615,7 @@ export class ComplianceValidationUtil {
       compliant: true,
       severity: 'CRITICAL',
       message: 'Risk management system in place',
-      details: {}
+      details: {},
     };
   }
 
@@ -609,7 +625,7 @@ export class ComplianceValidationUtil {
       compliant: true,
       severity: 'ERROR',
       message: 'Training data quality standards met',
-      details: {}
+      details: {},
     };
   }
 }

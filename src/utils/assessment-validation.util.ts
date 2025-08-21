@@ -2,16 +2,16 @@
  * Assessment Validation Utilities
  * TASK-CG-005: Assessment Management Core
  * Persona: Senior Software Engineer
- * 
+ *
  * Comprehensive validation utilities for assessment data,
  * settings validation, and input sanitization.
  */
 
 import validator from 'validator';
-import { 
+import {
   CreateAssessmentRequest,
   UpdateAssessmentRequest,
-  AssessmentSettings
+  AssessmentSettings,
 } from '../types/assessment.types';
 import { AssessmentType, AssessmentStatus } from '@prisma/client';
 
@@ -45,13 +45,13 @@ export function validateCreateAssessment(data: CreateAssessmentRequest): Validat
     errors.push({
       field: 'title',
       message: 'Assessment title is required',
-      code: 'TITLE_REQUIRED'
+      code: 'TITLE_REQUIRED',
     });
   } else if (data.title.length > 200) {
     errors.push({
       field: 'title',
       message: 'Assessment title must be less than 200 characters',
-      code: 'TITLE_TOO_LONG'
+      code: 'TITLE_TOO_LONG',
     });
   }
 
@@ -60,7 +60,7 @@ export function validateCreateAssessment(data: CreateAssessmentRequest): Validat
     errors.push({
       field: 'description',
       message: 'Assessment description must be less than 2000 characters',
-      code: 'DESCRIPTION_TOO_LONG'
+      code: 'DESCRIPTION_TOO_LONG',
     });
   }
 
@@ -69,7 +69,7 @@ export function validateCreateAssessment(data: CreateAssessmentRequest): Validat
     errors.push({
       field: 'type',
       message: 'Valid assessment type is required',
-      code: 'INVALID_TYPE'
+      code: 'INVALID_TYPE',
     });
   }
 
@@ -79,13 +79,14 @@ export function validateCreateAssessment(data: CreateAssessmentRequest): Validat
       errors.push({
         field: 'timeLimit',
         message: 'Time limit must be positive',
-        code: 'INVALID_TIME_LIMIT'
+        code: 'INVALID_TIME_LIMIT',
       });
-    } else if (data.timeLimit > 480) { // 8 hours max
+    } else if (data.timeLimit > 480) {
+      // 8 hours max
       errors.push({
         field: 'timeLimit',
         message: 'Time limit cannot exceed 480 minutes (8 hours)',
-        code: 'TIME_LIMIT_TOO_LONG'
+        code: 'TIME_LIMIT_TOO_LONG',
       });
     }
   }
@@ -96,7 +97,7 @@ export function validateCreateAssessment(data: CreateAssessmentRequest): Validat
       errors.push({
         field: 'startsAt',
         message: 'Start date must be before end date',
-        code: 'INVALID_DATE_RANGE'
+        code: 'INVALID_DATE_RANGE',
       });
     }
   }
@@ -105,7 +106,7 @@ export function validateCreateAssessment(data: CreateAssessmentRequest): Validat
     errors.push({
       field: 'scheduledAt',
       message: 'Scheduled date must be in the future',
-      code: 'INVALID_SCHEDULED_DATE'
+      code: 'INVALID_SCHEDULED_DATE',
     });
   }
 
@@ -121,13 +122,13 @@ export function validateCreateAssessment(data: CreateAssessmentRequest): Validat
       errors.push({
         field: 'questionIds',
         message: 'Question IDs must be an array',
-        code: 'INVALID_QUESTION_IDS_FORMAT'
+        code: 'INVALID_QUESTION_IDS_FORMAT',
       });
     } else if (data.questionIds.length > 100) {
       errors.push({
         field: 'questionIds',
         message: 'Assessment cannot have more than 100 questions',
-        code: 'TOO_MANY_QUESTIONS'
+        code: 'TOO_MANY_QUESTIONS',
       });
     } else {
       // Validate each question ID format
@@ -136,7 +137,7 @@ export function validateCreateAssessment(data: CreateAssessmentRequest): Validat
           errors.push({
             field: `questionIds[${index}]`,
             message: 'Invalid question ID format',
-            code: 'INVALID_QUESTION_ID'
+            code: 'INVALID_QUESTION_ID',
           });
         }
       });
@@ -145,7 +146,7 @@ export function validateCreateAssessment(data: CreateAssessmentRequest): Validat
 
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 }
 
@@ -161,13 +162,13 @@ export function validateUpdateAssessment(data: UpdateAssessmentRequest): Validat
       errors.push({
         field: 'title',
         message: 'Assessment title cannot be empty',
-        code: 'TITLE_REQUIRED'
+        code: 'TITLE_REQUIRED',
       });
     } else if (data.title.length > 200) {
       errors.push({
         field: 'title',
         message: 'Assessment title must be less than 200 characters',
-        code: 'TITLE_TOO_LONG'
+        code: 'TITLE_TOO_LONG',
       });
     }
   }
@@ -177,7 +178,7 @@ export function validateUpdateAssessment(data: UpdateAssessmentRequest): Validat
     errors.push({
       field: 'description',
       message: 'Assessment description must be less than 2000 characters',
-      code: 'DESCRIPTION_TOO_LONG'
+      code: 'DESCRIPTION_TOO_LONG',
     });
   }
 
@@ -186,7 +187,7 @@ export function validateUpdateAssessment(data: UpdateAssessmentRequest): Validat
     errors.push({
       field: 'type',
       message: 'Invalid assessment type',
-      code: 'INVALID_TYPE'
+      code: 'INVALID_TYPE',
     });
   }
 
@@ -195,7 +196,7 @@ export function validateUpdateAssessment(data: UpdateAssessmentRequest): Validat
     errors.push({
       field: 'status',
       message: 'Invalid assessment status',
-      code: 'INVALID_STATUS'
+      code: 'INVALID_STATUS',
     });
   }
 
@@ -205,13 +206,13 @@ export function validateUpdateAssessment(data: UpdateAssessmentRequest): Validat
       errors.push({
         field: 'timeLimit',
         message: 'Time limit must be positive',
-        code: 'INVALID_TIME_LIMIT'
+        code: 'INVALID_TIME_LIMIT',
       });
     } else if (data.timeLimit > 480) {
       errors.push({
         field: 'timeLimit',
         message: 'Time limit cannot exceed 480 minutes (8 hours)',
-        code: 'TIME_LIMIT_TOO_LONG'
+        code: 'TIME_LIMIT_TOO_LONG',
       });
     }
   }
@@ -222,7 +223,7 @@ export function validateUpdateAssessment(data: UpdateAssessmentRequest): Validat
       errors.push({
         field: 'startsAt',
         message: 'Start date must be before end date',
-        code: 'INVALID_DATE_RANGE'
+        code: 'INVALID_DATE_RANGE',
       });
     }
   }
@@ -235,7 +236,7 @@ export function validateUpdateAssessment(data: UpdateAssessmentRequest): Validat
 
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 }
 
@@ -250,15 +251,19 @@ export function validateAssessmentSettings(settings: AssessmentSettings): Valida
     errors.push({
       field: 'settings.allowRetakes',
       message: 'allowRetakes must be a boolean',
-      code: 'INVALID_ALLOW_RETAKES'
+      code: 'INVALID_ALLOW_RETAKES',
     });
   }
 
-  if (typeof settings.maxAttempts !== 'number' || settings.maxAttempts < 1 || settings.maxAttempts > 10) {
+  if (
+    typeof settings.maxAttempts !== 'number' ||
+    settings.maxAttempts < 1 ||
+    settings.maxAttempts > 10
+  ) {
     errors.push({
       field: 'settings.maxAttempts',
       message: 'maxAttempts must be a number between 1 and 10',
-      code: 'INVALID_MAX_ATTEMPTS'
+      code: 'INVALID_MAX_ATTEMPTS',
     });
   }
 
@@ -266,7 +271,7 @@ export function validateAssessmentSettings(settings: AssessmentSettings): Valida
     errors.push({
       field: 'settings.shuffleQuestions',
       message: 'shuffleQuestions must be a boolean',
-      code: 'INVALID_SHUFFLE_QUESTIONS'
+      code: 'INVALID_SHUFFLE_QUESTIONS',
     });
   }
 
@@ -274,16 +279,20 @@ export function validateAssessmentSettings(settings: AssessmentSettings): Valida
     errors.push({
       field: 'settings.showResults',
       message: 'showResults must be a boolean',
-      code: 'INVALID_SHOW_RESULTS'
+      code: 'INVALID_SHOW_RESULTS',
     });
   }
 
   // Timing settings validation
-  if (typeof settings.timeWarningAt !== 'number' || settings.timeWarningAt < 0 || settings.timeWarningAt > 60) {
+  if (
+    typeof settings.timeWarningAt !== 'number' ||
+    settings.timeWarningAt < 0 ||
+    settings.timeWarningAt > 60
+  ) {
     errors.push({
       field: 'settings.timeWarningAt',
       message: 'timeWarningAt must be a number between 0 and 60 minutes',
-      code: 'INVALID_TIME_WARNING'
+      code: 'INVALID_TIME_WARNING',
     });
   }
 
@@ -291,7 +300,7 @@ export function validateAssessmentSettings(settings: AssessmentSettings): Valida
     errors.push({
       field: 'settings.autoSubmit',
       message: 'autoSubmit must be a boolean',
-      code: 'INVALID_AUTO_SUBMIT'
+      code: 'INVALID_AUTO_SUBMIT',
     });
   }
 
@@ -301,7 +310,7 @@ export function validateAssessmentSettings(settings: AssessmentSettings): Valida
     errors.push({
       field: 'settings.proctoring.enabled',
       message: 'proctoring.enabled must be a boolean',
-      code: 'INVALID_PROCTORING_ENABLED'
+      code: 'INVALID_PROCTORING_ENABLED',
     });
   }
 
@@ -309,7 +318,7 @@ export function validateAssessmentSettings(settings: AssessmentSettings): Valida
     errors.push({
       field: 'settings.proctoring.videoRequired',
       message: 'proctoring.videoRequired must be a boolean',
-      code: 'INVALID_VIDEO_REQUIRED'
+      code: 'INVALID_VIDEO_REQUIRED',
     });
   }
 
@@ -317,7 +326,7 @@ export function validateAssessmentSettings(settings: AssessmentSettings): Valida
     errors.push({
       field: 'settings.proctoring.audioRequired',
       message: 'proctoring.audioRequired must be a boolean',
-      code: 'INVALID_AUDIO_REQUIRED'
+      code: 'INVALID_AUDIO_REQUIRED',
     });
   }
 
@@ -327,15 +336,19 @@ export function validateAssessmentSettings(settings: AssessmentSettings): Valida
     errors.push({
       field: 'settings.collaboration.enabled',
       message: 'collaboration.enabled must be a boolean',
-      code: 'INVALID_COLLABORATION_ENABLED'
+      code: 'INVALID_COLLABORATION_ENABLED',
     });
   }
 
-  if (typeof collaboration.maxParticipants !== 'number' || collaboration.maxParticipants < 1 || collaboration.maxParticipants > 10) {
+  if (
+    typeof collaboration.maxParticipants !== 'number' ||
+    collaboration.maxParticipants < 1 ||
+    collaboration.maxParticipants > 10
+  ) {
     errors.push({
       field: 'settings.collaboration.maxParticipants',
       message: 'collaboration.maxParticipants must be a number between 1 and 10',
-      code: 'INVALID_MAX_PARTICIPANTS'
+      code: 'INVALID_MAX_PARTICIPANTS',
     });
   }
 
@@ -345,7 +358,7 @@ export function validateAssessmentSettings(settings: AssessmentSettings): Valida
     errors.push({
       field: 'settings.accessControl.ipWhitelist',
       message: 'accessControl.ipWhitelist must be an array',
-      code: 'INVALID_IP_WHITELIST'
+      code: 'INVALID_IP_WHITELIST',
     });
   } else {
     accessControl.ipWhitelist.forEach((ip, index) => {
@@ -353,7 +366,7 @@ export function validateAssessmentSettings(settings: AssessmentSettings): Valida
         errors.push({
           field: `settings.accessControl.ipWhitelist[${index}]`,
           message: 'Invalid IP address format',
-          code: 'INVALID_IP_ADDRESS'
+          code: 'INVALID_IP_ADDRESS',
         });
       }
     });
@@ -361,14 +374,16 @@ export function validateAssessmentSettings(settings: AssessmentSettings): Valida
 
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 }
 
 /**
  * Validate partial assessment settings (for updates)
  */
-export function validateAssessmentSettingsPartial(settings: Partial<AssessmentSettings>): ValidationResult {
+export function validateAssessmentSettingsPartial(
+  settings: Partial<AssessmentSettings>
+): ValidationResult {
   const errors: ValidationError[] = [];
 
   // Only validate provided fields
@@ -376,26 +391,34 @@ export function validateAssessmentSettingsPartial(settings: Partial<AssessmentSe
     errors.push({
       field: 'settings.allowRetakes',
       message: 'allowRetakes must be a boolean',
-      code: 'INVALID_ALLOW_RETAKES'
+      code: 'INVALID_ALLOW_RETAKES',
     });
   }
 
   if (settings.maxAttempts !== undefined) {
-    if (typeof settings.maxAttempts !== 'number' || settings.maxAttempts < 1 || settings.maxAttempts > 10) {
+    if (
+      typeof settings.maxAttempts !== 'number' ||
+      settings.maxAttempts < 1 ||
+      settings.maxAttempts > 10
+    ) {
       errors.push({
         field: 'settings.maxAttempts',
         message: 'maxAttempts must be a number between 1 and 10',
-        code: 'INVALID_MAX_ATTEMPTS'
+        code: 'INVALID_MAX_ATTEMPTS',
       });
     }
   }
 
   if (settings.timeWarningAt !== undefined) {
-    if (typeof settings.timeWarningAt !== 'number' || settings.timeWarningAt < 0 || settings.timeWarningAt > 60) {
+    if (
+      typeof settings.timeWarningAt !== 'number' ||
+      settings.timeWarningAt < 0 ||
+      settings.timeWarningAt > 60
+    ) {
       errors.push({
         field: 'settings.timeWarningAt',
         message: 'timeWarningAt must be a number between 0 and 60 minutes',
-        code: 'INVALID_TIME_WARNING'
+        code: 'INVALID_TIME_WARNING',
       });
     }
   }
@@ -407,7 +430,7 @@ export function validateAssessmentSettingsPartial(settings: Partial<AssessmentSe
       errors.push({
         field: 'settings.proctoring.enabled',
         message: 'proctoring.enabled must be a boolean',
-        code: 'INVALID_PROCTORING_ENABLED'
+        code: 'INVALID_PROCTORING_ENABLED',
       });
     }
   }
@@ -416,11 +439,15 @@ export function validateAssessmentSettingsPartial(settings: Partial<AssessmentSe
   if (settings.collaboration) {
     const collaboration = settings.collaboration;
     if (collaboration.maxParticipants !== undefined) {
-      if (typeof collaboration.maxParticipants !== 'number' || collaboration.maxParticipants < 1 || collaboration.maxParticipants > 10) {
+      if (
+        typeof collaboration.maxParticipants !== 'number' ||
+        collaboration.maxParticipants < 1 ||
+        collaboration.maxParticipants > 10
+      ) {
         errors.push({
           field: 'settings.collaboration.maxParticipants',
           message: 'collaboration.maxParticipants must be a number between 1 and 10',
-          code: 'INVALID_MAX_PARTICIPANTS'
+          code: 'INVALID_MAX_PARTICIPANTS',
         });
       }
     }
@@ -428,7 +455,7 @@ export function validateAssessmentSettingsPartial(settings: Partial<AssessmentSe
 
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 }
 
@@ -443,13 +470,13 @@ export function normalizeAssessmentData(data: CreateAssessmentRequest): CreateAs
   const normalized: CreateAssessmentRequest = {
     ...data,
     title: data.title.trim(),
-    settings: normalizeAssessmentSettings(data.settings)
+    settings: normalizeAssessmentSettings(data.settings),
   };
-  
+
   if (data.description !== undefined) {
     normalized.description = data.description.trim();
   }
-  
+
   return normalized;
 }
 
@@ -462,18 +489,18 @@ export function normalizeAssessmentSettings(settings: AssessmentSettings): Asses
     proctoring: {
       ...settings.proctoring,
       // Ensure video is required if proctoring is enabled
-      videoRequired: settings.proctoring.enabled ? settings.proctoring.videoRequired : false
+      videoRequired: settings.proctoring.enabled ? settings.proctoring.videoRequired : false,
     },
     collaboration: {
       ...settings.collaboration,
       // Ensure reasonable defaults
-      maxParticipants: Math.min(Math.max(settings.collaboration.maxParticipants, 1), 10)
+      maxParticipants: Math.min(Math.max(settings.collaboration.maxParticipants, 1), 10),
     },
     accessControl: {
       ...settings.accessControl,
       // Filter out invalid IPs
-      ipWhitelist: settings.accessControl.ipWhitelist.filter(ip => validator.isIP(ip))
-    }
+      ipWhitelist: settings.accessControl.ipWhitelist.filter(ip => validator.isIP(ip)),
+    },
   };
 }
 
@@ -490,13 +517,13 @@ export function sanitizeAssessmentInput(data: CreateAssessmentRequest): CreateAs
     title: validator.escape(data.title),
     // Settings are JSON, so they should be properly typed and validated
     // but we might want to sanitize string values within them
-    settings: sanitizeAssessmentSettings(data.settings)
+    settings: sanitizeAssessmentSettings(data.settings),
   };
-  
+
   if (data.description !== undefined) {
     sanitized.description = validator.escape(data.description);
   }
-  
+
   return sanitized;
 }
 
@@ -510,8 +537,8 @@ export function sanitizeAssessmentSettings(settings: AssessmentSettings): Assess
     accessControl: {
       ...settings.accessControl,
       // IP addresses should be validated, not escaped
-      ipWhitelist: settings.accessControl.ipWhitelist.filter(ip => validator.isIP(ip))
-    }
+      ipWhitelist: settings.accessControl.ipWhitelist.filter(ip => validator.isIP(ip)),
+    },
   };
 }
 
@@ -533,12 +560,12 @@ export function validateAssessmentBusinessRules(
     const duplicateTitle = existingAssessments.find(
       assessment => assessment.title.toLowerCase() === data.title.toLowerCase()
     );
-    
+
     if (duplicateTitle) {
       errors.push({
         field: 'title',
         message: 'Assessment with this title already exists',
-        code: 'DUPLICATE_TITLE'
+        code: 'DUPLICATE_TITLE',
       });
     }
   }
@@ -549,7 +576,7 @@ export function validateAssessmentBusinessRules(
       errors.push({
         field: 'settings.proctoring',
         message: 'Proctoring requires at least video or audio monitoring',
-        code: 'INVALID_PROCTORING_CONFIG'
+        code: 'INVALID_PROCTORING_CONFIG',
       });
     }
   }
@@ -566,15 +593,16 @@ export function validateAssessmentBusinessRules(
     if (avgTimePerQuestion < 1) {
       errors.push({
         field: 'timeLimit',
-        message: 'Time limit is too short for the number of questions (minimum 1 minute per question)',
-        code: 'INSUFFICIENT_TIME_LIMIT'
+        message:
+          'Time limit is too short for the number of questions (minimum 1 minute per question)',
+        code: 'INSUFFICIENT_TIME_LIMIT',
       });
     }
   }
 
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 }
 
@@ -600,7 +628,7 @@ export function validateDateRange(startDate: Date, endDate: Date): ValidationRes
     errors.push({
       field: 'dateRange',
       message: 'Start date must be before end date',
-      code: 'INVALID_DATE_RANGE'
+      code: 'INVALID_DATE_RANGE',
     });
   }
 
@@ -608,13 +636,13 @@ export function validateDateRange(startDate: Date, endDate: Date): ValidationRes
     errors.push({
       field: 'startDate',
       message: 'Start date must be in the future',
-      code: 'INVALID_START_DATE'
+      code: 'INVALID_START_DATE',
     });
   }
 
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 }
 
@@ -635,18 +663,18 @@ export function createDefaultAssessmentSettings(): AssessmentSettings {
       audioRequired: false,
       screenRecording: false,
       tabSwitchDetection: false,
-      faceDetection: false
+      faceDetection: false,
     },
     collaboration: {
       enabled: false,
       maxParticipants: 1,
       allowChat: false,
-      allowScreenShare: false
+      allowScreenShare: false,
     },
     accessControl: {
       ipWhitelist: [],
       requireSecureBrowser: false,
-      blockCopyPaste: false
-    }
+      blockCopyPaste: false,
+    },
   };
 }

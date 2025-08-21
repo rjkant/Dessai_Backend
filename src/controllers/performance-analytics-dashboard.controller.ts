@@ -1,7 +1,7 @@
 /**
  * Performance Analytics Dashboard Controller
  * Epic 5 Task 5.2: Advanced Performance Analytics API
- * 
+ *
  * Provides REST API endpoints for advanced analytics, predictive insights,
  * and enhanced dashboard capabilities
  */
@@ -37,18 +37,17 @@ export class PerformanceAnalyticsDashboardController {
     private redis: RedisService,
     private logger: any
   ) {
-    this.dashboardService = PerformanceAnalyticsDashboardService.getInstance(
-      prisma,
-      redis,
-      logger
-    );
+    this.dashboardService = PerformanceAnalyticsDashboardService.getInstance(prisma, redis, logger);
   }
 
   /**
    * Get advanced performance metrics for a user
    * GET /api/analytics/advanced/performance/:userId
    */
-  public getAdvancedPerformanceMetrics = async (req: DashboardRequest, res: Response): Promise<void> => {
+  public getAdvancedPerformanceMetrics = async (
+    req: DashboardRequest,
+    res: Response
+  ): Promise<void> => {
     try {
       const { userId } = req.params;
       const { timeRange, organizationId } = req.query;
@@ -57,7 +56,7 @@ export class PerformanceAnalyticsDashboardController {
       if (req.user?.id !== userId && req.user?.role !== 'OrgAdmin') {
         res.status(403).json({
           success: false,
-          error: 'Access denied: Insufficient permissions'
+          error: 'Access denied: Insufficient permissions',
         });
         return;
       }
@@ -70,7 +69,7 @@ export class PerformanceAnalyticsDashboardController {
         } catch (error) {
           res.status(400).json({
             success: false,
-            error: 'Invalid time range format'
+            error: 'Invalid time range format',
           });
           return;
         }
@@ -89,26 +88,26 @@ export class PerformanceAnalyticsDashboardController {
           userId,
           timeRange: parsedTimeRange,
           organizationId: organizationId || req.user?.organizationId,
-          generatedAt: new Date().toISOString()
-        }
+          generatedAt: new Date().toISOString(),
+        },
       });
 
       this.logger.info('Advanced performance metrics retrieved', {
         userId,
         requestedBy: req.user?.id,
-        hasTimeRange: !!parsedTimeRange
+        hasTimeRange: !!parsedTimeRange,
       });
     } catch (error) {
       this.logger.error('Failed to get advanced performance metrics', {
         error: (error as Error).message,
         userId: req.params.userId,
-        requestedBy: req.user?.id
+        requestedBy: req.user?.id,
       });
 
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve advanced performance metrics',
-        details: (error as Error).message
+        details: (error as Error).message,
       });
     }
   };
@@ -126,7 +125,7 @@ export class PerformanceAnalyticsDashboardController {
       if (req.user?.role !== 'OrgAdmin' && req.user?.organizationId !== targetOrgId) {
         res.status(403).json({
           success: false,
-          error: 'Access denied: Organization mismatch'
+          error: 'Access denied: Organization mismatch',
         });
         return;
       }
@@ -138,10 +137,7 @@ export class PerformanceAnalyticsDashboardController {
         // config = await this.prisma.dashboardConfig.findUnique({ where: { id: configId } });
       }
 
-      const analytics = await this.dashboardService.getDashboardAnalytics(
-        targetOrgId,
-        config
-      );
+      const analytics = await this.dashboardService.getDashboardAnalytics(targetOrgId, config);
 
       res.status(200).json({
         success: true,
@@ -154,8 +150,8 @@ export class PerformanceAnalyticsDashboardController {
           recommendationsCount: analytics.recommendations.length,
           alertsCount: analytics.alerts.length,
           trendsCount: analytics.trends.length,
-          generatedAt: new Date().toISOString()
-        }
+          generatedAt: new Date().toISOString(),
+        },
       });
 
       this.logger.info('Dashboard analytics retrieved', {
@@ -167,20 +163,20 @@ export class PerformanceAnalyticsDashboardController {
           insights: analytics.insights.length,
           recommendations: analytics.recommendations.length,
           alerts: analytics.alerts.length,
-          trends: analytics.trends.length
-        }
+          trends: analytics.trends.length,
+        },
       });
     } catch (error) {
       this.logger.error('Failed to get dashboard analytics', {
         error: (error as Error).message,
         organizationId: req.query.organizationId,
-        requestedBy: req.user?.id
+        requestedBy: req.user?.id,
       });
 
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve dashboard analytics',
-        details: (error as Error).message
+        details: (error as Error).message,
       });
     }
   };
@@ -197,7 +193,7 @@ export class PerformanceAnalyticsDashboardController {
       if (!metric || !entityId) {
         res.status(400).json({
           success: false,
-          error: 'Missing required parameters: metric and entityId'
+          error: 'Missing required parameters: metric and entityId',
         });
         return;
       }
@@ -207,16 +203,12 @@ export class PerformanceAnalyticsDashboardController {
       if (period < 1 || period > 365) {
         res.status(400).json({
           success: false,
-          error: 'Forecast period must be between 1 and 365 days'
+          error: 'Forecast period must be between 1 and 365 days',
         });
         return;
       }
 
-      const forecast = await this.dashboardService.generateForecast(
-        metric,
-        entityId,
-        period
-      );
+      const forecast = await this.dashboardService.generateForecast(metric, entityId, period);
 
       res.status(200).json({
         success: true,
@@ -227,8 +219,8 @@ export class PerformanceAnalyticsDashboardController {
           forecastPeriod: period,
           dataPoints: forecast.length,
           generatedAt: new Date().toISOString(),
-          confidence: forecast.length > 0 ? forecast[0].confidence : 0
-        }
+          confidence: forecast.length > 0 ? forecast[0].confidence : 0,
+        },
       });
 
       this.logger.info('Forecast generated', {
@@ -236,19 +228,19 @@ export class PerformanceAnalyticsDashboardController {
         entityId,
         forecastPeriod: period,
         dataPoints: forecast.length,
-        requestedBy: req.user?.id
+        requestedBy: req.user?.id,
       });
     } catch (error) {
       this.logger.error('Failed to generate forecast', {
         error: (error as Error).message,
         requestBody: req.body,
-        requestedBy: req.user?.id
+        requestedBy: req.user?.id,
       });
 
       res.status(500).json({
         success: false,
         error: 'Failed to generate forecast',
-        details: (error as Error).message
+        details: (error as Error).message,
       });
     }
   };
@@ -263,7 +255,7 @@ export class PerformanceAnalyticsDashboardController {
       if (!organizationId) {
         res.status(400).json({
           success: false,
-          error: 'Organization ID required'
+          error: 'Organization ID required',
         });
         return;
       }
@@ -273,20 +265,17 @@ export class PerformanceAnalyticsDashboardController {
       if (!name) {
         res.status(400).json({
           success: false,
-          error: 'Dashboard name is required'
+          error: 'Dashboard name is required',
         });
         return;
       }
 
-      const config = await this.dashboardService.createDashboardConfig(
-        req.body,
-        organizationId
-      );
+      const config = await this.dashboardService.createDashboardConfig(req.body, organizationId);
 
       res.status(201).json({
         success: true,
         data: config,
-        message: 'Dashboard configuration created successfully'
+        message: 'Dashboard configuration created successfully',
       });
 
       this.logger.info('Dashboard configuration created', {
@@ -294,20 +283,20 @@ export class PerformanceAnalyticsDashboardController {
         organizationId,
         name: config.name,
         widgetsCount: config.widgets?.length || 0,
-        createdBy: req.user?.id
+        createdBy: req.user?.id,
       });
     } catch (error) {
       this.logger.error('Failed to create dashboard configuration', {
         error: (error as Error).message,
         requestBody: req.body,
         organizationId: req.user?.organizationId,
-        requestedBy: req.user?.id
+        requestedBy: req.user?.id,
       });
 
       res.status(500).json({
         success: false,
         error: 'Failed to create dashboard configuration',
-        details: (error as Error).message
+        details: (error as Error).message,
       });
     }
   };
@@ -324,7 +313,7 @@ export class PerformanceAnalyticsDashboardController {
       if (!organizationId) {
         res.status(400).json({
           success: false,
-          error: 'Organization ID required'
+          error: 'Organization ID required',
         });
         return;
       }
@@ -340,27 +329,27 @@ export class PerformanceAnalyticsDashboardController {
         metadata: {
           organizationId,
           industry: industry || 'default',
-          generatedAt: new Date().toISOString()
-        }
+          generatedAt: new Date().toISOString(),
+        },
       });
 
       this.logger.info('Industry benchmarks retrieved', {
         organizationId,
         industry: industry || 'default',
-        requestedBy: req.user?.id
+        requestedBy: req.user?.id,
       });
     } catch (error) {
       this.logger.error('Failed to get industry benchmarks', {
         error: (error as Error).message,
         organizationId: req.user?.organizationId,
         industry: req.query.industry,
-        requestedBy: req.user?.id
+        requestedBy: req.user?.id,
       });
 
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve industry benchmarks',
-        details: (error as Error).message
+        details: (error as Error).message,
       });
     }
   };
@@ -378,7 +367,7 @@ export class PerformanceAnalyticsDashboardController {
       if (req.user?.role !== 'OrgAdmin' && req.user?.organizationId !== targetOrgId) {
         res.status(403).json({
           success: false,
-          error: 'Access denied: Organization mismatch'
+          error: 'Access denied: Organization mismatch',
         });
         return;
       }
@@ -391,7 +380,7 @@ export class PerformanceAnalyticsDashboardController {
         } catch (error) {
           res.status(400).json({
             success: false,
-            error: 'Invalid time range format'
+            error: 'Invalid time range format',
           });
           return;
         }
@@ -404,8 +393,9 @@ export class PerformanceAnalyticsDashboardController {
       let insights = analytics.insights;
       if (userId) {
         // In production, filter insights by user
-        insights = insights.filter(insight => 
-          !insight.dataPoints.length || insight.dataPoints.some((dp: any) => dp.userId === userId)
+        insights = insights.filter(
+          insight =>
+            !insight.dataPoints.length || insight.dataPoints.some((dp: any) => dp.userId === userId)
         );
       }
 
@@ -415,7 +405,7 @@ export class PerformanceAnalyticsDashboardController {
           insights,
           recommendations: analytics.recommendations,
           alerts: analytics.alerts,
-          trends: analytics.trends
+          trends: analytics.trends,
         },
         metadata: {
           organizationId: targetOrgId,
@@ -425,28 +415,28 @@ export class PerformanceAnalyticsDashboardController {
           totalRecommendations: analytics.recommendations.length,
           totalAlerts: analytics.alerts.length,
           totalTrends: analytics.trends.length,
-          generatedAt: new Date().toISOString()
-        }
+          generatedAt: new Date().toISOString(),
+        },
       });
 
       this.logger.info('Predictive insights retrieved', {
         organizationId: targetOrgId,
         userId,
         insightsCount: insights.length,
-        requestedBy: req.user?.id
+        requestedBy: req.user?.id,
       });
     } catch (error) {
       this.logger.error('Failed to get predictive insights', {
         error: (error as Error).message,
         organizationId: req.query.organizationId,
         userId: req.query.userId,
-        requestedBy: req.user?.id
+        requestedBy: req.user?.id,
       });
 
       res.status(500).json({
         success: false,
         error: 'Failed to retrieve predictive insights',
-        details: (error as Error).message
+        details: (error as Error).message,
       });
     }
   };
@@ -461,7 +451,7 @@ export class PerformanceAnalyticsDashboardController {
       if (!organizationId) {
         res.status(400).json({
           success: false,
-          error: 'Organization ID required'
+          error: 'Organization ID required',
         });
         return;
       }
@@ -470,45 +460,51 @@ export class PerformanceAnalyticsDashboardController {
       res.writeHead(200, {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*'
+        Connection: 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
       });
 
       // Send initial connection message
-      res.write(`data: ${JSON.stringify({
-        type: 'connected',
-        timestamp: new Date().toISOString(),
-        organizationId,
-        message: 'Advanced analytics stream connected'
-      })}\n\n`);
+      res.write(
+        `data: ${JSON.stringify({
+          type: 'connected',
+          timestamp: new Date().toISOString(),
+          organizationId,
+          message: 'Advanced analytics stream connected',
+        })}\n\n`
+      );
 
       // Set up periodic advanced analytics updates
       const interval = setInterval(async () => {
         try {
           const analytics = await this.dashboardService.getDashboardAnalytics(organizationId);
-          
-          res.write(`data: ${JSON.stringify({
-            type: 'advanced_analytics_update',
-            data: {
-              widgets: analytics.widgets,
-              insights: analytics.insights.slice(0, 5), // Send top 5 insights
-              alerts: analytics.alerts.filter(alert => !alert.resolved), // Only unresolved alerts
-              trends: analytics.trends.slice(0, 3) // Top 3 trends
-            },
-            timestamp: new Date().toISOString()
-          })}\n\n`);
+
+          res.write(
+            `data: ${JSON.stringify({
+              type: 'advanced_analytics_update',
+              data: {
+                widgets: analytics.widgets,
+                insights: analytics.insights.slice(0, 5), // Send top 5 insights
+                alerts: analytics.alerts.filter(alert => !alert.resolved), // Only unresolved alerts
+                trends: analytics.trends.slice(0, 3), // Top 3 trends
+              },
+              timestamp: new Date().toISOString(),
+            })}\n\n`
+          );
         } catch (error) {
           this.logger.error('Failed to send advanced analytics stream data', {
             error: (error as Error).message,
             organizationId,
-            userId: req.user?.id
+            userId: req.user?.id,
           });
-          
-          res.write(`data: ${JSON.stringify({
-            type: 'error',
-            message: 'Failed to retrieve analytics data',
-            timestamp: new Date().toISOString()
-          })}\n\n`);
+
+          res.write(
+            `data: ${JSON.stringify({
+              type: 'error',
+              message: 'Failed to retrieve analytics data',
+              timestamp: new Date().toISOString(),
+            })}\n\n`
+          );
         }
       }, 10000); // Send updates every 10 seconds for advanced analytics
 
@@ -517,25 +513,25 @@ export class PerformanceAnalyticsDashboardController {
         clearInterval(interval);
         this.logger.info('Advanced analytics stream disconnected', {
           userId: req.user?.id,
-          organizationId
+          organizationId,
         });
       });
 
       this.logger.info('Advanced analytics stream connected', {
         userId: req.user?.id,
-        organizationId
+        organizationId,
       });
     } catch (error) {
       this.logger.error('Failed to establish advanced analytics stream', {
         error: (error as Error).message,
         userId: req.user?.id,
-        organizationId: req.user?.organizationId
+        organizationId: req.user?.organizationId,
       });
 
       res.status(500).json({
         success: false,
         error: 'Failed to establish analytics stream',
-        details: (error as Error).message
+        details: (error as Error).message,
       });
     }
   };
@@ -552,7 +548,7 @@ export class PerformanceAnalyticsDashboardController {
       if (!organizationId) {
         res.status(400).json({
           success: false,
-          error: 'Organization ID required'
+          error: 'Organization ID required',
         });
         return;
       }
@@ -561,7 +557,7 @@ export class PerformanceAnalyticsDashboardController {
       if ((!userIds || !Array.isArray(userIds)) && (!groupIds || !Array.isArray(groupIds))) {
         res.status(400).json({
           success: false,
-          error: 'Either userIds or groupIds array is required'
+          error: 'Either userIds or groupIds array is required',
         });
         return;
       }
@@ -574,7 +570,7 @@ export class PerformanceAnalyticsDashboardController {
         } catch (error) {
           res.status(400).json({
             success: false,
-            error: 'Invalid time range format'
+            error: 'Invalid time range format',
           });
           return;
         }
@@ -582,7 +578,7 @@ export class PerformanceAnalyticsDashboardController {
 
       // Get comparison data
       const comparisons = [];
-      
+
       // Compare users
       if (userIds && userIds.length > 0) {
         for (const userId of userIds) {
@@ -595,12 +591,12 @@ export class PerformanceAnalyticsDashboardController {
             comparisons.push({
               type: 'user',
               id: userId,
-              metrics: userMetrics
+              metrics: userMetrics,
             });
           } catch (error) {
             this.logger.warn('Failed to get metrics for user', {
               userId,
-              error: (error as Error).message
+              error: (error as Error).message,
             });
           }
         }
@@ -610,7 +606,7 @@ export class PerformanceAnalyticsDashboardController {
       if (groupIds && groupIds.length > 0) {
         // Group comparison would be implemented here
         this.logger.info('Group comparison requested but not implemented yet', {
-          groupIds
+          groupIds,
         });
       }
 
@@ -620,28 +616,30 @@ export class PerformanceAnalyticsDashboardController {
           comparisons,
           summary: {
             totalEntities: comparisons.length,
-            averageScore: comparisons.length > 0 
-              ? comparisons.reduce((sum, comp) => {
-                  const firstMetric = comp.metrics.metrics?.[0];
-                  return sum + (firstMetric?.value || 0);
-                }, 0) / comparisons.length 
-              : 0,
-            topPerformer: comparisons.length > 0 
-              ? comparisons.reduce((top, current) => {
-                  const currentScore = current.metrics.metrics?.[0]?.value || 0;
-                  const topScore = top.metrics.metrics?.[0]?.value || 0;
-                  return currentScore > topScore ? current : top;
-                }).id 
-              : null
-          }
+            averageScore:
+              comparisons.length > 0
+                ? comparisons.reduce((sum, comp) => {
+                    const firstMetric = comp.metrics.metrics?.[0];
+                    return sum + (firstMetric?.value || 0);
+                  }, 0) / comparisons.length
+                : 0,
+            topPerformer:
+              comparisons.length > 0
+                ? comparisons.reduce((top, current) => {
+                    const currentScore = current.metrics.metrics?.[0]?.value || 0;
+                    const topScore = top.metrics.metrics?.[0]?.value || 0;
+                    return currentScore > topScore ? current : top;
+                  }).id
+                : null,
+          },
         },
         metadata: {
           organizationId,
           timeRange: parsedTimeRange,
           metricsRequested: metrics || 'all',
           comparisonCount: comparisons.length,
-          generatedAt: new Date().toISOString()
-        }
+          generatedAt: new Date().toISOString(),
+        },
       });
 
       this.logger.info('Performance comparison generated', {
@@ -649,19 +647,19 @@ export class PerformanceAnalyticsDashboardController {
         userIds: userIds?.length || 0,
         groupIds: groupIds?.length || 0,
         comparisonsGenerated: comparisons.length,
-        requestedBy: req.user?.id
+        requestedBy: req.user?.id,
       });
     } catch (error) {
       this.logger.error('Failed to generate performance comparison', {
         error: (error as Error).message,
         requestBody: req.body,
-        requestedBy: req.user?.id
+        requestedBy: req.user?.id,
       });
 
       res.status(500).json({
         success: false,
         error: 'Failed to generate performance comparison',
-        details: (error as Error).message
+        details: (error as Error).message,
       });
     }
   };

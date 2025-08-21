@@ -1,6 +1,6 @@
 /**
  * Integration Services Type Definitions
- * 
+ *
  * Comprehensive type system for external service integrations including:
  * - ATS (Applicant Tracking System) integrations (Greenhouse, Workday, BambooHR)
  * - Calendar integrations (Google Calendar, Microsoft Exchange)
@@ -26,7 +26,7 @@ export enum ATSProvider {
   JOBVITE = 'jobvite',
   ICIMS = 'icims',
   SMART_RECRUITERS = 'smart_recruiters',
-  TALEO = 'taleo'
+  TALEO = 'taleo',
 }
 
 /**
@@ -128,14 +128,14 @@ export enum JobType {
   CONTRACT = 'contract',
   FREELANCE = 'freelance',
   INTERNSHIP = 'internship',
-  TEMPORARY = 'temporary'
+  TEMPORARY = 'temporary',
 }
 
 export enum WorkArrangement {
   REMOTE = 'remote',
   HYBRID = 'hybrid',
   ON_SITE = 'on_site',
-  FLEXIBLE = 'flexible'
+  FLEXIBLE = 'flexible',
 }
 
 export enum CandidateStatus {
@@ -150,7 +150,7 @@ export enum CandidateStatus {
   HIRED = 'hired',
   REJECTED = 'rejected',
   WITHDRAWN = 'withdrawn',
-  ON_HOLD = 'on_hold'
+  ON_HOLD = 'on_hold',
 }
 
 /**
@@ -206,14 +206,14 @@ export enum JobPositionStatus {
   OPEN = 'open',
   ON_HOLD = 'on_hold',
   CLOSED = 'closed',
-  FILLED = 'filled'
+  FILLED = 'filled',
 }
 
 export enum JobPriority {
   LOW = 'low',
   MEDIUM = 'medium',
   HIGH = 'high',
-  CRITICAL = 'critical'
+  CRITICAL = 'critical',
 }
 
 /**
@@ -226,22 +226,22 @@ export interface ATSOperations {
   createCandidate(candidate: CreateCandidateRequest): Promise<CandidateData>;
   updateCandidate(id: string, updates: UpdateCandidateRequest): Promise<CandidateData>;
   moveCandidate(id: string, stage: string, jobId?: string): Promise<void>;
-  
+
   // Job Operations
   getJobs(filters?: JobFilters): Promise<JobPosition[]>;
   getJob(id: string): Promise<JobPosition | null>;
   createJob(job: CreateJobRequest): Promise<JobPosition>;
   updateJob(id: string, updates: UpdateJobRequest): Promise<JobPosition>;
-  
+
   // Application Operations
   getApplications(candidateId?: string, jobId?: string): Promise<Application[]>;
   createApplication(application: CreateApplicationRequest): Promise<Application>;
   updateApplicationStatus(id: string, status: ApplicationStatus): Promise<Application>;
-  
+
   // Assessment Integration
   createAssessmentInvite(candidateId: string, assessmentId: string): Promise<AssessmentInvite>;
   updateAssessmentResults(inviteId: string, results: AssessmentResults): Promise<void>;
-  
+
   // Webhook Management
   registerWebhook(events: ATSWebhookEvent[], url: string): Promise<WebhookRegistration>;
   unregisterWebhook(id: string): Promise<void>;
@@ -396,7 +396,7 @@ export enum ApplicationStatus {
   OFFER = 'offer',
   HIRED = 'hired',
   REJECTED = 'rejected',
-  WITHDRAWN = 'withdrawn'
+  WITHDRAWN = 'withdrawn',
 }
 
 export interface ApplicationEvent {
@@ -428,7 +428,7 @@ export enum ApplicationEventType {
   OFFER_REJECTED = 'offer_rejected',
   HIRED = 'hired',
   REJECTED = 'rejected',
-  WITHDRAWN = 'withdrawn'
+  WITHDRAWN = 'withdrawn',
 }
 
 export interface ApplicationNote {
@@ -479,7 +479,7 @@ export enum AssessmentInviteStatus {
   IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed',
   EXPIRED = 'expired',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
 }
 
 export interface AssessmentResults {
@@ -550,7 +550,7 @@ export enum AssessmentRecommendation {
   RECOMMEND = 'recommend',
   NEUTRAL = 'neutral',
   NOT_RECOMMEND = 'not_recommend',
-  STRONGLY_NOT_RECOMMEND = 'strongly_not_recommend'
+  STRONGLY_NOT_RECOMMEND = 'strongly_not_recommend',
 }
 
 export interface AssessmentReminder {
@@ -593,7 +593,7 @@ export enum InterviewType {
   BEHAVIORAL = 'behavioral',
   CULTURE_FIT = 'culture_fit',
   PANEL = 'panel',
-  GROUP = 'group'
+  GROUP = 'group',
 }
 
 export enum InterviewStatus {
@@ -603,7 +603,7 @@ export enum InterviewStatus {
   COMPLETED = 'completed',
   CANCELLED = 'cancelled',
   RESCHEDULED = 'rescheduled',
-  NO_SHOW = 'no_show'
+  NO_SHOW = 'no_show',
 }
 
 export interface Interviewer {
@@ -623,7 +623,7 @@ export enum InterviewerStatus {
   ACCEPTED = 'accepted',
   DECLINED = 'declined',
   JOINED = 'joined',
-  LEFT = 'left'
+  LEFT = 'left',
 }
 
 export interface InterviewQuestion {
@@ -654,7 +654,7 @@ export enum InterviewRecommendation {
   YES = 'yes',
   MAYBE = 'maybe',
   NO = 'no',
-  STRONG_NO = 'strong_no'
+  STRONG_NO = 'strong_no',
 }
 
 export interface FeedbackCriterion {
@@ -677,7 +677,7 @@ export enum CalendarProvider {
   MICROSOFT = 'microsoft',
   OUTLOOK = 'outlook',
   APPLE = 'apple',
-  CALDAV = 'caldav'
+  CALDAV = 'caldav',
 }
 
 /**
@@ -761,14 +761,14 @@ export enum AttendeeStatus {
   NEEDS_ACTION = 'needs_action',
   ACCEPTED = 'accepted',
   DECLINED = 'declined',
-  TENTATIVE = 'tentative'
+  TENTATIVE = 'tentative',
 }
 
 export enum AttendeeRole {
   ORGANIZER = 'organizer',
   ATTENDEE = 'attendee',
   OPTIONAL = 'optional',
-  RESOURCE = 'resource'
+  RESOURCE = 'resource',
 }
 
 export interface EventOrganizer {
@@ -781,13 +781,13 @@ export interface EventOrganizer {
 export enum EventStatus {
   CONFIRMED = 'confirmed',
   TENTATIVE = 'tentative',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
 }
 
 export enum EventVisibility {
   PUBLIC = 'public',
   PRIVATE = 'private',
-  CONFIDENTIAL = 'confidential'
+  CONFIDENTIAL = 'confidential',
 }
 
 export interface EventRecurrence {
@@ -804,7 +804,7 @@ export interface EventReminder {
 export enum ReminderMethod {
   EMAIL = 'email',
   POPUP = 'popup',
-  SMS = 'sms'
+  SMS = 'sms',
 }
 
 export interface EventConferencing {
@@ -822,7 +822,7 @@ export enum ConferencingType {
   ZOOM = 'zoom',
   WEBEX = 'webex',
   GOTOMEETING = 'gotomeeting',
-  HANGOUTS = 'hangouts'
+  HANGOUTS = 'hangouts',
 }
 
 export interface ConferencingDialIn {
@@ -855,29 +855,63 @@ export interface CalendarOperations {
   exchangeCode(code: string, state?: string): Promise<CalendarAuth>;
   refreshToken(refreshToken: string): Promise<CalendarAuth>;
   revokeAccess(userId: string): Promise<void>;
-  
+
   // Calendar Management
   getCalendars(userId: string): Promise<Calendar[]>;
   getCalendar(userId: string, calendarId: string): Promise<Calendar | null>;
   createCalendar(userId: string, calendar: CreateCalendarRequest): Promise<Calendar>;
-  updateCalendar(userId: string, calendarId: string, updates: UpdateCalendarRequest): Promise<Calendar>;
+  updateCalendar(
+    userId: string,
+    calendarId: string,
+    updates: UpdateCalendarRequest
+  ): Promise<Calendar>;
   deleteCalendar(userId: string, calendarId: string): Promise<void>;
-  
+
   // Event Management
-  getEvents(userId: string, calendarId: string, options?: GetEventsOptions): Promise<CalendarEvent[]>;
+  getEvents(
+    userId: string,
+    calendarId: string,
+    options?: GetEventsOptions
+  ): Promise<CalendarEvent[]>;
   getEvent(userId: string, calendarId: string, eventId: string): Promise<CalendarEvent | null>;
-  createEvent(userId: string, calendarId: string, event: CreateEventRequest): Promise<CalendarEvent>;
-  updateEvent(userId: string, calendarId: string, eventId: string, updates: UpdateEventRequest): Promise<CalendarEvent>;
+  createEvent(
+    userId: string,
+    calendarId: string,
+    event: CreateEventRequest
+  ): Promise<CalendarEvent>;
+  updateEvent(
+    userId: string,
+    calendarId: string,
+    eventId: string,
+    updates: UpdateEventRequest
+  ): Promise<CalendarEvent>;
   deleteEvent(userId: string, calendarId: string, eventId: string): Promise<void>;
-  
+
   // Availability
-  getFreeBusyInfo(userId: string, timeRange: TimeRange, calendars?: string[]): Promise<FreeBusyInfo>;
-  findAvailableSlots(userId: string, requirements: AvailabilityRequirements): Promise<AvailableSlot[]>;
-  
+  getFreeBusyInfo(
+    userId: string,
+    timeRange: TimeRange,
+    calendars?: string[]
+  ): Promise<FreeBusyInfo>;
+  findAvailableSlots(
+    userId: string,
+    requirements: AvailabilityRequirements
+  ): Promise<AvailableSlot[]>;
+
   // Meeting Scheduling
   scheduleMeeting(request: ScheduleMeetingRequest): Promise<CalendarEvent>;
-  rescheduleEvent(userId: string, calendarId: string, eventId: string, newTime: TimeRange): Promise<CalendarEvent>;
-  cancelMeeting(userId: string, calendarId: string, eventId: string, reason?: string): Promise<void>;
+  rescheduleEvent(
+    userId: string,
+    calendarId: string,
+    eventId: string,
+    newTime: TimeRange
+  ): Promise<CalendarEvent>;
+  cancelMeeting(
+    userId: string,
+    calendarId: string,
+    eventId: string,
+    reason?: string
+  ): Promise<void>;
 }
 
 export interface Calendar {
@@ -904,7 +938,7 @@ export enum CalendarAccessRole {
   OWNER = 'owner',
   WRITER = 'writer',
   READER = 'reader',
-  FREE_BUSY_READER = 'free_busy_reader'
+  FREE_BUSY_READER = 'free_busy_reader',
 }
 
 export interface CreateCalendarRequest {
@@ -1071,7 +1105,7 @@ export enum ATSWebhookEvent {
   ASSESSMENT_COMPLETED = 'assessment.completed',
   OFFER_EXTENDED = 'offer.extended',
   OFFER_ACCEPTED = 'offer.accepted',
-  OFFER_REJECTED = 'offer.rejected'
+  OFFER_REJECTED = 'offer.rejected',
 }
 
 export enum CalendarWebhookEvent {
@@ -1082,7 +1116,7 @@ export enum CalendarWebhookEvent {
   ATTENDEE_RESPONSE = 'attendee.response',
   CALENDAR_CREATED = 'calendar.created',
   CALENDAR_UPDATED = 'calendar.updated',
-  CALENDAR_DELETED = 'calendar.deleted'
+  CALENDAR_DELETED = 'calendar.deleted',
 }
 
 /**
@@ -1203,7 +1237,7 @@ export enum SyncStatusType {
   IN_PROGRESS = 'in_progress',
   COMPLETED = 'completed',
   FAILED = 'failed',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
 }
 
 export interface SyncError {
@@ -1277,7 +1311,7 @@ export enum RequestPriority {
   NORMAL = 1,
   HIGH = 2,
   URGENT = 3,
-  CRITICAL = 4
+  CRITICAL = 4,
 }
 
 export enum QueueStatus {
@@ -1285,7 +1319,7 @@ export enum QueueStatus {
   PROCESSING = 'processing',
   COMPLETED = 'completed',
   FAILED = 'failed',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
 }
 
 // ============================================================================
@@ -1305,7 +1339,7 @@ export enum IntegrationErrorType {
   VALIDATION_ERROR = 'validation_error',
   NETWORK_ERROR = 'network_error',
   TIMEOUT_ERROR = 'timeout_error',
-  UNKNOWN_ERROR = 'unknown_error'
+  UNKNOWN_ERROR = 'unknown_error',
 }
 
 export interface IntegrationError extends Error {
@@ -1336,7 +1370,7 @@ export enum HealthStatus {
   HEALTHY = 'healthy',
   DEGRADED = 'degraded',
   UNHEALTHY = 'unhealthy',
-  UNKNOWN = 'unknown'
+  UNKNOWN = 'unknown',
 }
 
 export interface HealthIssue {

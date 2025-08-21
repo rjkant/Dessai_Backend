@@ -1,10 +1,10 @@
 /**
  * Performance Analytics Service
- * 
+ *
  * Comprehensive service for candidate performance analytics, assessment metrics,
  * comparative analysis, trend analysis, and performance prediction models.
  * Provides enterprise-grade analytics capabilities for data-driven hiring decisions.
- * 
+ *
  * @author Senior Software Engineer
  * @version Epic 5 Task 5.2: Performance Analytics
  */
@@ -57,12 +57,12 @@ import {
   ProjectionScenario,
   StressIndicator,
   FocusMetrics,
-  CategoryScore
+  CategoryScore,
 } from '../types/performance-analytics.types';
 
 /**
  * Enterprise Performance Analytics Service
- * 
+ *
  * Provides comprehensive analytics capabilities including:
  * - Real-time performance metric calculation and aggregation
  * - Candidate performance profiling and benchmarking
@@ -100,7 +100,7 @@ export class PerformanceAnalyticsService extends EventEmitter {
     logger: Logger
   ) {
     super();
-    
+
     this.prisma = prisma;
     this.redisService = redisService;
     this.dataCollection = dataCollection;
@@ -137,7 +137,7 @@ export class PerformanceAnalyticsService extends EventEmitter {
   ): Promise<PerformanceMetric[]> {
     try {
       const cacheKey = `candidate_metrics:${candidateId}:${assessmentId || 'all'}:${period ? `${period.startDate.getTime()}-${period.endDate.getTime()}` : 'lifetime'}`;
-      
+
       // Check cache first
       if (this.config.enableMetricCaching) {
         const cached = await this.getCachedResult(cacheKey);
@@ -148,10 +148,10 @@ export class PerformanceAnalyticsService extends EventEmitter {
 
       // Collect raw data
       const rawData = await this.collectCandidateData(candidateId, assessmentId, period);
-      
+
       // Calculate metrics
       const metrics = await this.computePerformanceMetrics(rawData);
-      
+
       // Normalize and benchmark metrics
       const normalizedMetrics = await this.normalizeMetrics(metrics);
       const benchmarkedMetrics = await this.benchmarkMetrics(normalizedMetrics, candidateId);
@@ -166,14 +166,15 @@ export class PerformanceAnalyticsService extends EventEmitter {
         candidateId,
         assessmentId,
         metricsCount: benchmarkedMetrics.length,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       return benchmarkedMetrics;
-
     } catch (error) {
       this.logger.error('Error calculating candidate metrics:', error as Error);
-      throw new Error(`Failed to calculate metrics for candidate ${candidateId}: ${(error as Error).message}`);
+      throw new Error(
+        `Failed to calculate metrics for candidate ${candidateId}: ${(error as Error).message}`
+      );
     }
   }
 
@@ -188,7 +189,7 @@ export class PerformanceAnalyticsService extends EventEmitter {
   ): Promise<AggregatedMetrics> {
     try {
       const cacheKey = `aggregated_metrics:${metricType}:${aggregationType}:${period}:${JSON.stringify(filters || {})}`;
-      
+
       // Check cache
       if (this.config.enableMetricCaching) {
         const cached = await this.getCachedResult(cacheKey);
@@ -199,20 +200,16 @@ export class PerformanceAnalyticsService extends EventEmitter {
 
       // Get time range for period
       const dateRange = this.getPeriodDateRange(period);
-      
+
       // Collect metrics data
-      const metricsData = await this.collectMetricsForAggregation(
-        metricType,
-        dateRange,
-        filters
-      );
+      const metricsData = await this.collectMetricsForAggregation(metricType, dateRange, filters);
 
       // Perform aggregation
       const aggregatedResult = this.performAggregation(metricsData, aggregationType);
-      
+
       // Calculate statistical measures
       const statistics = this.calculateStatistics(metricsData);
-      
+
       // Analyze trend
       const trend = await this.analyzeTrend(metricsData, period);
 
@@ -228,7 +225,7 @@ export class PerformanceAnalyticsService extends EventEmitter {
         trend: trend.direction,
         trendStrength: trend.strength,
         changeFromPrevious: trend.changeFromPrevious,
-        changeFromPreviousPercent: trend.changeFromPreviousPercent
+        changeFromPreviousPercent: trend.changeFromPreviousPercent,
       };
 
       // Cache result
@@ -237,7 +234,6 @@ export class PerformanceAnalyticsService extends EventEmitter {
       }
 
       return aggregatedMetrics;
-
     } catch (error) {
       this.logger.error('Error aggregating metrics:', error);
       throw new Error(`Failed to aggregate metrics: ${(error as Error).message}`);
@@ -255,20 +251,20 @@ export class PerformanceAnalyticsService extends EventEmitter {
 
       // Get candidate metrics
       const metrics = await this.calculateCandidateMetrics(candidateId);
-      
+
       // Calculate category scores
       const categoryScores = await this.calculateCategoryScores(metrics);
-      
+
       // Determine skill level
       const skillLevel = this.determineSkillLevel(categoryScores);
-      
+
       // Calculate overall score and percentile
       const overallScore = this.calculateOverallScore(categoryScores);
       const overallPercentile = await this.calculatePercentile(overallScore, candidateId);
 
       // Analyze performance trends
       const performanceTrend = await this.analyzePerformanceTrend(candidateId);
-      
+
       // Generate comparative analysis
       const peerComparison = await this.generatePeerComparison(candidateId, overallScore);
       const industryComparison = await this.generateIndustryComparison(candidateId, categoryScores);
@@ -281,13 +277,13 @@ export class PerformanceAnalyticsService extends EventEmitter {
         insights: [],
         recommendations: [],
         milestones: [],
-        projectedPerformance: { score: 85, confidence: 0.75, timeframe: 30 }
+        projectedPerformance: { score: 85, confidence: 0.75, timeframe: 30 },
       };
 
       // Identify strengths and weaknesses
       const strengths = await this.identifyStrengths(metrics, categoryScores);
       const weaknesses = await this.identifyWeaknesses(metrics, categoryScores);
-      
+
       // Generate recommendations
       const recommendations = await this.generateRecommendations(
         candidateId,
@@ -298,7 +294,7 @@ export class PerformanceAnalyticsService extends EventEmitter {
 
       // Get assessment history
       const assessmentHistory = await this.getAssessmentHistory(candidateId);
-      
+
       // Calculate data quality and confidence
       const dataQuality = this.calculateDataQuality(metrics);
       const confidenceLevel = this.calculateConfidenceLevel(metrics, assessmentHistory);
@@ -306,7 +302,7 @@ export class PerformanceAnalyticsService extends EventEmitter {
       // Get organization info
       const candidate = await this.prisma.user.findUnique({
         where: { id: candidateId },
-        select: { organizationId: true }
+        select: { organizationId: true },
       });
 
       const profile: CandidatePerformanceProfile = {
@@ -334,7 +330,7 @@ export class PerformanceAnalyticsService extends EventEmitter {
         assessmentHistory,
         lastUpdated: new Date(),
         dataQuality,
-        confidenceLevel
+        confidenceLevel,
       };
 
       // Store profile
@@ -345,15 +341,16 @@ export class PerformanceAnalyticsService extends EventEmitter {
         candidateId,
         overallScore,
         skillLevel,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       this.logger.info(`Performance profile generated for candidate ${candidateId}`);
       return profile;
-
     } catch (error) {
       this.logger.error('Error generating candidate profile:', error);
-      throw new Error(`Failed to generate profile for candidate ${candidateId}: ${(error as Error).message}`);
+      throw new Error(
+        `Failed to generate profile for candidate ${candidateId}: ${(error as Error).message}`
+      );
     }
   }
 
@@ -366,21 +363,21 @@ export class PerformanceAnalyticsService extends EventEmitter {
     try {
       // Determine peer group
       const peerGroup = await this.determinePeerGroup(candidateId);
-      
+
       // Get peer group performance data
       const peerData = await this.getPeerGroupData(peerGroup.id);
-      
+
       // Calculate rankings
       const overallRank = this.calculateRank(overallScore, peerData.scores);
       const overallPercentile = this.calculatePercentileInGroup(overallScore, peerData.scores);
-      
+
       // Calculate category rankings
       const categoryRankings = await this.calculateCategoryRankings(candidateId, peerGroup.id);
-      
+
       // Identify performance gaps
       const strengthGaps = this.identifyStrengthGaps(categoryRankings);
       const weaknessGaps = this.identifyWeaknessGaps(categoryRankings);
-      
+
       // Generate insights
       const insights = await this.generateComparisonInsights(
         candidateId,
@@ -398,9 +395,8 @@ export class PerformanceAnalyticsService extends EventEmitter {
         categoryRankings,
         strengthGaps,
         weaknessGaps,
-        insights
+        insights,
       };
-
     } catch (error) {
       this.logger.error('Error generating peer comparison:', error);
       throw new Error(`Failed to generate peer comparison: ${(error as Error).message}`);
@@ -410,20 +406,23 @@ export class PerformanceAnalyticsService extends EventEmitter {
   /**
    * Generate industry benchmark comparison
    */
-  async generateIndustryComparison(candidateId: string, categoryScores: any): Promise<IndustryComparison> {
+  async generateIndustryComparison(
+    candidateId: string,
+    categoryScores: any
+  ): Promise<IndustryComparison> {
     try {
       // Get candidate's industry
       const industry = await this.getCandidateIndustry(candidateId);
-      
+
       // Get industry benchmarks
       const benchmarks = await this.getIndustryBenchmarks(industry.id);
-      
+
       // Calculate industry percentiles
       const overallIndustryPercentile = this.calculateIndustryPercentile(
         categoryScores.overall,
         benchmarks.overall
       );
-      
+
       const categoryPercentiles = Object.entries(categoryScores)
         .filter(([key]) => key !== 'overall')
         .map(([category, score]) => ({
@@ -431,12 +430,12 @@ export class PerformanceAnalyticsService extends EventEmitter {
           percentile: this.calculateIndustryPercentile(score as number, benchmarks[category]),
           score: score as number,
           industryAverage: benchmarks[category]?.average || 0,
-          industryStandardDeviation: benchmarks[category]?.standardDeviation || 0
+          industryStandardDeviation: benchmarks[category]?.standardDeviation || 0,
         }));
 
       // Determine market position
       const marketPosition = this.determineMarketPosition(overallIndustryPercentile);
-      
+
       // Identify competitive advantages and opportunities
       const competitiveAdvantages = this.identifyCompetitiveAdvantages(categoryPercentiles);
       const improvementOpportunities = this.identifyImprovementOpportunities(categoryPercentiles);
@@ -449,9 +448,8 @@ export class PerformanceAnalyticsService extends EventEmitter {
         categoryPercentiles,
         marketPosition,
         competitiveAdvantages,
-        improvementOpportunities
+        improvementOpportunities,
       };
-
     } catch (error) {
       this.logger.error('Error generating industry comparison:', error);
       throw new Error(`Failed to generate industry comparison: ${(error as Error).message}`);
@@ -472,31 +470,33 @@ export class PerformanceAnalyticsService extends EventEmitter {
       // Get historical data
       const dateRange = this.getPeriodDateRange(period);
       const historicalData = await this.getHistoricalMetricData(candidateId, metricType, dateRange);
-      
+
       // Prepare data points
       const dataPoints: TrendDataPoint[] = historicalData.map(point => ({
         timestamp: point.timestamp,
         value: point.value,
         movingAverage: this.calculateMovingAverage(historicalData, point.timestamp, 7),
         expectedValue: this.calculateExpectedValue(historicalData, point.timestamp),
-        deviation: Math.abs(point.value - this.calculateExpectedValue(historicalData, point.timestamp)),
-        confidence: this.calculateDataPointConfidence(point)
+        deviation: Math.abs(
+          point.value - this.calculateExpectedValue(historicalData, point.timestamp)
+        ),
+        confidence: this.calculateDataPointConfidence(point),
       }));
 
       // Analyze trend characteristics
       const trendCharacteristics = this.analyzeTrendCharacteristics(dataPoints);
-      
+
       // Detect seasonality
       const seasonalAnalysis = await this.detectSeasonality(dataPoints);
-      
+
       // Identify anomalies and outliers
       const anomalies = this.identifyAnomalies(dataPoints);
       const outliers = this.identifyOutliers(dataPoints);
-      
+
       // Generate predictions
       const shortTermPrediction = await this.generateShortTermPrediction(dataPoints);
       const longTermPrediction = await this.generateLongTermPrediction(dataPoints);
-      
+
       // Generate insights and recommendations
       const trendInsights = this.generateTrendInsights(dataPoints, trendCharacteristics);
       const recommendations = this.generateTrendRecommendations(trendCharacteristics, anomalies);
@@ -520,9 +520,8 @@ export class PerformanceAnalyticsService extends EventEmitter {
         anomalies,
         outliers,
         trendInsights,
-        recommendations
+        recommendations,
       };
-
     } catch (error) {
       this.logger.error('Error performing trend analysis:', error);
       throw new Error(`Failed to perform trend analysis: ${(error as Error).message}`);
@@ -549,9 +548,9 @@ export class PerformanceAnalyticsService extends EventEmitter {
             include: {
               // responses: true, // Remove if not available in schema
               // session: true // Remove if not available
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       if (!assessment) {
@@ -563,7 +562,7 @@ export class PerformanceAnalyticsService extends EventEmitter {
         startedAt: new Date(),
         completedAt: new Date(),
         timeSpent: 3600,
-        responses: []
+        responses: [],
       };
       if (!participation) {
         throw new Error('Assessment participation not found');
@@ -572,28 +571,31 @@ export class PerformanceAnalyticsService extends EventEmitter {
       // Calculate scores
       const categoryScores = await this.calculateAssessmentCategoryScores(participation);
       const overallScore = this.calculateWeightedOverallScore(categoryScores);
-      const overallPercentile = await this.calculateAssessmentPercentile(assessmentId, overallScore);
+      const overallPercentile = await this.calculateAssessmentPercentile(
+        assessmentId,
+        overallScore
+      );
 
       // Calculate time metrics
       const timeMetrics = this.calculateTimeMetrics(participation);
-      
+
       // Calculate completion metrics
       const completionMetrics = this.calculateCompletionMetrics(participation, assessment);
-      
+
       // Calculate quality metrics
       const qualityMetrics = await this.calculateQualityMetrics(participation);
-      
+
       // Analyze behavioral patterns
       const stressIndicators = await this.analyzeStressIndicators(participation);
       const engagementLevel = this.calculateEngagementLevel(participation);
       const focusMetrics = await this.analyzeFocusMetrics(participation);
-      
+
       // Get cohort performance context
       const cohortPerformance = await this.getCohortPerformance(assessmentId, overallScore);
-      
+
       // Calculate difficulty rating
       const difficultyRating = await this.calculateAssessmentDifficulty(assessmentId);
-      
+
       // Get industry benchmark
       const industryBenchmark = await this.getIndustryAssessmentBenchmark(assessmentId);
 
@@ -618,9 +620,8 @@ export class PerformanceAnalyticsService extends EventEmitter {
         focusMetrics,
         cohortPerformance,
         difficultyRating,
-        industryBenchmark
+        industryBenchmark,
       };
-
     } catch (error) {
       this.logger.error('Error generating assessment summary:', error);
       throw new Error(`Failed to generate assessment summary: ${(error as Error).message}`);
@@ -645,13 +646,13 @@ export class PerformanceAnalyticsService extends EventEmitter {
 
       // Extract features for candidate
       const features = await this.extractCandidateFeatures(candidateId, model.features);
-      
+
       // Apply feature transformations
       const transformedFeatures = this.applyFeatureTransformations(features, model);
-      
+
       // Make prediction
       const prediction = await this.makePrediction(model, transformedFeatures);
-      
+
       // Calculate feature contributions
       const featureContributions = this.calculateFeatureContributions(
         transformedFeatures,
@@ -676,7 +677,7 @@ export class PerformanceAnalyticsService extends EventEmitter {
         probability: prediction.probability,
         featureContributions,
         explanation,
-        validated: false
+        validated: false,
       };
 
       // Store prediction
@@ -687,11 +688,10 @@ export class PerformanceAnalyticsService extends EventEmitter {
         candidateId,
         modelType,
         predictedScore: prediction.value,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       return predictionResult;
-
     } catch (error) {
       this.logger.error('Error generating prediction:', error);
       throw new Error(`Failed to generate prediction: ${(error as Error).message}`);
@@ -707,7 +707,7 @@ export class PerformanceAnalyticsService extends EventEmitter {
     try {
       // Validate dashboard configuration
       this.validateDashboardConfig(config);
-      
+
       // Generate dashboard ID
       config.dashboardId = this.generateId();
       config.createdAt = new Date();
@@ -722,7 +722,6 @@ export class PerformanceAnalyticsService extends EventEmitter {
 
       this.logger.info(`Dashboard created: ${config.dashboardId}`);
       return config.dashboardId;
-
     } catch (error) {
       this.logger.error('Error creating dashboard:', error);
       throw new Error(`Failed to create dashboard: ${(error as Error).message}`);
@@ -746,10 +745,10 @@ export class PerformanceAnalyticsService extends EventEmitter {
         ...(period && {
           timestamp: {
             gte: period.startDate,
-            lte: period.endDate
-          }
-        })
-      }
+            lte: period.endDate,
+          },
+        }),
+      },
     };
 
     // This would typically query assessment results, code submissions, etc.
@@ -758,8 +757,8 @@ export class PerformanceAnalyticsService extends EventEmitter {
       include: {
         assessment: true,
         responses: true,
-        session: true
-      }
+        session: true,
+      },
     });
 
     return assessmentResults;
@@ -789,7 +788,7 @@ export class PerformanceAnalyticsService extends EventEmitter {
   private calculateCodeQualityMetric(data: any): PerformanceMetric {
     // Simplified calculation - in reality would analyze code complexity, style, etc.
     const qualityScore = this.analyzeCodeQuality(data);
-    
+
     return {
       id: this.generateId(),
       type: PerformanceMetricType.CODE_QUALITY,
@@ -803,13 +802,13 @@ export class PerformanceAnalyticsService extends EventEmitter {
       metadata: {
         complexity: data.complexity,
         linesOfCode: data.linesOfCode,
-        testCoverage: data.testCoverage
+        testCoverage: data.testCoverage,
       },
       tags: ['code-quality', 'technical'],
       confidence: 0.85,
       benchmarkGroup: 'general',
       industryPercentile: 0,
-      companyPercentile: 0
+      companyPercentile: 0,
     };
   }
 
@@ -818,7 +817,7 @@ export class PerformanceAnalyticsService extends EventEmitter {
    */
   private calculateTimeEfficiencyMetric(data: any): PerformanceMetric {
     const timeEfficiency = this.calculateTimeEfficiency(data);
-    
+
     return {
       id: this.generateId(),
       type: PerformanceMetricType.TIME_EFFICIENCY,
@@ -832,13 +831,13 @@ export class PerformanceAnalyticsService extends EventEmitter {
       metadata: {
         totalTime: data.totalTime,
         expectedTime: data.expectedTime,
-        complexity: data.complexity
+        complexity: data.complexity,
       },
       tags: ['time-management', 'efficiency'],
       confidence: 0.9,
       benchmarkGroup: 'general',
       industryPercentile: 0,
-      companyPercentile: 0
+      companyPercentile: 0,
     };
   }
 
@@ -847,7 +846,7 @@ export class PerformanceAnalyticsService extends EventEmitter {
    */
   private calculateProblemSolvingMetric(data: any): PerformanceMetric {
     const problemSolvingScore = this.analyzeProblemSolvingApproach(data);
-    
+
     return {
       id: this.generateId(),
       type: PerformanceMetricType.PROBLEM_UNDERSTANDING,
@@ -861,13 +860,13 @@ export class PerformanceAnalyticsService extends EventEmitter {
       metadata: {
         approach: data.approach,
         correctness: data.correctness,
-        edgeCases: data.edgeCases
+        edgeCases: data.edgeCases,
       },
       tags: ['problem-solving', 'analytical'],
       confidence: 0.8,
       benchmarkGroup: 'general',
       industryPercentile: 0,
-      companyPercentile: 0
+      companyPercentile: 0,
     };
   }
 
@@ -898,11 +897,11 @@ export class PerformanceAnalyticsService extends EventEmitter {
   private calculateTimeEfficiency(data: any): number {
     const totalTime = data.session?.duration || 3600; // Default 1 hour
     const expectedTime = 2400; // 40 minutes expected
-    
+
     if (totalTime <= expectedTime) {
       return 100; // Perfect efficiency
     }
-    
+
     return Math.max(0, 100 - ((totalTime - expectedTime) / expectedTime) * 50);
   }
 
@@ -925,12 +924,24 @@ export class PerformanceAnalyticsService extends EventEmitter {
   }
 
   // Simplified analysis methods (would be more sophisticated in reality)
-  private analyzeCodeStructure(code: string): number { return Math.random() * 20 - 10; }
-  private analyzeNamingConventions(code: string): number { return Math.random() * 20 - 10; }
-  private analyzeCommentQuality(code: string): number { return Math.random() * 20 - 10; }
-  private evaluateSolutionApproach(response: any): number { return Math.random() * 20 - 10; }
-  private evaluateCorrectness(response: any): number { return Math.random() * 20 - 10; }
-  private evaluateEdgeCaseHandling(response: any): number { return Math.random() * 20 - 10; }
+  private analyzeCodeStructure(code: string): number {
+    return Math.random() * 20 - 10;
+  }
+  private analyzeNamingConventions(code: string): number {
+    return Math.random() * 20 - 10;
+  }
+  private analyzeCommentQuality(code: string): number {
+    return Math.random() * 20 - 10;
+  }
+  private evaluateSolutionApproach(response: any): number {
+    return Math.random() * 20 - 10;
+  }
+  private evaluateCorrectness(response: any): number {
+    return Math.random() * 20 - 10;
+  }
+  private evaluateEdgeCaseHandling(response: any): number {
+    return Math.random() * 20 - 10;
+  }
 
   /**
    * Normalize metrics to 0-1 scale
@@ -938,7 +949,7 @@ export class PerformanceAnalyticsService extends EventEmitter {
   private async normalizeMetrics(metrics: PerformanceMetric[]): Promise<PerformanceMetric[]> {
     return metrics.map(metric => ({
       ...metric,
-      normalizedValue: metric.value / 100 // Simplified normalization
+      normalizedValue: metric.value / 100, // Simplified normalization
     }));
   }
 
@@ -973,22 +984,25 @@ export class PerformanceAnalyticsService extends EventEmitter {
       problemSolving: this.calculateProblemSolvingScore(metrics),
       codeQuality: this.calculateCodeQualityScore(metrics),
       timeManagement: this.calculateTimeManagementScore(metrics),
-      communication: this.calculateCommunicationScore(metrics)
+      communication: this.calculateCommunicationScore(metrics),
     };
 
     return categories;
   }
 
   private calculateTechnicalSkillsScore(metrics: PerformanceMetric[]): number {
-    const technicalMetrics = metrics.filter(m => 
+    const technicalMetrics = metrics.filter(m =>
       [PerformanceMetricType.CODE_QUALITY, PerformanceMetricType.SOLUTION_ELEGANCE].includes(m.type)
     );
     return this.calculateAverageScore(technicalMetrics);
   }
 
   private calculateProblemSolvingScore(metrics: PerformanceMetric[]): number {
-    const problemSolvingMetrics = metrics.filter(m => 
-      [PerformanceMetricType.PROBLEM_UNDERSTANDING, PerformanceMetricType.SOLUTION_APPROACH].includes(m.type)
+    const problemSolvingMetrics = metrics.filter(m =>
+      [
+        PerformanceMetricType.PROBLEM_UNDERSTANDING,
+        PerformanceMetricType.SOLUTION_APPROACH,
+      ].includes(m.type)
     );
     return this.calculateAverageScore(problemSolvingMetrics);
   }
@@ -999,8 +1013,10 @@ export class PerformanceAnalyticsService extends EventEmitter {
   }
 
   private calculateTimeManagementScore(metrics: PerformanceMetric[]): number {
-    const timeMetrics = metrics.filter(m => 
-      [PerformanceMetricType.TIME_EFFICIENCY, PerformanceMetricType.COMPLETION_RATE].includes(m.type)
+    const timeMetrics = metrics.filter(m =>
+      [PerformanceMetricType.TIME_EFFICIENCY, PerformanceMetricType.COMPLETION_RATE].includes(
+        m.type
+      )
     );
     return this.calculateAverageScore(timeMetrics);
   }
@@ -1014,7 +1030,9 @@ export class PerformanceAnalyticsService extends EventEmitter {
    * Calculate average score from metrics
    */
   private calculateAverageScore(metrics: PerformanceMetric[]): number {
-    if (metrics.length === 0) return 0;
+    if (metrics.length === 0) {
+      return 0;
+    }
     const sum = metrics.reduce((acc, m) => acc + m.value, 0);
     return sum / metrics.length;
   }
@@ -1024,11 +1042,19 @@ export class PerformanceAnalyticsService extends EventEmitter {
    */
   private determineSkillLevel(categoryScores: any): SkillLevel {
     const overall = this.calculateOverallScore(categoryScores);
-    
-    if (overall >= 90) return SkillLevel.EXPERT;
-    if (overall >= 80) return SkillLevel.SENIOR;
-    if (overall >= 70) return SkillLevel.MID_LEVEL;
-    if (overall >= 60) return SkillLevel.JUNIOR;
+
+    if (overall >= 90) {
+      return SkillLevel.EXPERT;
+    }
+    if (overall >= 80) {
+      return SkillLevel.SENIOR;
+    }
+    if (overall >= 70) {
+      return SkillLevel.MID_LEVEL;
+    }
+    if (overall >= 60) {
+      return SkillLevel.JUNIOR;
+    }
     return SkillLevel.BEGINNER;
   }
 
@@ -1041,7 +1067,7 @@ export class PerformanceAnalyticsService extends EventEmitter {
       problemSolving: 0.25,
       codeQuality: 0.25,
       timeManagement: 0.15,
-      communication: 0.05
+      communication: 0.05,
     };
 
     let weightedSum = 0;
@@ -1100,14 +1126,16 @@ export class PerformanceAnalyticsService extends EventEmitter {
    * Set up event handlers
    */
   private setupEventHandlers(): void {
-    this.dataCollection.on('eventCollected', (event) => {
+    this.dataCollection.on('eventCollected', event => {
       if (this.shouldTriggerMetricCalculation(event)) {
         this.queueMetricCalculation(event.candidateId, event.assessmentId);
       }
     });
 
-    this.on('metricsCalculated', (data) => {
-      this.logger.debug(`Metrics calculated for candidate ${data.candidateId}: ${data.metricsCount} metrics`);
+    this.on('metricsCalculated', data => {
+      this.logger.debug(
+        `Metrics calculated for candidate ${data.candidateId}: ${data.metricsCount} metrics`
+      );
     });
   }
 
@@ -1115,9 +1143,11 @@ export class PerformanceAnalyticsService extends EventEmitter {
    * Check if event should trigger metric calculation
    */
   private shouldTriggerMetricCalculation(event: any): boolean {
-    return event.type === 'ASSESSMENT_COMPLETED' || 
-           event.type === 'QUESTION_ANSWERED' ||
-           event.type === 'SESSION_ENDED';
+    return (
+      event.type === 'ASSESSMENT_COMPLETED' ||
+      event.type === 'QUESTION_ANSWERED' ||
+      event.type === 'SESSION_ENDED'
+    );
   }
 
   /**
@@ -1145,7 +1175,7 @@ export class PerformanceAnalyticsService extends EventEmitter {
       while (this.processingQueue.length > 0) {
         const key = this.processingQueue.shift()!;
         const [candidateId, assessmentId] = key.split(':');
-        
+
         await this.calculateCandidateMetrics(
           candidateId,
           assessmentId !== 'all' ? assessmentId : undefined
@@ -1174,14 +1204,20 @@ export class PerformanceAnalyticsService extends EventEmitter {
    */
   private startPeriodicTasks(): void {
     // Update benchmarks periodically
-    setInterval(() => {
-      this.updateBenchmarks();
-    }, this.config.benchmarkUpdateInterval * 60 * 60 * 1000);
+    setInterval(
+      () => {
+        this.updateBenchmarks();
+      },
+      this.config.benchmarkUpdateInterval * 60 * 60 * 1000
+    );
 
     // Retrain models periodically
-    setInterval(() => {
-      this.retrainModels();
-    }, this.config.modelRetrainingInterval * 24 * 60 * 60 * 1000);
+    setInterval(
+      () => {
+        this.retrainModels();
+      },
+      this.config.modelRetrainingInterval * 24 * 60 * 60 * 1000
+    );
   }
 
   /**
@@ -1220,67 +1256,221 @@ export class PerformanceAnalyticsService extends EventEmitter {
   /**
    * Placeholder methods (would be implemented with proper business logic)
    */
-  private async collectMetricsForAggregation(metricType: PerformanceMetricType, dateRange: DateRange, filters?: Record<string, any>): Promise<number[]> { return []; }
-  private performAggregation(data: number[], type: MetricAggregationType): number { return 0; }
-  private calculateStatistics(data: number[]): any { return {}; }
-  private async analyzeTrend(data: number[], period: AnalysisPeriod): Promise<any> { return {}; }
-  private getPeriodDateRange(period: AnalysisPeriod): DateRange { return { startDate: new Date(), endDate: new Date() }; }
-  private async calculatePercentile(score: number, candidateId: string): Promise<number> { return 50; }
-  private async analyzePerformanceTrend(candidateId: string): Promise<any> { return { direction: TrendDirection.STABLE, improvementRate: 0, consistencyScore: 75 }; }
-  private async identifyStrengths(metrics: PerformanceMetric[], categoryScores: any): Promise<any[]> { return []; }
-  private async identifyWeaknesses(metrics: PerformanceMetric[], categoryScores: any): Promise<any[]> { return []; }
-  private async generateRecommendations(candidateId: string, strengths: any[], weaknesses: any[], trend: any): Promise<PerformanceRecommendation[]> { return []; }
-  private async getAssessmentHistory(candidateId: string): Promise<AssessmentPerformanceSummary[]> { return []; }
-  private calculateDataQuality(metrics: PerformanceMetric[]): number { return 0.85; }
-  private calculateConfidenceLevel(metrics: PerformanceMetric[], history: any[]): number { return 0.9; }
-  private async storePerformanceProfile(profile: CandidatePerformanceProfile): Promise<void> { }
-  private async determinePeerGroup(candidateId: string): Promise<any> { return { id: 'default', name: 'General' }; }
-  private async getPeerGroupData(groupId: string): Promise<any> { return { scores: [], size: 0 }; }
-  private calculateRank(score: number, peerScores: number[]): number { return 1; }
-  private calculatePercentileInGroup(score: number, peerScores: number[]): number { return 50; }
-  private async calculateCategoryRankings(candidateId: string, peerGroupId: string): Promise<CategoryRanking[]> { return []; }
-  private identifyStrengthGaps(rankings: CategoryRanking[]): PerformanceGap[] { return []; }
-  private identifyWeaknessGaps(rankings: CategoryRanking[]): PerformanceGap[] { return []; }
-  private async generateComparisonInsights(candidateId: string, rankings: CategoryRanking[], strengthGaps: PerformanceGap[], weaknessGaps: PerformanceGap[]): Promise<ComparisonInsight[]> { return []; }
-  private async getCandidateIndustry(candidateId: string): Promise<any> { return { id: 'tech', name: 'Technology' }; }
-  private async getIndustryBenchmarks(industryId: string): Promise<any> { return {}; }
-  private calculateIndustryPercentile(score: number, benchmark: any): number { return 50; }
-  private determineMarketPosition(percentile: number): MarketPosition { return MarketPosition.SECOND_QUARTILE; }
-  private identifyCompetitiveAdvantages(percentiles: any[]): string[] { return []; }
-  private identifyImprovementOpportunities(percentiles: any[]): string[] { return []; }
-  private async getHistoricalMetricData(candidateId: string, metricType: PerformanceMetricType, dateRange: DateRange): Promise<any[]> { return []; }
-  private calculateMovingAverage(data: any[], timestamp: Date, days: number): number { return 0; }
-  private calculateExpectedValue(data: any[], timestamp: Date): number { return 0; }
-  private calculateDataPointConfidence(point: any): number { return 0.8; }
-  private analyzeTrendCharacteristics(dataPoints: TrendDataPoint[]): any { return {}; }
-  private async detectSeasonality(dataPoints: TrendDataPoint[]): Promise<any> { return { detected: false, patterns: [] }; }
-  private identifyAnomalies(dataPoints: TrendDataPoint[]): TrendAnomaly[] { return []; }
-  private identifyOutliers(dataPoints: TrendDataPoint[]): any[] { return []; }
-  private async generateShortTermPrediction(dataPoints: TrendDataPoint[]): Promise<any> { return {}; }
-  private async generateLongTermPrediction(dataPoints: TrendDataPoint[]): Promise<any> { return {}; }
-  private generateTrendInsights(dataPoints: TrendDataPoint[], characteristics: any): any[] { return []; }
-  private generateTrendRecommendations(characteristics: any, anomalies: TrendAnomaly[]): any[] { return []; }
-  private async calculateAssessmentCategoryScores(participation: any): Promise<CategoryScore[]> { return []; }
-  private calculateWeightedOverallScore(categoryScores: CategoryScore[]): number { return 75; }
-  private async calculateAssessmentPercentile(assessmentId: string, score: number): Promise<number> { return 50; }
-  private calculateTimeMetrics(participation: any): any { return {}; }
-  private calculateCompletionMetrics(participation: any, assessment: any): any { return {}; }
-  private async calculateQualityMetrics(participation: any): Promise<any> { return {}; }
-  private async analyzeStressIndicators(participation: any): Promise<StressIndicator[]> { return []; }
-  private calculateEngagementLevel(participation: any): number { return 75; }
-  private async analyzeFocusMetrics(participation: any): Promise<FocusMetrics> { return {} as FocusMetrics; }
-  private async getCohortPerformance(assessmentId: string, score: number): Promise<any> { return {}; }
-  private async calculateAssessmentDifficulty(assessmentId: string): Promise<number> { return 5; }
-  private async getIndustryAssessmentBenchmark(assessmentId: string): Promise<number> { return 70; }
-  private async extractCandidateFeatures(candidateId: string, features: ModelFeature[]): Promise<any> { return {}; }
-  private applyFeatureTransformations(features: any, model: PerformancePredictionModel): any { return features; }
-  private async makePrediction(model: PerformancePredictionModel, features: any): Promise<any> { return {}; }
-  private calculateFeatureContributions(features: any, prediction: any, model: PerformancePredictionModel): FeatureContribution[] { return []; }
-  private generatePredictionExplanation(prediction: any, contributions: FeatureContribution[], model: PerformancePredictionModel): PredictionExplanation { return {} as PredictionExplanation; }
-  private async storePrediction(prediction: PerformancePrediction): Promise<void> { }
-  private validateDashboardConfig(config: DashboardConfig): void { }
-  private async storeDashboardConfig(config: DashboardConfig): Promise<void> { }
-  private async initializeDashboardWidgets(config: DashboardConfig): Promise<void> { }
-  private async getBenchmarkData(peerGroupId: string): Promise<any> { return {}; }
+  private async collectMetricsForAggregation(
+    metricType: PerformanceMetricType,
+    dateRange: DateRange,
+    filters?: Record<string, any>
+  ): Promise<number[]> {
+    return [];
+  }
+  private performAggregation(data: number[], type: MetricAggregationType): number {
+    return 0;
+  }
+  private calculateStatistics(data: number[]): any {
+    return {};
+  }
+  private async analyzeTrend(data: number[], period: AnalysisPeriod): Promise<any> {
+    return {};
+  }
+  private getPeriodDateRange(period: AnalysisPeriod): DateRange {
+    return { startDate: new Date(), endDate: new Date() };
+  }
+  private async calculatePercentile(score: number, candidateId: string): Promise<number> {
+    return 50;
+  }
+  private async analyzePerformanceTrend(candidateId: string): Promise<any> {
+    return { direction: TrendDirection.STABLE, improvementRate: 0, consistencyScore: 75 };
+  }
+  private async identifyStrengths(
+    metrics: PerformanceMetric[],
+    categoryScores: any
+  ): Promise<any[]> {
+    return [];
+  }
+  private async identifyWeaknesses(
+    metrics: PerformanceMetric[],
+    categoryScores: any
+  ): Promise<any[]> {
+    return [];
+  }
+  private async generateRecommendations(
+    candidateId: string,
+    strengths: any[],
+    weaknesses: any[],
+    trend: any
+  ): Promise<PerformanceRecommendation[]> {
+    return [];
+  }
+  private async getAssessmentHistory(candidateId: string): Promise<AssessmentPerformanceSummary[]> {
+    return [];
+  }
+  private calculateDataQuality(metrics: PerformanceMetric[]): number {
+    return 0.85;
+  }
+  private calculateConfidenceLevel(metrics: PerformanceMetric[], history: any[]): number {
+    return 0.9;
+  }
+  private async storePerformanceProfile(profile: CandidatePerformanceProfile): Promise<void> {}
+  private async determinePeerGroup(candidateId: string): Promise<any> {
+    return { id: 'default', name: 'General' };
+  }
+  private async getPeerGroupData(groupId: string): Promise<any> {
+    return { scores: [], size: 0 };
+  }
+  private calculateRank(score: number, peerScores: number[]): number {
+    return 1;
+  }
+  private calculatePercentileInGroup(score: number, peerScores: number[]): number {
+    return 50;
+  }
+  private async calculateCategoryRankings(
+    candidateId: string,
+    peerGroupId: string
+  ): Promise<CategoryRanking[]> {
+    return [];
+  }
+  private identifyStrengthGaps(rankings: CategoryRanking[]): PerformanceGap[] {
+    return [];
+  }
+  private identifyWeaknessGaps(rankings: CategoryRanking[]): PerformanceGap[] {
+    return [];
+  }
+  private async generateComparisonInsights(
+    candidateId: string,
+    rankings: CategoryRanking[],
+    strengthGaps: PerformanceGap[],
+    weaknessGaps: PerformanceGap[]
+  ): Promise<ComparisonInsight[]> {
+    return [];
+  }
+  private async getCandidateIndustry(candidateId: string): Promise<any> {
+    return { id: 'tech', name: 'Technology' };
+  }
+  private async getIndustryBenchmarks(industryId: string): Promise<any> {
+    return {};
+  }
+  private calculateIndustryPercentile(score: number, benchmark: any): number {
+    return 50;
+  }
+  private determineMarketPosition(percentile: number): MarketPosition {
+    return MarketPosition.SECOND_QUARTILE;
+  }
+  private identifyCompetitiveAdvantages(percentiles: any[]): string[] {
+    return [];
+  }
+  private identifyImprovementOpportunities(percentiles: any[]): string[] {
+    return [];
+  }
+  private async getHistoricalMetricData(
+    candidateId: string,
+    metricType: PerformanceMetricType,
+    dateRange: DateRange
+  ): Promise<any[]> {
+    return [];
+  }
+  private calculateMovingAverage(data: any[], timestamp: Date, days: number): number {
+    return 0;
+  }
+  private calculateExpectedValue(data: any[], timestamp: Date): number {
+    return 0;
+  }
+  private calculateDataPointConfidence(point: any): number {
+    return 0.8;
+  }
+  private analyzeTrendCharacteristics(dataPoints: TrendDataPoint[]): any {
+    return {};
+  }
+  private async detectSeasonality(dataPoints: TrendDataPoint[]): Promise<any> {
+    return { detected: false, patterns: [] };
+  }
+  private identifyAnomalies(dataPoints: TrendDataPoint[]): TrendAnomaly[] {
+    return [];
+  }
+  private identifyOutliers(dataPoints: TrendDataPoint[]): any[] {
+    return [];
+  }
+  private async generateShortTermPrediction(dataPoints: TrendDataPoint[]): Promise<any> {
+    return {};
+  }
+  private async generateLongTermPrediction(dataPoints: TrendDataPoint[]): Promise<any> {
+    return {};
+  }
+  private generateTrendInsights(dataPoints: TrendDataPoint[], characteristics: any): any[] {
+    return [];
+  }
+  private generateTrendRecommendations(characteristics: any, anomalies: TrendAnomaly[]): any[] {
+    return [];
+  }
+  private async calculateAssessmentCategoryScores(participation: any): Promise<CategoryScore[]> {
+    return [];
+  }
+  private calculateWeightedOverallScore(categoryScores: CategoryScore[]): number {
+    return 75;
+  }
+  private async calculateAssessmentPercentile(
+    assessmentId: string,
+    score: number
+  ): Promise<number> {
+    return 50;
+  }
+  private calculateTimeMetrics(participation: any): any {
+    return {};
+  }
+  private calculateCompletionMetrics(participation: any, assessment: any): any {
+    return {};
+  }
+  private async calculateQualityMetrics(participation: any): Promise<any> {
+    return {};
+  }
+  private async analyzeStressIndicators(participation: any): Promise<StressIndicator[]> {
+    return [];
+  }
+  private calculateEngagementLevel(participation: any): number {
+    return 75;
+  }
+  private async analyzeFocusMetrics(participation: any): Promise<FocusMetrics> {
+    return {} as FocusMetrics;
+  }
+  private async getCohortPerformance(assessmentId: string, score: number): Promise<any> {
+    return {};
+  }
+  private async calculateAssessmentDifficulty(assessmentId: string): Promise<number> {
+    return 5;
+  }
+  private async getIndustryAssessmentBenchmark(assessmentId: string): Promise<number> {
+    return 70;
+  }
+  private async extractCandidateFeatures(
+    candidateId: string,
+    features: ModelFeature[]
+  ): Promise<any> {
+    return {};
+  }
+  private applyFeatureTransformations(features: any, model: PerformancePredictionModel): any {
+    return features;
+  }
+  private async makePrediction(model: PerformancePredictionModel, features: any): Promise<any> {
+    return {};
+  }
+  private calculateFeatureContributions(
+    features: any,
+    prediction: any,
+    model: PerformancePredictionModel
+  ): FeatureContribution[] {
+    return [];
+  }
+  private generatePredictionExplanation(
+    prediction: any,
+    contributions: FeatureContribution[],
+    model: PerformancePredictionModel
+  ): PredictionExplanation {
+    return {} as PredictionExplanation;
+  }
+  private async storePrediction(prediction: PerformancePrediction): Promise<void> {}
+  private validateDashboardConfig(config: DashboardConfig): void {}
+  private async storeDashboardConfig(config: DashboardConfig): Promise<void> {}
+  private async initializeDashboardWidgets(config: DashboardConfig): Promise<void> {}
+  private async getBenchmarkData(peerGroupId: string): Promise<any> {
+    return {};
+  }
 }
-

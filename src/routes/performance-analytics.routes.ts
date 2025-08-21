@@ -1,8 +1,8 @@
 /**
  * Performance Analytics Routes
- * 
+ *
  * Simplified Express routing configuration for performance analytics API endpoints.
- * 
+ *
  * @author Senior Software Engineer
  * @version Epic 5 Task 5.2: Performance Analytics
  */
@@ -15,10 +15,10 @@ import { AuthMiddleware } from '../middleware/auth.middleware';
 import { ValidationMiddleware } from '../middleware/validation.middleware';
 import { roleGuard } from '../middleware/role.middleware';
 import { UserRole } from '../types/auth.types';
-import { 
-  PerformanceMetricType, 
-  MetricAggregationType, 
-  AnalysisPeriod 
+import {
+  PerformanceMetricType,
+  MetricAggregationType,
+  AnalysisPeriod,
 } from '../types/performance-analytics.types';
 
 /**
@@ -33,13 +33,13 @@ export function createPerformanceAnalyticsRoutes(
   const standardLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100,
-    message: { success: false, error: 'Rate limit exceeded' }
+    message: { success: false, error: 'Rate limit exceeded' },
   });
 
   const heavyLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
     max: 20,
-    message: { success: false, error: 'Rate limit exceeded' }
+    message: { success: false, error: 'Rate limit exceeded' },
   });
 
   // ===== PERFORMANCE METRICS ROUTES =====
@@ -54,7 +54,7 @@ export function createPerformanceAnalyticsRoutes(
     roleGuard([UserRole.ADMIN, UserRole.HR_MANAGER, UserRole.INTERVIEWER]) as any,
     [
       body('candidateId').isUUID().withMessage('Invalid candidate ID'),
-      body('assessmentId').optional().isUUID().withMessage('Invalid assessment ID')
+      body('assessmentId').optional().isUUID().withMessage('Invalid assessment ID'),
     ],
     ValidationMiddleware.handleValidationErrors,
     analyticsController.calculateMetrics.bind(analyticsController)
@@ -71,7 +71,7 @@ export function createPerformanceAnalyticsRoutes(
     [
       query('metricType').isIn(Object.values(PerformanceMetricType)),
       query('aggregationType').isIn(Object.values(MetricAggregationType)),
-      query('period').isIn(Object.values(AnalysisPeriod))
+      query('period').isIn(Object.values(AnalysisPeriod)),
     ],
     ValidationMiddleware.handleValidationErrors,
     analyticsController.getAggregatedMetrics.bind(analyticsController)
@@ -99,7 +99,12 @@ export function createPerformanceAnalyticsRoutes(
     '/profile/:candidateId',
     standardLimiter,
     AuthMiddleware.authenticate as any,
-    roleGuard([UserRole.ADMIN, UserRole.HR_MANAGER, UserRole.INTERVIEWER, UserRole.CANDIDATE]) as any,
+    roleGuard([
+      UserRole.ADMIN,
+      UserRole.HR_MANAGER,
+      UserRole.INTERVIEWER,
+      UserRole.CANDIDATE,
+    ]) as any,
     [param('candidateId').isUUID().withMessage('Invalid candidate ID')],
     ValidationMiddleware.handleValidationErrors,
     analyticsController.getProfile.bind(analyticsController)
@@ -114,8 +119,10 @@ export function createPerformanceAnalyticsRoutes(
     AuthMiddleware.authenticate as any,
     roleGuard([UserRole.ADMIN, UserRole.HR_MANAGER, UserRole.INTERVIEWER]) as any,
     [
-      body('candidateIds').isArray({ min: 2, max: 10 }).withMessage('Must provide 2-10 candidate IDs'),
-      body('candidateIds.*').isUUID().withMessage('All candidate IDs must be valid UUIDs')
+      body('candidateIds')
+        .isArray({ min: 2, max: 10 })
+        .withMessage('Must provide 2-10 candidate IDs'),
+      body('candidateIds.*').isUUID().withMessage('All candidate IDs must be valid UUIDs'),
     ],
     ValidationMiddleware.handleValidationErrors,
     analyticsController.compareCandidates.bind(analyticsController)
@@ -134,7 +141,7 @@ export function createPerformanceAnalyticsRoutes(
     [
       body('candidateId').isUUID().withMessage('Invalid candidate ID'),
       body('metricType').isIn(Object.values(PerformanceMetricType)),
-      body('period').isIn(Object.values(AnalysisPeriod))
+      body('period').isIn(Object.values(AnalysisPeriod)),
     ],
     ValidationMiddleware.handleValidationErrors,
     analyticsController.analyzeTrends.bind(analyticsController)
@@ -150,7 +157,7 @@ export function createPerformanceAnalyticsRoutes(
     roleGuard([UserRole.ADMIN, UserRole.HR_MANAGER]) as any,
     [
       query('organizationId').isUUID().withMessage('Invalid organization ID'),
-      query('period').optional().isIn(Object.values(AnalysisPeriod))
+      query('period').optional().isIn(Object.values(AnalysisPeriod)),
     ],
     ValidationMiddleware.handleValidationErrors,
     analyticsController.getOrganizationTrends.bind(analyticsController)
@@ -168,7 +175,7 @@ export function createPerformanceAnalyticsRoutes(
     roleGuard([UserRole.ADMIN, UserRole.HR_MANAGER, UserRole.INTERVIEWER]) as any,
     [
       param('assessmentId').isUUID().withMessage('Invalid assessment ID'),
-      param('candidateId').isUUID().withMessage('Invalid candidate ID')
+      param('candidateId').isUUID().withMessage('Invalid candidate ID'),
     ],
     ValidationMiddleware.handleValidationErrors,
     analyticsController.getAssessmentSummary.bind(analyticsController)
@@ -199,7 +206,14 @@ export function createPerformanceAnalyticsRoutes(
     roleGuard([UserRole.ADMIN, UserRole.HR_MANAGER, UserRole.INTERVIEWER]) as any,
     [
       body('candidateId').isUUID().withMessage('Invalid candidate ID'),
-      body('modelType').isIn(['PERFORMANCE_FORECASTING', 'SKILL_LEVEL_PREDICTION', 'SUCCESS_PROBABILITY', 'IMPROVEMENT_RATE', 'HIRING_RECOMMENDATION', 'RISK_ASSESSMENT'])
+      body('modelType').isIn([
+        'PERFORMANCE_FORECASTING',
+        'SKILL_LEVEL_PREDICTION',
+        'SUCCESS_PROBABILITY',
+        'IMPROVEMENT_RATE',
+        'HIRING_RECOMMENDATION',
+        'RISK_ASSESSMENT',
+      ]),
     ],
     ValidationMiddleware.handleValidationErrors,
     analyticsController.generatePrediction.bind(analyticsController)
@@ -228,8 +242,11 @@ export function createPerformanceAnalyticsRoutes(
     AuthMiddleware.authenticate as any,
     roleGuard([UserRole.ADMIN, UserRole.HR_MANAGER]) as any,
     [
-      body('name').trim().isLength({ min: 1, max: 100 }).withMessage('Dashboard name must be 1-100 characters'),
-      body('organizationId').isUUID().withMessage('Invalid organization ID')
+      body('name')
+        .trim()
+        .isLength({ min: 1, max: 100 })
+        .withMessage('Dashboard name must be 1-100 characters'),
+      body('organizationId').isUUID().withMessage('Invalid organization ID'),
     ],
     ValidationMiddleware.handleValidationErrors,
     analyticsController.createDashboard.bind(analyticsController)
@@ -284,8 +301,14 @@ export function createPerformanceAnalyticsRoutes(
     AuthMiddleware.authenticate as any,
     roleGuard([UserRole.ADMIN, UserRole.HR_MANAGER]) as any,
     [
-      body('reportType').isIn(['CANDIDATE_SUMMARY', 'ORGANIZATION_OVERVIEW', 'TREND_ANALYSIS', 'COMPARATIVE_ANALYSIS', 'PREDICTION_SUMMARY']),
-      body('organizationId').isUUID().withMessage('Invalid organization ID')
+      body('reportType').isIn([
+        'CANDIDATE_SUMMARY',
+        'ORGANIZATION_OVERVIEW',
+        'TREND_ANALYSIS',
+        'COMPARATIVE_ANALYSIS',
+        'PREDICTION_SUMMARY',
+      ]),
+      body('organizationId').isUUID().withMessage('Invalid organization ID'),
     ],
     ValidationMiddleware.handleValidationErrors,
     analyticsController.generateReport.bind(analyticsController)
@@ -337,10 +360,7 @@ export function createPerformanceAnalyticsRoutes(
   /**
    * Get health status
    */
-  router.get(
-    '/health',
-    analyticsController.getHealth.bind(analyticsController)
-  );
+  router.get('/health', analyticsController.getHealth.bind(analyticsController));
 
   return router;
 }

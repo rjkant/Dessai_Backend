@@ -12,41 +12,41 @@ export enum EventType {
   ASSESSMENT_ABANDONED = 'assessment_abandoned',
   ASSESSMENT_PAUSED = 'assessment_paused',
   ASSESSMENT_RESUMED = 'assessment_resumed',
-  
+
   // Question Events
   QUESTION_VIEWED = 'question_viewed',
   QUESTION_ANSWERED = 'question_answered',
   QUESTION_SKIPPED = 'question_skipped',
   QUESTION_FLAGGED = 'question_flagged',
   QUESTION_UNFLAGGED = 'question_unflagged',
-  
+
   // Code Execution Events
   CODE_EXECUTED = 'code_executed',
   CODE_COMPILED = 'code_compiled',
   CODE_ERROR = 'code_error',
   CODE_TEST_RUN = 'code_test_run',
   CODE_SUBMITTED = 'code_submitted',
-  
+
   // Proctoring Events
   VIOLATION_DETECTED = 'violation_detected',
   FACE_NOT_DETECTED = 'face_not_detected',
   MULTIPLE_FACES = 'multiple_faces',
   TAB_SWITCH = 'tab_switch',
   SUSPICIOUS_ACTIVITY = 'suspicious_activity',
-  
+
   // User Interaction Events
   PAGE_VIEW = 'page_view',
   BUTTON_CLICK = 'button_click',
   FORM_SUBMISSION = 'form_submission',
   FILE_UPLOAD = 'file_upload',
   SEARCH_PERFORMED = 'search_performed',
-  
+
   // System Events
   SESSION_STARTED = 'session_started',
   SESSION_ENDED = 'session_ended',
   CONNECTION_LOST = 'connection_lost',
   CONNECTION_RESTORED = 'connection_restored',
-  ERROR_OCCURRED = 'error_occurred'
+  ERROR_OCCURRED = 'error_occurred',
 }
 
 // Event Severity Levels
@@ -54,7 +54,7 @@ export enum EventSeverity {
   LOW = 'low',
   MEDIUM = 'medium',
   HIGH = 'high',
-  CRITICAL = 'critical'
+  CRITICAL = 'critical',
 }
 
 // Event Categories for Analytics
@@ -66,7 +66,7 @@ export enum EventCategory {
   USER_INTERACTION = 'user_interaction',
   SYSTEM = 'system',
   PERFORMANCE = 'performance',
-  SECURITY = 'security'
+  SECURITY = 'security',
 }
 
 // Base Analytics Event Interface
@@ -359,7 +359,9 @@ export interface StreamProcessor {
   };
 }
 
-export type StreamProcessorFunction = (event: AnalyticsEvent) => AnalyticsEvent | AnalyticsEvent[] | null;
+export type StreamProcessorFunction = (
+  event: AnalyticsEvent
+) => AnalyticsEvent | AnalyticsEvent[] | null;
 
 // Analytics Query Types
 export interface AnalyticsQuery {

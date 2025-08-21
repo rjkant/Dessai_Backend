@@ -2,7 +2,7 @@
  * ID Generation Utilities
  * TASK-CG-005: Assessment Management Core
  * Persona: Senior Software Engineer
- * 
+ *
  * Utilities for generating unique IDs and codes for assessments and sessions.
  */
 

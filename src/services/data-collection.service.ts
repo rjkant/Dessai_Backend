@@ -23,7 +23,7 @@ import {
   DataExportConfig,
   DataImportConfig,
   AggregationMetric,
-  RetentionPolicy
+  RetentionPolicy,
 } from '../types/analytics.types';
 
 const logger = new Logger('DataCollectionService');
@@ -43,7 +43,7 @@ export class DataCollectionService extends EventEmitter {
     config: Partial<DataCollectionConfig> = {}
   ) {
     super();
-    
+
     this.config = {
       enabled: true,
       bufferSize: 1000,
@@ -59,13 +59,13 @@ export class DataCollectionService extends EventEmitter {
         primary: {
           type: 'postgresql',
           connectionString: process.env.DATABASE_URL || '',
-          database: 'dessai_analytics'
+          database: 'dessai_analytics',
         },
         cache: {
           enabled: true,
           type: 'redis',
-          ttl: 3600
-        }
+          ttl: 3600,
+        },
       },
       processing: {
         realTime: {
@@ -73,39 +73,39 @@ export class DataCollectionService extends EventEmitter {
           kafka: {
             brokers: [],
             topics: ['analytics-events'],
-            consumerGroup: 'analytics-processor'
-          }
+            consumerGroup: 'analytics-processor',
+          },
         },
         batch: {
           enabled: true,
           interval: 15, // 15 minutes
-          batchSize: 10000
+          batchSize: 10000,
         },
         aggregation: {
           enabled: true,
           intervals: ['1m', '5m', '15m', '1h', '1d'],
-          metrics: []
-        }
+          metrics: [],
+        },
       },
       retention: {
         rawData: {
           duration: 90, // 90 days
-          compressionAfter: 30
+          compressionAfter: 30,
         },
         aggregatedData: {
           minutely: 7, // 7 days
           hourly: 30, // 30 days
-          daily: 365 // 1 year
+          daily: 365, // 1 year
         },
-        policies: []
+        policies: [],
       },
-      ...config
+      ...config,
     };
 
     this.statistics = {
       timeRange: {
         start: new Date(),
-        end: new Date()
+        end: new Date(),
       },
       totalEvents: 0,
       eventsByType: {} as Record<EventType, number>,
@@ -117,8 +117,8 @@ export class DataCollectionService extends EventEmitter {
       storageUsage: {
         raw: 0,
         compressed: 0,
-        indexed: 0
-      }
+        indexed: 0,
+      },
     };
 
     this.setupEventListeners();
@@ -134,10 +134,7 @@ export class DataCollectionService extends EventEmitter {
 
     // Setup periodic tasks
     if (this.config.processing.batch.enabled) {
-      setInterval(
-        () => this.processBatchJobs(),
-        this.config.processing.batch.interval * 60 * 1000
-      );
+      setInterval(() => this.processBatchJobs(), this.config.processing.batch.interval * 60 * 1000);
     }
 
     // Setup retention cleanup
@@ -166,18 +163,17 @@ export class DataCollectionService extends EventEmitter {
       }
 
       this.isRunning = true;
-      
+
       logger.info('Data Collection Service started successfully', {
         config: {
           bufferSize: this.config.bufferSize,
           flushInterval: this.config.flushInterval,
           realTimeEnabled: this.config.processing.realTime.enabled,
-          batchEnabled: this.config.processing.batch.enabled
-        }
+          batchEnabled: this.config.processing.batch.enabled,
+        },
       });
 
       this.emit('service-started');
-
     } catch (error) {
       logger.error('Failed to start Data Collection Service', { error });
       throw error;
@@ -207,7 +203,6 @@ export class DataCollectionService extends EventEmitter {
 
       logger.info('Data Collection Service stopped successfully');
       this.emit('service-stopped');
-
     } catch (error) {
       logger.error('Error stopping Data Collection Service', { error });
       throw error;
@@ -238,7 +233,7 @@ export class DataCollectionService extends EventEmitter {
       const completeEvent: AnalyticsEvent = {
         id: this.generateEventId(),
         timestamp: new Date(),
-        ...event
+        ...event,
       };
 
       // Validate event size
@@ -262,11 +257,10 @@ export class DataCollectionService extends EventEmitter {
         eventId: completeEvent.id,
         type: completeEvent.type,
         category: completeEvent.category,
-        bufferSize: this.eventBuffer.length
+        bufferSize: this.eventBuffer.length,
       });
 
       return completeEvent.id;
-
     } catch (error) {
       logger.error('Failed to collect event', { error, event });
       this.emit('error', error);
@@ -303,13 +297,13 @@ export class DataCollectionService extends EventEmitter {
       logger.info('Executing analytics query', {
         queryId: query.id,
         timeRange: query.timeRange,
-        filters: query.filters
+        filters: query.filters,
       });
 
       // Check cache first
       const cacheKey = this.generateQueryCacheKey(query);
-      let cached = false;
-      
+      const cached = false;
+
       if (this.config.storage.cache.enabled) {
         const cachedResult = await this.redisService.get(cacheKey);
         if (cachedResult) {
@@ -332,11 +326,11 @@ export class DataCollectionService extends EventEmitter {
         const offset = query.offset || 0;
         const limit = query.limit || 100;
         paginatedResults = results.slice(offset, offset + limit);
-        
+
         pagination = {
           page: Math.floor(offset / limit) + 1,
           pageSize: limit,
-          totalPages: Math.ceil(totalRecords / limit)
+          totalPages: Math.ceil(totalRecords / limit),
         };
       }
 
@@ -349,9 +343,9 @@ export class DataCollectionService extends EventEmitter {
           totalRecords,
           executionTime,
           dataSource: 'primary',
-          cached
+          cached,
         },
-        pagination
+        pagination,
       };
 
       // Cache result
@@ -367,11 +361,10 @@ export class DataCollectionService extends EventEmitter {
         queryId: query.id,
         totalRecords,
         executionTime,
-        cached
+        cached,
       });
 
       return result;
-
     } catch (error) {
       logger.error('Failed to execute analytics query', { error, query });
       throw error;
@@ -390,10 +383,9 @@ export class DataCollectionService extends EventEmitter {
         ...this.statistics,
         timeRange: {
           start: this.statistics.timeRange.start,
-          end: new Date()
-        }
+          end: new Date(),
+        },
       };
-
     } catch (error) {
       logger.error('Failed to get collection statistics', { error });
       throw error;
@@ -406,9 +398,10 @@ export class DataCollectionService extends EventEmitter {
   async getPipelineStatus(): Promise<PipelineStatus> {
     try {
       const uptime = Date.now() - this.statistics.timeRange.start.getTime();
-      const lastProcessed = this.eventBuffer.length > 0 
-        ? this.eventBuffer[this.eventBuffer.length - 1].timestamp 
-        : new Date();
+      const lastProcessed =
+        this.eventBuffer.length > 0
+          ? this.eventBuffer[this.eventBuffer.length - 1].timestamp
+          : new Date();
 
       return {
         id: 'data-collection-pipeline',
@@ -421,11 +414,10 @@ export class DataCollectionService extends EventEmitter {
         performance: {
           throughput: this.calculateThroughput(),
           latency: this.calculateAverageLatency(),
-          errorRate: this.statistics.errorRate
+          errorRate: this.statistics.errorRate,
         },
-        health: await this.getSystemHealth()
+        health: await this.getSystemHealth(),
       };
-
     } catch (error) {
       logger.error('Failed to get pipeline status', { error });
       throw error;
@@ -446,7 +438,7 @@ export class DataCollectionService extends EventEmitter {
         status: 'pending',
         createdAt: new Date(),
         progress: 0,
-        parameters: config
+        parameters: config,
       };
 
       this.batchJobs.set(jobId, job);
@@ -457,12 +449,11 @@ export class DataCollectionService extends EventEmitter {
         job.status = 'failed';
         job.error = {
           message: error.message,
-          stack: error.stack
+          stack: error.stack,
         };
       });
 
       return jobId;
-
     } catch (error) {
       logger.error('Failed to start data export', { error, config });
       throw error;
@@ -483,7 +474,7 @@ export class DataCollectionService extends EventEmitter {
         status: 'pending',
         createdAt: new Date(),
         progress: 0,
-        parameters: config
+        parameters: config,
       };
 
       this.batchJobs.set(jobId, job);
@@ -494,12 +485,11 @@ export class DataCollectionService extends EventEmitter {
         job.status = 'failed';
         job.error = {
           message: error.message,
-          stack: error.stack
+          stack: error.stack,
         };
       });
 
       return jobId;
-
     } catch (error) {
       logger.error('Failed to start data import', { error, config });
       throw error;
@@ -533,10 +523,7 @@ export class DataCollectionService extends EventEmitter {
       clearInterval(this.flushTimer);
     }
 
-    this.flushTimer = setInterval(
-      () => this.flushEvents(),
-      this.config.flushInterval
-    );
+    this.flushTimer = setInterval(() => this.flushEvents(), this.config.flushInterval);
   }
 
   private async flushEvents(): Promise<void> {
@@ -559,7 +546,6 @@ export class DataCollectionService extends EventEmitter {
       }
 
       this.emit('batch-processed', { events, count: events.length });
-
     } catch (error) {
       logger.error('Failed to flush events', { error });
       // Put events back in buffer for retry
@@ -573,19 +559,18 @@ export class DataCollectionService extends EventEmitter {
       // Store in Redis for immediate access
       if (this.config.storage.cache.enabled) {
         const pipeline = this.redisService.pipeline();
-        
+
         for (const event of events) {
           const key = `analytics:event:${event.id}`;
           pipeline.setWithExpiry(key, JSON.stringify(event), this.config.storage.cache.ttl);
         }
-        
+
         await pipeline.exec();
       }
 
       // Store in primary database (simulated for now)
       // In production, this would store in InfluxDB or PostgreSQL
       logger.debug('Events stored in primary storage', { count: events.length });
-
     } catch (error) {
       logger.error('Failed to store events', { error });
       throw error;
@@ -595,7 +580,7 @@ export class DataCollectionService extends EventEmitter {
   private async initializeStorage(): Promise<void> {
     // Initialize storage connections
     logger.info('Initializing storage connections');
-    
+
     // In production, this would initialize InfluxDB connection
     // For now, we'll use the existing PostgreSQL and Redis connections
   }
@@ -621,9 +606,9 @@ export class DataCollectionService extends EventEmitter {
           const result = processor.processor(event);
           if (result) {
             // Handle processed result
-            logger.debug('Event processed by stream processor', { 
-              eventId: event.id, 
-              processorId: id 
+            logger.debug('Event processed by stream processor', {
+              eventId: event.id,
+              processorId: id,
             });
           }
         } catch (error) {
@@ -635,7 +620,7 @@ export class DataCollectionService extends EventEmitter {
 
   private async processBatchJobs(): Promise<void> {
     logger.debug('Processing batch aggregation jobs');
-    
+
     // Run aggregation jobs
     if (this.config.processing.aggregation.enabled) {
       await this.runAggregationJobs();
@@ -654,10 +639,9 @@ export class DataCollectionService extends EventEmitter {
   private async runAggregationJob(interval: string, metric: AggregationMetric): Promise<void> {
     try {
       logger.debug('Running aggregation job', { interval, metric: metric.name });
-      
+
       // In production, this would run aggregation queries against InfluxDB or similar
       // For now, we'll just log the operation
-      
     } catch (error) {
       logger.error('Aggregation job failed', { error, interval, metric: metric.name });
     }
@@ -665,20 +649,19 @@ export class DataCollectionService extends EventEmitter {
 
   private async enforceRetentionPolicies(): Promise<void> {
     logger.info('Enforcing retention policies');
-    
+
     try {
       // Cleanup old raw data
       const rawDataCutoff = new Date();
       rawDataCutoff.setDate(rawDataCutoff.getDate() - this.config.retention.rawData.duration);
-      
+
       // In production, this would delete old data from storage
       logger.debug('Raw data retention enforced', { cutoff: rawDataCutoff });
-      
+
       // Apply custom retention policies
       for (const policy of this.config.retention.policies) {
         await this.applyRetentionPolicy(policy);
       }
-
     } catch (error) {
       logger.error('Failed to enforce retention policies', { error });
     }
@@ -687,12 +670,11 @@ export class DataCollectionService extends EventEmitter {
   private async applyRetentionPolicy(policy: RetentionPolicy): Promise<void> {
     try {
       logger.debug('Applying retention policy', { policyName: policy.name });
-      
+
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - policy.duration);
-      
+
       // In production, this would delete data matching policy conditions
-      
     } catch (error) {
       logger.error('Failed to apply retention policy', { error, policyName: policy.name });
     }
@@ -708,7 +690,7 @@ export class DataCollectionService extends EventEmitter {
       aggregations: query.aggregations,
       orderBy: query.orderBy,
       limit: query.limit,
-      offset: query.offset
+      offset: query.offset,
     };
   }
 
@@ -720,19 +702,19 @@ export class DataCollectionService extends EventEmitter {
 
   private updateStatistics(event: AnalyticsEvent): void {
     this.statistics.totalEvents++;
-    
+
     // Update event type counts
     if (!this.statistics.eventsByType[event.type]) {
       this.statistics.eventsByType[event.type] = 0;
     }
     this.statistics.eventsByType[event.type]++;
-    
+
     // Update category counts
     if (!this.statistics.eventsByCategory[event.category]) {
       this.statistics.eventsByCategory[event.category] = 0;
     }
     this.statistics.eventsByCategory[event.category]++;
-    
+
     // Update severity counts
     if (!this.statistics.eventsBySeverity[event.severity]) {
       this.statistics.eventsBySeverity[event.severity] = 0;
@@ -762,7 +744,7 @@ export class DataCollectionService extends EventEmitter {
       cpu: process.cpuUsage().user / 1000000, // Convert to percentage
       memory: process.memoryUsage().heapUsed / 1024 / 1024, // MB
       disk: 0, // Would need additional monitoring
-      network: 0 // Would need additional monitoring
+      network: 0, // Would need additional monitoring
     };
   }
 
@@ -778,15 +760,15 @@ export class DataCollectionService extends EventEmitter {
     try {
       job.status = 'running';
       job.startedAt = new Date();
-      
+
       const config = job.parameters as DataExportConfig;
-      
+
       // Simulate export process
       for (let i = 0; i <= 100; i += 10) {
         job.progress = i;
         await new Promise(resolve => setTimeout(resolve, 100));
       }
-      
+
       job.status = 'completed';
       job.completedAt = new Date();
       job.result = {
@@ -794,14 +776,13 @@ export class DataCollectionService extends EventEmitter {
         recordsSuccess: 1000,
         recordsError: 0,
         duration: Date.now() - job.startedAt.getTime(),
-        outputPath: `/exports/${job.id}.${config.format}`
+        outputPath: `/exports/${job.id}.${config.format}`,
       };
-      
     } catch (error) {
       job.status = 'failed';
       job.error = {
         message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined
+        stack: error instanceof Error ? error.stack : undefined,
       };
       throw error;
     }
@@ -811,27 +792,26 @@ export class DataCollectionService extends EventEmitter {
     try {
       job.status = 'running';
       job.startedAt = new Date();
-      
+
       // Simulate import process
       for (let i = 0; i <= 100; i += 10) {
         job.progress = i;
         await new Promise(resolve => setTimeout(resolve, 100));
       }
-      
+
       job.status = 'completed';
       job.completedAt = new Date();
       job.result = {
         recordsProcessed: 500,
         recordsSuccess: 500,
         recordsError: 0,
-        duration: Date.now() - job.startedAt.getTime()
+        duration: Date.now() - job.startedAt.getTime(),
       };
-      
     } catch (error) {
       job.status = 'failed';
       job.error = {
         message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined
+        stack: error instanceof Error ? error.stack : undefined,
       };
       throw error;
     }
@@ -842,10 +822,10 @@ export class DataCollectionService extends EventEmitter {
    */
   async cleanup(): Promise<void> {
     logger.info('Cleaning up Data Collection Service');
-    
+
     await this.stop();
     this.removeAllListeners();
-    
+
     logger.info('Data Collection Service cleanup completed');
   }
 }

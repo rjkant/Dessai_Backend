@@ -20,7 +20,7 @@ import {
   MonitoringLevel,
   WebRTCErrorCode,
   SessionStatus,
-  ProctoringServiceOptions
+  ProctoringServiceOptions,
 } from '../types/proctoring.types';
 
 export class WebRTCController {
@@ -49,8 +49,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: 'UNAUTHORIZED',
-            message: 'User authentication required'
-          }
+            message: 'User authentication required',
+          },
         });
         return;
       }
@@ -61,8 +61,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: 'VALIDATION_ERROR',
-            message: 'Session ID is required'
-          }
+            message: 'Session ID is required',
+          },
         });
         return;
       }
@@ -71,11 +71,11 @@ export class WebRTCController {
       const assessmentSession = await this.prisma.assessmentSession.findFirst({
         where: {
           sessionToken: sessionId,
-          userId: userId
+          userId: userId,
         },
         include: {
-          assessment: true
-        }
+          assessment: true,
+        },
       });
 
       if (!assessmentSession) {
@@ -83,8 +83,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: 'SESSION_NOT_FOUND',
-            message: 'Assessment session not found or access denied'
-          }
+            message: 'Assessment session not found or access denied',
+          },
         });
         return;
       }
@@ -96,8 +96,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: 'PROCTORING_DISABLED',
-            message: 'Proctoring is not enabled for this assessment'
-          }
+            message: 'Proctoring is not enabled for this assessment',
+          },
         });
         return;
       }
@@ -115,8 +115,8 @@ export class WebRTCController {
           enableRecording: settings?.enableRecording ?? true,
           enableMonitoring: settings?.enableMonitoring ?? true,
           quality: this.parseStreamQuality(settings?.quality),
-          monitoringLevel: this.parseMonitoringLevel(settings?.monitoringLevel)
-        }
+          monitoringLevel: this.parseMonitoringLevel(settings?.monitoringLevel),
+        },
       };
 
       // Create WebRTC session
@@ -125,7 +125,7 @@ export class WebRTCController {
       logger.info('WebRTC session created via API', {
         sessionId: webrtcSession.session.id,
         userId,
-        assessmentId: sessionRequest.assessmentId
+        assessmentId: sessionRequest.assessmentId,
       });
 
       res.status(201).json({
@@ -136,22 +136,21 @@ export class WebRTCController {
             sessionId: webrtcSession.session.sessionId,
             status: webrtcSession.session.status,
             mediaStreams: webrtcSession.session.mediaStreams,
-            createdAt: webrtcSession.session.createdAt
+            createdAt: webrtcSession.session.createdAt,
           },
           connection: {
             iceServers: webrtcSession.iceServers,
             signalingServer: webrtcSession.signalingServer,
-            token: webrtcSession.token
+            token: webrtcSession.token,
           },
-          offer: webrtcSession.offer
-        }
+          offer: webrtcSession.offer,
+        },
       });
-
     } catch (error) {
       logger.error('Failed to create WebRTC session via API', {
         error: error instanceof Error ? error.message : String(error),
         userId: req.user?.id,
-        sessionId: req.body.sessionId
+        sessionId: req.body.sessionId,
       });
 
       if (error instanceof WebRTCError) {
@@ -159,8 +158,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: error.code,
-            message: error.message
-          }
+            message: error.message,
+          },
         });
       } else {
         next(error);
@@ -182,8 +181,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: 'UNAUTHORIZED',
-            message: 'User authentication required'
-          }
+            message: 'User authentication required',
+          },
         });
         return;
       }
@@ -195,8 +194,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: 'SESSION_NOT_FOUND',
-            message: 'WebRTC session not found'
-          }
+            message: 'WebRTC session not found',
+          },
         });
         return;
       }
@@ -207,8 +206,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: 'ACCESS_DENIED',
-            message: 'Access denied to this session'
-          }
+            message: 'Access denied to this session',
+          },
         });
         return;
       }
@@ -222,16 +221,15 @@ export class WebRTCController {
             status: session.status,
             mediaStreams: session.mediaStreams,
             createdAt: session.createdAt,
-            updatedAt: session.updatedAt
-          }
-        }
+            updatedAt: session.updatedAt,
+          },
+        },
       });
-
     } catch (error) {
       logger.error('Failed to get WebRTC session via API', {
         error: error instanceof Error ? error.message : String(error),
         userId: req.user?.id,
-        sessionId: req.params.sessionId
+        sessionId: req.params.sessionId,
       });
 
       next(error);
@@ -253,8 +251,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: 'UNAUTHORIZED',
-            message: 'User authentication required'
-          }
+            message: 'User authentication required',
+          },
         });
         return;
       }
@@ -266,8 +264,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: 'SESSION_NOT_FOUND',
-            message: 'WebRTC session not found or access denied'
-          }
+            message: 'WebRTC session not found or access denied',
+          },
         });
         return;
       }
@@ -281,7 +279,7 @@ export class WebRTCController {
       logger.info('Media streams initialized via API', {
         sessionId,
         userId,
-        streamCount: mediaStreams.length
+        streamCount: mediaStreams.length,
       });
 
       res.json({
@@ -293,16 +291,15 @@ export class WebRTCController {
             status: stream.status,
             quality: stream.quality,
             startTime: stream.startTime,
-            metadata: stream.metadata
-          }))
-        }
+            metadata: stream.metadata,
+          })),
+        },
       });
-
     } catch (error) {
       logger.error('Failed to initialize streams via API', {
         error: error instanceof Error ? error.message : String(error),
         userId: req.user?.id,
-        sessionId: req.params.sessionId
+        sessionId: req.params.sessionId,
       });
 
       if (error instanceof WebRTCError) {
@@ -310,8 +307,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: error.code,
-            message: error.message
-          }
+            message: error.message,
+          },
         });
       } else {
         next(error);
@@ -333,8 +330,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: 'UNAUTHORIZED',
-            message: 'User authentication required'
-          }
+            message: 'User authentication required',
+          },
         });
         return;
       }
@@ -346,8 +343,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: 'SESSION_NOT_FOUND',
-            message: 'WebRTC session not found or access denied'
-          }
+            message: 'WebRTC session not found or access denied',
+          },
         });
         return;
       }
@@ -357,20 +354,19 @@ export class WebRTCController {
       logger.info('Recording started via API', {
         sessionId,
         streamId,
-        userId
+        userId,
       });
 
       res.json({
         success: true,
-        message: 'Recording started successfully'
+        message: 'Recording started successfully',
       });
-
     } catch (error) {
       logger.error('Failed to start recording via API', {
         error: error instanceof Error ? error.message : String(error),
         userId: req.user?.id,
         sessionId: req.params.sessionId,
-        streamId: req.params.streamId
+        streamId: req.params.streamId,
       });
 
       if (error instanceof WebRTCError) {
@@ -378,8 +374,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: error.code,
-            message: error.message
-          }
+            message: error.message,
+          },
         });
       } else {
         next(error);
@@ -401,8 +397,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: 'UNAUTHORIZED',
-            message: 'User authentication required'
-          }
+            message: 'User authentication required',
+          },
         });
         return;
       }
@@ -414,8 +410,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: 'SESSION_NOT_FOUND',
-            message: 'WebRTC session not found or access denied'
-          }
+            message: 'WebRTC session not found or access denied',
+          },
         });
         return;
       }
@@ -426,23 +422,22 @@ export class WebRTCController {
         sessionId,
         streamId,
         userId,
-        recordingPath
+        recordingPath,
       });
 
       res.json({
         success: true,
         data: {
-          recordingPath
+          recordingPath,
         },
-        message: 'Recording stopped successfully'
+        message: 'Recording stopped successfully',
       });
-
     } catch (error) {
       logger.error('Failed to stop recording via API', {
         error: error instanceof Error ? error.message : String(error),
         userId: req.user?.id,
         sessionId: req.params.sessionId,
-        streamId: req.params.streamId
+        streamId: req.params.streamId,
       });
 
       if (error instanceof WebRTCError) {
@@ -450,8 +445,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: error.code,
-            message: error.message
-          }
+            message: error.message,
+          },
         });
       } else {
         next(error);
@@ -473,8 +468,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: 'UNAUTHORIZED',
-            message: 'User authentication required'
-          }
+            message: 'User authentication required',
+          },
         });
         return;
       }
@@ -486,8 +481,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: 'SESSION_NOT_FOUND',
-            message: 'WebRTC session not found or access denied'
-          }
+            message: 'WebRTC session not found or access denied',
+          },
         });
         return;
       }
@@ -497,15 +492,14 @@ export class WebRTCController {
       res.json({
         success: true,
         data: {
-          metrics
-        }
+          metrics,
+        },
       });
-
     } catch (error) {
       logger.error('Failed to get session metrics via API', {
         error: error instanceof Error ? error.message : String(error),
         userId: req.user?.id,
-        sessionId: req.params.sessionId
+        sessionId: req.params.sessionId,
       });
 
       if (error instanceof WebRTCError) {
@@ -513,8 +507,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: error.code,
-            message: error.message
-          }
+            message: error.message,
+          },
         });
       } else {
         next(error);
@@ -537,8 +531,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: 'UNAUTHORIZED',
-            message: 'User authentication required'
-          }
+            message: 'User authentication required',
+          },
         });
         return;
       }
@@ -550,8 +544,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: 'SESSION_NOT_FOUND',
-            message: 'WebRTC session not found or access denied'
-          }
+            message: 'WebRTC session not found or access denied',
+          },
         });
         return;
       }
@@ -561,19 +555,18 @@ export class WebRTCController {
       logger.info('WebRTC session ended via API', {
         sessionId,
         userId,
-        reason
+        reason,
       });
 
       res.json({
         success: true,
-        message: 'Session ended successfully'
+        message: 'Session ended successfully',
       });
-
     } catch (error) {
       logger.error('Failed to end session via API', {
         error: error instanceof Error ? error.message : String(error),
         userId: req.user?.id,
-        sessionId: req.params.sessionId
+        sessionId: req.params.sessionId,
       });
 
       if (error instanceof WebRTCError) {
@@ -581,8 +574,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: error.code,
-            message: error.message
-          }
+            message: error.message,
+          },
         });
       } else {
         next(error);
@@ -603,8 +596,8 @@ export class WebRTCController {
           success: false,
           error: {
             code: 'UNAUTHORIZED',
-            message: 'User authentication required'
-          }
+            message: 'User authentication required',
+          },
         });
         return;
       }
@@ -620,15 +613,14 @@ export class WebRTCController {
             status: session.status,
             mediaStreams: session.mediaStreams,
             createdAt: session.createdAt,
-            updatedAt: session.updatedAt
-          }))
-        }
+            updatedAt: session.updatedAt,
+          })),
+        },
       });
-
     } catch (error) {
       logger.error('Failed to get user sessions via API', {
         error: error instanceof Error ? error.message : String(error),
-        userId: req.user?.id
+        userId: req.user?.id,
       });
 
       next(error);
@@ -651,27 +643,28 @@ export class WebRTCController {
         services: {
           webrtc: 'healthy',
           redis: redisHealth ? 'healthy' : 'unhealthy',
-          database: dbHealth ? 'healthy' : 'unhealthy'
+          database: dbHealth ? 'healthy' : 'unhealthy',
         },
-        version: '1.0.0'
+        version: '1.0.0',
       };
 
       const overallHealthy = redisHealth && dbHealth;
-      
+
       res.status(overallHealthy ? 200 : 503).json({
         success: overallHealthy,
-        data: health
+        data: health,
       });
-
     } catch (error) {
-      logger.error('Health check failed', { error: error instanceof Error ? error.message : String(error) });
+      logger.error('Health check failed', {
+        error: error instanceof Error ? error.message : String(error),
+      });
 
       res.status(503).json({
         success: false,
         error: {
           code: 'HEALTH_CHECK_FAILED',
-          message: 'Service health check failed'
-        }
+          message: 'Service health check failed',
+        },
       });
     }
   }
@@ -681,11 +674,11 @@ export class WebRTCController {
    */
 
   private setupEventListeners(): void {
-    this.webrtcService.on('webrtc-event', (event) => {
+    this.webrtcService.on('webrtc-event', event => {
       logger.info('WebRTC event received', {
         type: event.type,
         sessionId: event.sessionId,
-        severity: event.severity
+        severity: event.severity,
       });
 
       // Handle specific events if needed
@@ -701,24 +694,23 @@ export class WebRTCController {
       await this.prisma.assessmentSession.updateMany({
         where: {
           sessionToken: event.sessionId,
-          userId: event.userId
+          userId: event.userId,
         },
         data: {
           status: SessionStatus.COMPLETED,
-          endedAt: new Date()
-        }
+          endedAt: new Date(),
+        },
       });
 
       logger.info('Assessment session updated after WebRTC session end', {
         sessionId: event.sessionId,
-        userId: event.userId
+        userId: event.userId,
       });
-
     } catch (error) {
       logger.error('Failed to handle session ended event', {
         error: error instanceof Error ? error.message : String(error),
         sessionId: event.sessionId,
-        userId: event.userId
+        userId: event.userId,
       });
     }
   }
@@ -731,107 +723,120 @@ export class WebRTCController {
           width: { min: 320, ideal: 1280, max: 1920 },
           height: { min: 240, ideal: 720, max: 1080 },
           frameRate: { min: 15, ideal: 30, max: 30 },
-          facingMode: 'user'
+          facingMode: 'user',
         },
         audio: settings?.audioConstraints || {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true
-        }
+          autoGainControl: true,
+        },
       },
       recording: {
         enabled: settings?.enableRecording ?? true,
         format: 'webm',
         codecs: {
           video: 'vp8',
-          audio: 'opus'
+          audio: 'opus',
         },
         bitRate: {
           video: settings?.videoBitRate || 1000,
-          audio: settings?.audioBitRate || 128
-        }
-      }
+          audio: settings?.audioBitRate || 128,
+        },
+      },
     } as Partial<MediaStreamConfig>;
   }
 
   private parseStreamQuality(quality?: string): StreamQuality {
     switch (quality?.toLowerCase()) {
-      case 'low': return StreamQuality.LOW;
-      case 'medium': return StreamQuality.MEDIUM;
-      case 'high': return StreamQuality.HIGH;
-      case 'hd': return StreamQuality.HD;
-      default: return StreamQuality.MEDIUM;
+      case 'low':
+        return StreamQuality.LOW;
+      case 'medium':
+        return StreamQuality.MEDIUM;
+      case 'high':
+        return StreamQuality.HIGH;
+      case 'hd':
+        return StreamQuality.HD;
+      default:
+        return StreamQuality.MEDIUM;
     }
   }
 
   private parseMonitoringLevel(level?: string): MonitoringLevel {
     switch (level?.toLowerCase()) {
-      case 'none': return MonitoringLevel.NONE;
-      case 'basic': return MonitoringLevel.BASIC;
-      case 'standard': return MonitoringLevel.STANDARD;
-      case 'advanced': return MonitoringLevel.ADVANCED;
-      case 'strict': return MonitoringLevel.STRICT;
-      default: return MonitoringLevel.STANDARD;
+      case 'none':
+        return MonitoringLevel.NONE;
+      case 'basic':
+        return MonitoringLevel.BASIC;
+      case 'standard':
+        return MonitoringLevel.STANDARD;
+      case 'advanced':
+        return MonitoringLevel.ADVANCED;
+      case 'strict':
+        return MonitoringLevel.STRICT;
+      default:
+        return MonitoringLevel.STANDARD;
     }
   }
 
   private getDefaultStreamConfigs(sessionId: string, userId: string): MediaStreamConfig[] {
-    return [{
-      id: `default_${Date.now()}`,
-      sessionId,
-      userId,
-      type: 'combined' as any,
-      constraints: {
-        video: {
-          width: { min: 320, ideal: 1280, max: 1920 },
-          height: { min: 240, ideal: 720, max: 1080 },
-          frameRate: { min: 15, ideal: 30, max: 30 },
-          facingMode: 'user'
+    return [
+      {
+        id: `default_${Date.now()}`,
+        sessionId,
+        userId,
+        type: 'combined' as any,
+        constraints: {
+          video: {
+            width: { min: 320, ideal: 1280, max: 1920 },
+            height: { min: 240, ideal: 720, max: 1080 },
+            frameRate: { min: 15, ideal: 30, max: 30 },
+            facingMode: 'user',
+          },
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
         },
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        }
+        quality: StreamQuality.MEDIUM,
+        recording: {
+          enabled: true,
+          format: 'webm',
+          codecs: {
+            video: 'vp8',
+            audio: 'opus',
+          },
+          bitRate: {
+            video: 1000,
+            audio: 128,
+          },
+          storage: {
+            provider: 'local',
+            path: 'recordings',
+            encryption: false,
+            compression: true,
+          },
+          retention: {
+            duration: 30,
+            autoDelete: true,
+          },
+        },
+        monitoring: {
+          faceDetection: true,
+          gazeTracking: false,
+          audioAnalysis: false,
+          behaviorAnalysis: false,
+          integrityChecks: true,
+          alertThresholds: {
+            multipleFaces: 2,
+            noFaceDetected: 10,
+            lookAwayDuration: 30,
+            audioAnomalies: 5,
+            suspiciousActivity: 3,
+          },
+        },
       },
-      quality: StreamQuality.MEDIUM,
-      recording: {
-        enabled: true,
-        format: 'webm',
-        codecs: {
-          video: 'vp8',
-          audio: 'opus'
-        },
-        bitRate: {
-          video: 1000,
-          audio: 128
-        },
-        storage: {
-          provider: 'local',
-          path: 'recordings',
-          encryption: false,
-          compression: true
-        },
-        retention: {
-          duration: 30,
-          autoDelete: true
-        }
-      },
-      monitoring: {
-        faceDetection: true,
-        gazeTracking: false,
-        audioAnalysis: false,
-        behaviorAnalysis: false,
-        integrityChecks: true,
-        alertThresholds: {
-          multipleFaces: 2,
-          noFaceDetected: 10,
-          lookAwayDuration: 30,
-          audioAnomalies: 5,
-          suspiciousActivity: 3
-        }
-      }
-    }];
+    ];
   }
 
   private async checkRedisHealth(): Promise<boolean> {

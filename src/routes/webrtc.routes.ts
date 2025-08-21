@@ -36,57 +36,48 @@ export function createWebRTCRoutes(
     '/sessions',
     [
       // Validation middleware
-      body('sessionId')
-        .isString()
-        .notEmpty()
-        .withMessage('Session ID is required'),
-      
-      body('assessmentId')
-        .optional()
-        .isString()
-        .withMessage('Assessment ID must be a string'),
-      
-      body('settings')
-        .optional()
-        .isObject()
-        .withMessage('Settings must be an object'),
-      
+      body('sessionId').isString().notEmpty().withMessage('Session ID is required'),
+
+      body('assessmentId').optional().isString().withMessage('Assessment ID must be a string'),
+
+      body('settings').optional().isObject().withMessage('Settings must be an object'),
+
       body('settings.enableVideo')
         .optional()
         .isBoolean()
         .withMessage('enableVideo must be a boolean'),
-      
+
       body('settings.enableAudio')
         .optional()
         .isBoolean()
         .withMessage('enableAudio must be a boolean'),
-      
+
       body('settings.enableScreenShare')
         .optional()
         .isBoolean()
         .withMessage('enableScreenShare must be a boolean'),
-      
+
       body('settings.enableRecording')
         .optional()
         .isBoolean()
         .withMessage('enableRecording must be a boolean'),
-      
+
       body('settings.enableMonitoring')
         .optional()
         .isBoolean()
         .withMessage('enableMonitoring must be a boolean'),
-      
+
       body('settings.quality')
         .optional()
         .isIn(['low', 'medium', 'high', 'hd'])
         .withMessage('Quality must be one of: low, medium, high, hd'),
-      
+
       body('settings.monitoringLevel')
         .optional()
         .isIn(['none', 'basic', 'standard', 'advanced', 'strict'])
         .withMessage('Monitoring level must be one of: none, basic, standard, advanced, strict'),
 
-      ValidationMiddleware.handleValidationErrors
+      ValidationMiddleware.handleValidationErrors,
     ],
     webrtcController.createSession.bind(webrtcController) as any
   );
@@ -99,12 +90,9 @@ export function createWebRTCRoutes(
   router.get(
     '/sessions/:sessionId',
     [
-      param('sessionId')
-        .isString()
-        .notEmpty()
-        .withMessage('Session ID is required'),
+      param('sessionId').isString().notEmpty().withMessage('Session ID is required'),
 
-      ValidationMiddleware.handleValidationErrors
+      ValidationMiddleware.handleValidationErrors,
     ],
     webrtcController.getSession.bind(webrtcController) as any
   );
@@ -117,17 +105,11 @@ export function createWebRTCRoutes(
   router.post(
     '/sessions/:sessionId/streams',
     [
-      param('sessionId')
-        .isString()
-        .notEmpty()
-        .withMessage('Session ID is required'),
-      
-      body('streamConfigs')
-        .optional()
-        .isArray()
-        .withMessage('Stream configs must be an array'),
+      param('sessionId').isString().notEmpty().withMessage('Session ID is required'),
 
-      ValidationMiddleware.handleValidationErrors
+      body('streamConfigs').optional().isArray().withMessage('Stream configs must be an array'),
+
+      ValidationMiddleware.handleValidationErrors,
     ],
     webrtcController.initializeStreams.bind(webrtcController) as any
   );
@@ -140,17 +122,11 @@ export function createWebRTCRoutes(
   router.post(
     '/sessions/:sessionId/streams/:streamId/recording/start',
     [
-      param('sessionId')
-        .isString()
-        .notEmpty()
-        .withMessage('Session ID is required'),
-      
-      param('streamId')
-        .isString()
-        .notEmpty()
-        .withMessage('Stream ID is required'),
+      param('sessionId').isString().notEmpty().withMessage('Session ID is required'),
 
-      ValidationMiddleware.handleValidationErrors
+      param('streamId').isString().notEmpty().withMessage('Stream ID is required'),
+
+      ValidationMiddleware.handleValidationErrors,
     ],
     webrtcController.startRecording.bind(webrtcController) as any
   );
@@ -163,17 +139,11 @@ export function createWebRTCRoutes(
   router.post(
     '/sessions/:sessionId/streams/:streamId/recording/stop',
     [
-      param('sessionId')
-        .isString()
-        .notEmpty()
-        .withMessage('Session ID is required'),
-      
-      param('streamId')
-        .isString()
-        .notEmpty()
-        .withMessage('Stream ID is required'),
+      param('sessionId').isString().notEmpty().withMessage('Session ID is required'),
 
-      ValidationMiddleware.handleValidationErrors
+      param('streamId').isString().notEmpty().withMessage('Stream ID is required'),
+
+      ValidationMiddleware.handleValidationErrors,
     ],
     webrtcController.stopRecording.bind(webrtcController) as any
   );
@@ -186,12 +156,9 @@ export function createWebRTCRoutes(
   router.get(
     '/sessions/:sessionId/metrics',
     [
-      param('sessionId')
-        .isString()
-        .notEmpty()
-        .withMessage('Session ID is required'),
+      param('sessionId').isString().notEmpty().withMessage('Session ID is required'),
 
-      ValidationMiddleware.handleValidationErrors
+      ValidationMiddleware.handleValidationErrors,
     ],
     webrtcController.getSessionMetrics.bind(webrtcController) as any
   );
@@ -204,17 +171,11 @@ export function createWebRTCRoutes(
   router.post(
     '/sessions/:sessionId/end',
     [
-      param('sessionId')
-        .isString()
-        .notEmpty()
-        .withMessage('Session ID is required'),
-      
-      body('reason')
-        .optional()
-        .isString()
-        .withMessage('Reason must be a string'),
+      param('sessionId').isString().notEmpty().withMessage('Session ID is required'),
 
-      ValidationMiddleware.handleValidationErrors
+      body('reason').optional().isString().withMessage('Reason must be a string'),
+
+      ValidationMiddleware.handleValidationErrors,
     ],
     webrtcController.endSession.bind(webrtcController) as any
   );
@@ -224,10 +185,7 @@ export function createWebRTCRoutes(
    * @desc    Get user's active WebRTC sessions
    * @access  Private (Authenticated user)
    */
-  router.get(
-    '/users/sessions',
-    webrtcController.getUserSessions.bind(webrtcController) as any
-  );
+  router.get('/users/sessions', webrtcController.getUserSessions.bind(webrtcController) as any);
 
   /**
    * @route   GET /api/proctoring/health
@@ -249,23 +207,29 @@ export function createWebRTCRoutes(
     '/admin/sessions',
     [
       roleGuard([UserRole.ADMIN]) as any,
-      
-      query('page')
-        .optional()
-        .isInt({ min: 1 })
-        .withMessage('Page must be a positive integer'),
-      
+
+      query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
+
       query('limit')
         .optional()
         .isInt({ min: 1, max: 100 })
         .withMessage('Limit must be between 1 and 100'),
-      
+
       query('status')
         .optional()
-        .isIn(['initializing', 'connecting', 'connected', 'monitoring', 'paused', 'disconnected', 'completed', 'failed'])
+        .isIn([
+          'initializing',
+          'connecting',
+          'connected',
+          'monitoring',
+          'paused',
+          'disconnected',
+          'completed',
+          'failed',
+        ])
         .withMessage('Invalid status value'),
 
-      ValidationMiddleware.handleValidationErrors
+      ValidationMiddleware.handleValidationErrors,
     ],
     // TODO: Implement admin sessions endpoint
     (req: any, res: any) => {
@@ -273,8 +237,8 @@ export function createWebRTCRoutes(
         success: false,
         error: {
           code: 'NOT_IMPLEMENTED',
-          message: 'Admin sessions endpoint not yet implemented'
-        }
+          message: 'Admin sessions endpoint not yet implemented',
+        },
       });
     }
   );
@@ -288,13 +252,10 @@ export function createWebRTCRoutes(
     '/admin/sessions/:sessionId/recordings',
     [
       roleGuard as any,
-      
-      param('sessionId')
-        .isString()
-        .notEmpty()
-        .withMessage('Session ID is required'),
 
-      ValidationMiddleware.handleValidationErrors
+      param('sessionId').isString().notEmpty().withMessage('Session ID is required'),
+
+      ValidationMiddleware.handleValidationErrors,
     ],
     // TODO: Implement admin recordings endpoint
     (req: any, res: any) => {
@@ -302,8 +263,8 @@ export function createWebRTCRoutes(
         success: false,
         error: {
           code: 'NOT_IMPLEMENTED',
-          message: 'Admin recordings endpoint not yet implemented'
-        }
+          message: 'Admin recordings endpoint not yet implemented',
+        },
       });
     }
   );
@@ -317,13 +278,10 @@ export function createWebRTCRoutes(
     '/admin/sessions/:sessionId',
     [
       roleGuard as any,
-      
-      param('sessionId')
-        .isString()
-        .notEmpty()
-        .withMessage('Session ID is required'),
 
-      ValidationMiddleware.handleValidationErrors
+      param('sessionId').isString().notEmpty().withMessage('Session ID is required'),
+
+      ValidationMiddleware.handleValidationErrors,
     ],
     // TODO: Implement admin session deletion endpoint
     (req: any, res: any) => {
@@ -331,8 +289,8 @@ export function createWebRTCRoutes(
         success: false,
         error: {
           code: 'NOT_IMPLEMENTED',
-          message: 'Admin session deletion endpoint not yet implemented'
-        }
+          message: 'Admin session deletion endpoint not yet implemented',
+        },
       });
     }
   );

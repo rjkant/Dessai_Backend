@@ -1,9 +1,9 @@
 /**
  * Simplified Bias Recommendation Engine
- * 
+ *
  * AI-powered recommendation system that analyzes bias detection results
  * and generates actionable remediation recommendations.
- * 
+ *
  * Features:
  * - Pattern-based recommendation generation
  * - Priority scoring and resource estimation
@@ -12,7 +12,11 @@
  */
 
 import { Logger } from './logger.util';
-import { DisparateImpactAnalysis, DemographicAnalysis, RemediationRecommendation } from './compliance-validation.util';
+import {
+  DisparateImpactAnalysis,
+  DemographicAnalysis,
+  RemediationRecommendation,
+} from './compliance-validation.util';
 import { BiasAnalysisResult, IntersectionalAnalysis } from '../types/bias-detection.types';
 
 // Create logger instance
@@ -57,11 +61,13 @@ export class SimplifiedBiasRecommendationEngine {
   /**
    * Generate comprehensive remediation recommendations
    */
-  async generateRecommendations(context: RecommendationContext): Promise<RemediationRecommendation[]> {
+  async generateRecommendations(
+    context: RecommendationContext
+  ): Promise<RemediationRecommendation[]> {
     try {
       logger.info('Generating bias remediation recommendations', {
         organizationId: context.organizationId,
-        analysesCount: context.disparateImpactAnalyses.length
+        analysesCount: context.disparateImpactAnalyses.length,
       });
 
       const recommendations: RemediationRecommendation[] = [];
@@ -87,11 +93,10 @@ export class SimplifiedBiasRecommendationEngine {
       logger.info('Generated remediation recommendations', {
         organizationId: context.organizationId,
         recommendationCount: recommendations.length,
-        criticalCount: recommendations.filter(r => r.priority === 'CRITICAL').length
+        criticalCount: recommendations.filter(r => r.priority === 'CRITICAL').length,
       });
 
       return recommendations;
-
     } catch (error) {
       logger.error('Failed to generate recommendations', error as Error);
       throw error;
@@ -121,35 +126,35 @@ export class SimplifiedBiasRecommendationEngine {
             'Implement bias-aware scoring algorithms',
             'Provide additional training for underperforming groups',
             'Validate assessment tools for cultural bias',
-            'Establish continuous monitoring system'
+            'Establish continuous monitoring system',
           ],
           expectedImpact: {
             biasReduction: 75,
             timeToImpact: '3-6 months',
             riskLevel: 'HIGH',
-            sideEffects: ['Potential temporary increase in false positives']
+            sideEffects: ['Potential temporary increase in false positives'],
           },
           timelineToImplement: '4-8 weeks',
           resourcesRequired: [
             'Assessment team review and training',
             'Technical implementation of bias detection',
-            'Legal review of compliance measures'
+            'Legal review of compliance measures',
           ],
           successMetrics: [
             {
               metric: 'Impact ratio',
               currentValue: analysis.impactRatio,
               targetValue: 0.8,
-              measurementMethod: 'Selection rate comparison'
+              measurementMethod: 'Selection rate comparison',
             },
             {
               metric: 'P-value',
               currentValue: analysis.statisticalTest.pValue,
               targetValue: 0.05,
-              measurementMethod: 'Statistical significance test'
-            }
+              measurementMethod: 'Statistical significance test',
+            },
           ],
-          relatedBiasFindings: [analysis.protectedGroup.toString()]
+          relatedBiasFindings: [analysis.protectedGroup.toString()],
         });
       }
     }
@@ -185,29 +190,29 @@ export class SimplifiedBiasRecommendationEngine {
             'Analyze question difficulty across demographic groups',
             'Implement differential item functioning analysis',
             'Review content for cultural relevance',
-            'Provide targeted preparation materials'
+            'Provide targeted preparation materials',
           ],
           expectedImpact: {
             biasReduction: 60,
             timeToImpact: '6-12 months',
             riskLevel: 'MEDIUM',
-            sideEffects: ['May require assessment validation studies']
+            sideEffects: ['May require assessment validation studies'],
           },
           timelineToImplement: '8-16 weeks',
           resourcesRequired: [
             'Psychometric analysis expertise',
             'Assessment content review',
-            'Statistical analysis tools'
+            'Statistical analysis tools',
           ],
           successMetrics: [
             {
               metric: 'Performance gap',
               currentValue: performanceGap,
               targetValue: 10,
-              measurementMethod: 'Score difference between groups'
-            }
+              measurementMethod: 'Score difference between groups',
+            },
           ],
-          relatedBiasFindings: [analysis.characteristic.toString()]
+          relatedBiasFindings: [analysis.characteristic.toString()],
         });
       }
     }
@@ -218,7 +223,9 @@ export class SimplifiedBiasRecommendationEngine {
   /**
    * Generate systemic improvement recommendations
    */
-  private generateSystemicRecommendations(context: RecommendationContext): RemediationRecommendation[] {
+  private generateSystemicRecommendations(
+    context: RecommendationContext
+  ): RemediationRecommendation[] {
     const recommendations: RemediationRecommendation[] = [];
 
     // Always recommend bias monitoring system
@@ -233,35 +240,35 @@ export class SimplifiedBiasRecommendationEngine {
         'Deploy automated bias detection algorithms',
         'Set up real-time bias alerting system',
         'Create bias reporting dashboards',
-        'Establish regular bias review cycles'
+        'Establish regular bias review cycles',
       ],
       expectedImpact: {
         biasReduction: 40,
         timeToImpact: '6-12 months',
         riskLevel: 'LOW',
-        sideEffects: ['Requires ongoing maintenance and monitoring']
+        sideEffects: ['Requires ongoing maintenance and monitoring'],
       },
       timelineToImplement: '3-6 months',
       resourcesRequired: [
         'Bias detection software implementation',
         'Dashboard development and integration',
-        'Staff training on monitoring tools'
+        'Staff training on monitoring tools',
       ],
       successMetrics: [
         {
           metric: 'Detection time',
           currentValue: 0,
           targetValue: 24,
-          measurementMethod: 'Hours to detect bias incidents'
+          measurementMethod: 'Hours to detect bias incidents',
         },
         {
           metric: 'Undetected incidents',
           currentValue: 0,
           targetValue: 0,
-          measurementMethod: 'Count of missed bias incidents'
-        }
+          measurementMethod: 'Count of missed bias incidents',
+        },
       ],
-      relatedBiasFindings: ['systemic-monitoring']
+      relatedBiasFindings: ['systemic-monitoring'],
     });
 
     return recommendations;

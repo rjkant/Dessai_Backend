@@ -24,8 +24,9 @@ router.use(AuthMiddleware.authenticate as any);
  * @desc Execute code with optional test cases
  * @access Candidate, Interviewer, Admin
  */
-router.post('/execute', 
-  roleGuard([UserRole.CANDIDATE, UserRole.INTERVIEWER, UserRole.ADMIN]) as any, 
+router.post(
+  '/execute',
+  roleGuard([UserRole.CANDIDATE, UserRole.INTERVIEWER, UserRole.ADMIN]) as any,
   executionController.executeCode
 );
 
@@ -34,7 +35,8 @@ router.post('/execute',
  * @desc Get execution status and progress
  * @access Candidate, Interviewer, Admin
  */
-router.get('/status/:executionId',
+router.get(
+  '/status/:executionId',
   roleGuard([UserRole.CANDIDATE, UserRole.INTERVIEWER, UserRole.ADMIN]) as any,
   executionController.getExecutionStatus
 );
@@ -44,7 +46,8 @@ router.get('/status/:executionId',
  * @desc Validate code without execution
  * @access Candidate, Interviewer, Admin
  */
-router.post('/validate',
+router.post(
+  '/validate',
   roleGuard([UserRole.CANDIDATE, UserRole.INTERVIEWER, UserRole.ADMIN]) as any,
   executionController.validateCode
 );
@@ -54,7 +57,8 @@ router.post('/validate',
  * @desc Execute multiple code submissions
  * @access Interviewer, Admin
  */
-router.post('/bulk',
+router.post(
+  '/bulk',
   roleGuard([UserRole.INTERVIEWER, UserRole.ADMIN]) as any,
   executionController.executeBulk
 );
@@ -68,7 +72,8 @@ router.post('/bulk',
  * @desc Get list of supported programming languages
  * @access Candidate, Interviewer, Admin
  */
-router.get('/languages',
+router.get(
+  '/languages',
   roleGuard([UserRole.CANDIDATE, UserRole.INTERVIEWER, UserRole.ADMIN]) as any,
   executionController.getSupportedLanguages
 );
@@ -78,10 +83,7 @@ router.get('/languages',
  * @desc Get system status and health
  * @access Admin
  */
-router.get('/status',
-  roleGuard([UserRole.ADMIN]) as any,
-  executionController.getSystemStatus
-);
+router.get('/status', roleGuard([UserRole.ADMIN]) as any, executionController.getSystemStatus);
 
 // ============================================================================
 // EXECUTION HISTORY ROUTES
@@ -92,7 +94,8 @@ router.get('/status',
  * @desc Get execution history with filtering
  * @access Interviewer, Admin
  */
-router.get('/history',
+router.get(
+  '/history',
   roleGuard([UserRole.INTERVIEWER, UserRole.ADMIN]) as any,
   executionController.getExecutionHistory
 );

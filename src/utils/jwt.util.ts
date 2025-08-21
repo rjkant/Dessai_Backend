@@ -19,7 +19,7 @@ export class JWTUtil {
    * Generate access token
    */
   static generateAccessToken(
-    payload: Omit<JWTPayload, 'iat' | 'exp'>, 
+    payload: Omit<JWTPayload, 'iat' | 'exp'>,
     customExpiry?: string
   ): string {
     try {
@@ -29,7 +29,7 @@ export class JWTUtil {
       }
 
       const options: SignOptions = {
-        expiresIn: customExpiry || this.ACCESS_TOKEN_EXPIRY as any,
+        expiresIn: customExpiry || (this.ACCESS_TOKEN_EXPIRY as any),
         algorithm: 'HS256',
         issuer: 'dessai-backend',
         audience: 'dessai-frontend',

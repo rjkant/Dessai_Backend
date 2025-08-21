@@ -2,7 +2,7 @@
  * Assessment Routes
  * TASK-CG-005: Assessment Management Core
  * Persona: Senior Software Engineer
- * 
+ *
  * Express routes for assessment management API endpoints
  * with authentication, validation, and role-based access control.
  */
@@ -39,11 +39,7 @@ export function createAssessmentRoutes(prisma: PrismaClient): Router {
    * GET /api/assessments
    * Search assessments with filtering and pagination
    */
-  router.get(
-    '/',
-    AssessmentController.searchValidation,
-    assessmentController.searchAssessments
-  );
+  router.get('/', AssessmentController.searchValidation, assessmentController.searchAssessments);
 
   /**
    * GET /api/assessments/:id

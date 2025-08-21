@@ -10,7 +10,7 @@ import {
   ProgrammingLanguage,
   ExecutionPriority,
   ExecutionStage,
-  ExecutionErrorCode
+  ExecutionErrorCode,
 } from '../types/execution.types';
 
 export class ExecutionController {
@@ -36,7 +36,7 @@ export class ExecutionController {
         memoryLimit,
         runTests = true,
         analyzeCode = false,
-        priority = ExecutionPriority.NORMAL
+        priority = ExecutionPriority.NORMAL,
       } = req.body;
 
       // Validate required fields
@@ -47,8 +47,8 @@ export class ExecutionController {
             code: ExecutionErrorCode.INVALID_CODE,
             message: 'Missing required fields: sessionId, questionId, language, or code',
             timestamp: new Date(),
-            recoverable: true
-          }
+            recoverable: true,
+          },
         });
         return;
       }
@@ -61,8 +61,8 @@ export class ExecutionController {
             code: ExecutionErrorCode.INVALID_LANGUAGE,
             message: `Unsupported programming language: ${language}`,
             timestamp: new Date(),
-            recoverable: true
-          }
+            recoverable: true,
+          },
         });
         return;
       }
@@ -78,7 +78,7 @@ export class ExecutionController {
         memoryLimit,
         runTests,
         analyzeCode,
-        priority
+        priority,
       };
 
       // Execute code
@@ -90,7 +90,6 @@ export class ExecutionController {
         const statusCode = this.getErrorStatusCode(result.error?.code);
         res.status(statusCode).json(result);
       }
-
     } catch (error) {
       console.error('Code execution error:', error);
       res.status(500).json({
@@ -100,8 +99,8 @@ export class ExecutionController {
           code: ExecutionErrorCode.RUNTIME_ERROR,
           message: 'Internal server error during code execution',
           timestamp: new Date(),
-          recoverable: true
-        }
+          recoverable: true,
+        },
       });
     }
   };
@@ -120,8 +119,8 @@ export class ExecutionController {
             code: ExecutionErrorCode.INVALID_CODE,
             message: 'Execution ID is required',
             timestamp: new Date(),
-            recoverable: true
-          }
+            recoverable: true,
+          },
         });
         return;
       }
@@ -132,9 +131,9 @@ export class ExecutionController {
         executionId,
         status: status.stage,
         progress: status.progress,
-        isCompleted: status.stage === ExecutionStage.COMPLETED || status.stage === ExecutionStage.FAILED
+        isCompleted:
+          status.stage === ExecutionStage.COMPLETED || status.stage === ExecutionStage.FAILED,
       });
-
     } catch (error) {
       console.error('Get execution status error:', error);
       res.status(500).json({
@@ -142,8 +141,8 @@ export class ExecutionController {
           code: ExecutionErrorCode.RUNTIME_ERROR,
           message: 'Failed to get execution status',
           timestamp: new Date(),
-          recoverable: true
-        }
+          recoverable: true,
+        },
       });
     }
   };
@@ -160,14 +159,13 @@ export class ExecutionController {
         fileExtension: this.getFileExtension(lang),
         supportsCompilation: this.supportsCompilation(lang),
         defaultTimeLimit: this.getDefaultTimeLimit(lang),
-        defaultMemoryLimit: this.getDefaultMemoryLimit(lang)
+        defaultMemoryLimit: this.getDefaultMemoryLimit(lang),
       }));
 
       res.status(200).json({
         success: true,
-        languages
+        languages,
       });
-
     } catch (error) {
       console.error('Get supported languages error:', error);
       res.status(500).json({
@@ -176,8 +174,8 @@ export class ExecutionController {
           code: ExecutionErrorCode.RUNTIME_ERROR,
           message: 'Failed to get supported languages',
           timestamp: new Date(),
-          recoverable: true
-        }
+          recoverable: true,
+        },
       });
     }
   };
@@ -197,8 +195,8 @@ export class ExecutionController {
             code: ExecutionErrorCode.INVALID_CODE,
             message: 'Language and code are required',
             timestamp: new Date(),
-            recoverable: true
-          }
+            recoverable: true,
+          },
         });
         return;
       }
@@ -208,9 +206,8 @@ export class ExecutionController {
 
       res.status(200).json({
         success: true,
-        validation
+        validation,
       });
-
     } catch (error) {
       console.error('Code validation error:', error);
       res.status(500).json({
@@ -219,8 +216,8 @@ export class ExecutionController {
           code: ExecutionErrorCode.RUNTIME_ERROR,
           message: 'Failed to validate code',
           timestamp: new Date(),
-          recoverable: true
-        }
+          recoverable: true,
+        },
       });
     }
   };
@@ -240,8 +237,8 @@ export class ExecutionController {
             code: ExecutionErrorCode.INVALID_CODE,
             message: 'Requests array is required and cannot be empty',
             timestamp: new Date(),
-            recoverable: true
-          }
+            recoverable: true,
+          },
         });
         return;
       }
@@ -253,14 +250,14 @@ export class ExecutionController {
             code: ExecutionErrorCode.QUEUE_FULL,
             message: 'Maximum 10 requests allowed per batch',
             timestamp: new Date(),
-            recoverable: true
-          }
+            recoverable: true,
+          },
         });
         return;
       }
 
       const results = await Promise.allSettled(
-        requests.map((request: ExecuteCodeRequest) => 
+        requests.map((request: ExecuteCodeRequest) =>
           this.executionService.executeCode({ ...request, priority })
         )
       );
@@ -275,8 +272,10 @@ export class ExecutionController {
           successfulSubmissions++;
         } else {
           failedSubmissions++;
-          console.error(`Bulk execution ${index} failed:`, 
-            result.status === 'rejected' ? result.reason : result.value.error);
+          console.error(
+            `Bulk execution ${index} failed:`,
+            result.status === 'rejected' ? result.reason : result.value.error
+          );
         }
       });
 
@@ -289,9 +288,8 @@ export class ExecutionController {
         successfulSubmissions,
         failedSubmissions,
         executionIds,
-        estimatedCompletionTime
+        estimatedCompletionTime,
       });
-
     } catch (error) {
       console.error('Bulk execution error:', error);
       res.status(500).json({
@@ -300,8 +298,8 @@ export class ExecutionController {
           code: ExecutionErrorCode.RUNTIME_ERROR,
           message: 'Failed to execute bulk requests',
           timestamp: new Date(),
-          recoverable: true
-        }
+          recoverable: true,
+        },
       });
     }
   };
@@ -319,12 +317,12 @@ export class ExecutionController {
         startDate,
         endDate,
         page = 1,
-        limit = 20
+        limit = 20,
       } = req.query;
 
       // For now, return empty history since we don't have persistent storage
       // This would typically query the database
-      
+
       res.status(200).json({
         data: [],
         total: 0,
@@ -336,10 +334,9 @@ export class ExecutionController {
           questionId: questionId as string,
           language: language as string,
           startDate: startDate as string,
-          endDate: endDate as string
-        }
+          endDate: endDate as string,
+        },
       });
-
     } catch (error) {
       console.error('Get execution history error:', error);
       res.status(500).json({
@@ -347,8 +344,8 @@ export class ExecutionController {
           code: ExecutionErrorCode.RUNTIME_ERROR,
           message: 'Failed to get execution history',
           timestamp: new Date(),
-          recoverable: true
-        }
+          recoverable: true,
+        },
       });
     }
   };
@@ -367,9 +364,8 @@ export class ExecutionController {
         activeExecutions: 0, // this.executionService.getActiveExecutions(),
         systemLoad: 0.1,
         availableLanguages: Object.values(ProgrammingLanguage).length,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
-
     } catch (error) {
       console.error('Get system status error:', error);
       res.status(500).json({
@@ -378,8 +374,8 @@ export class ExecutionController {
           code: ExecutionErrorCode.RUNTIME_ERROR,
           message: 'Failed to get system status',
           timestamp: new Date(),
-          recoverable: true
-        }
+          recoverable: true,
+        },
       });
     }
   };
@@ -428,7 +424,7 @@ export class ExecutionController {
       [ProgrammingLanguage.KOTLIN]: 'Kotlin',
       [ProgrammingLanguage.SWIFT]: 'Swift',
       [ProgrammingLanguage.SCALA]: 'Scala',
-      [ProgrammingLanguage.SQL]: 'SQL'
+      [ProgrammingLanguage.SQL]: 'SQL',
     };
     return displayNames[language] || language;
   }
@@ -449,7 +445,7 @@ export class ExecutionController {
       [ProgrammingLanguage.KOTLIN]: '.kt',
       [ProgrammingLanguage.SWIFT]: '.swift',
       [ProgrammingLanguage.SCALA]: '.scala',
-      [ProgrammingLanguage.SQL]: '.sql'
+      [ProgrammingLanguage.SQL]: '.sql',
     };
     return extensions[language] || '.txt';
   }
@@ -465,7 +461,7 @@ export class ExecutionController {
       ProgrammingLanguage.TYPESCRIPT,
       ProgrammingLanguage.KOTLIN,
       ProgrammingLanguage.SWIFT,
-      ProgrammingLanguage.SCALA
+      ProgrammingLanguage.SCALA,
     ];
     return compiled.includes(language);
   }
@@ -486,7 +482,7 @@ export class ExecutionController {
       [ProgrammingLanguage.KOTLIN]: 15000,
       [ProgrammingLanguage.SWIFT]: 12000,
       [ProgrammingLanguage.SCALA]: 15000,
-      [ProgrammingLanguage.SQL]: 5000
+      [ProgrammingLanguage.SQL]: 5000,
     };
     return timeLimits[language] || 10000;
   }
@@ -507,7 +503,7 @@ export class ExecutionController {
       [ProgrammingLanguage.KOTLIN]: 512,
       [ProgrammingLanguage.SWIFT]: 256,
       [ProgrammingLanguage.SCALA]: 512,
-      [ProgrammingLanguage.SQL]: 64
+      [ProgrammingLanguage.SQL]: 64,
     };
     return memoryLimits[language] || 128;
   }
@@ -517,7 +513,8 @@ export class ExecutionController {
     const warnings: string[] = [];
 
     // Basic size check
-    if (code.length > 100000) { // 100KB
+    if (code.length > 100000) {
+      // 100KB
       issues.push('Code size exceeds maximum limit');
     }
 
@@ -527,7 +524,7 @@ export class ExecutionController {
       { pattern: /import\s+subprocess/, message: 'Subprocess module import detected' },
       { pattern: /require\(['"]fs['"]\)/, message: 'File system access detected' },
       { pattern: /system\s*\(/, message: 'System call detected' },
-      { pattern: /exec\s*\(/, message: 'Code execution function detected' }
+      { pattern: /exec\s*\(/, message: 'Code execution function detected' },
     ];
 
     suspiciousPatterns.forEach(({ pattern, message }) => {
@@ -562,7 +559,7 @@ export class ExecutionController {
       warnings,
       codeSize: code.length,
       estimatedComplexity: this.estimateComplexity(code),
-      securityRisk: warnings.length > 0 ? 'medium' : 'low'
+      securityRisk: warnings.length > 0 ? 'medium' : 'low',
     };
   }
 
@@ -570,11 +567,15 @@ export class ExecutionController {
     const lines = code.split('\n').length;
     const loops = (code.match(/for\s*\(|while\s*\(|for\s+\w+\s+in/g) || []).length;
     const conditions = (code.match(/if\s*\(|switch\s*\(/g) || []).length;
-    
+
     const complexityScore = lines * 0.1 + loops * 2 + conditions * 1.5;
-    
-    if (complexityScore < 10) return 'low';
-    if (complexityScore < 30) return 'medium';
+
+    if (complexityScore < 10) {
+      return 'low';
+    }
+    if (complexityScore < 30) {
+      return 'medium';
+    }
     return 'high';
   }
 }

@@ -34,8 +34,8 @@ router.get('/ready', (_req, res) => {
     checks: {
       database: 'connected', // This would be dynamic in real implementation
       cache: 'connected',
-      services: 'available'
-    }
+      services: 'available',
+    },
   });
 });
 
@@ -49,7 +49,7 @@ router.get('/live', (_req, res) => {
   res.json({
     status: 'alive',
     timestamp: new Date().toISOString(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
   });
 });
 

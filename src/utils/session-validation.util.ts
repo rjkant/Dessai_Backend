@@ -11,7 +11,7 @@ import {
   NavigateRequest,
   NavigationDirection,
   SubmitAnswerRequest,
-  QuestionOrderType
+  QuestionOrderType,
 } from '../types/session.types';
 
 export interface ValidationResult {
@@ -63,7 +63,7 @@ class SessionValidationUtils {
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -78,7 +78,8 @@ class SessionValidationUtils {
       if (config.timeLimit <= 0) {
         errors.push('Time limit must be positive');
       }
-      if (config.timeLimit > 86400) { // 24 hours max
+      if (config.timeLimit > 86400) {
+        // 24 hours max
         errors.push('Time limit cannot exceed 24 hours');
       }
     }
@@ -91,7 +92,7 @@ class SessionValidationUtils {
     // Warning thresholds validation
     if (config.warningThresholds) {
       const thresholds = config.warningThresholds;
-      
+
       if (thresholds.tabSwitches !== undefined && thresholds.tabSwitches < 0) {
         errors.push('Tab switch warning threshold cannot be negative');
       }
@@ -107,7 +108,7 @@ class SessionValidationUtils {
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -134,7 +135,8 @@ class SessionValidationUtils {
       if (typeof answer.code !== 'string') {
         errors.push('Code must be a string');
       }
-      if (answer.code.length > 50000) { // 50KB limit
+      if (answer.code.length > 50000) {
+        // 50KB limit
         errors.push('Code exceeds maximum length');
       }
     }
@@ -160,14 +162,15 @@ class SessionValidationUtils {
       if (typeof answer.query !== 'string') {
         errors.push('Database query must be a string');
       }
-      if (answer.query.length > 10000) { // 10KB limit
+      if (answer.query.length > 10000) {
+        // 10KB limit
         errors.push('Database query exceeds maximum length');
       }
     }
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -195,7 +198,7 @@ class SessionValidationUtils {
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -234,7 +237,7 @@ class SessionValidationUtils {
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -245,10 +248,11 @@ class SessionValidationUtils {
     const errors: string[] = [];
 
     // At least one field should be provided
-    const hasUpdates = request.status || 
-                      request.configuration || 
-                      request.currentQuestionIndex !== undefined || 
-                      request.metadata;
+    const hasUpdates =
+      request.status ||
+      request.configuration ||
+      request.currentQuestionIndex !== undefined ||
+      request.metadata;
 
     if (!hasUpdates) {
       errors.push('At least one field must be provided for update');
@@ -269,7 +273,7 @@ class SessionValidationUtils {
 
     return {
       isValid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -302,7 +306,7 @@ class SessionValidationUtils {
 
     // Sanitize arrays
     if (sanitized.selectedOptions) {
-      sanitized.selectedOptions = sanitized.selectedOptions.map(option => 
+      sanitized.selectedOptions = sanitized.selectedOptions.map(option =>
         this.sanitizeString(option)
       );
     }
@@ -328,8 +332,8 @@ class SessionValidationUtils {
       warningThresholds: {
         tabSwitches: config.warningThresholds?.tabSwitches || 2,
         timeRemaining: config.warningThresholds?.timeRemaining || 300, // 5 minutes
-        inactivity: config.warningThresholds?.inactivity || 600 // 10 minutes
-      }
+        inactivity: config.warningThresholds?.inactivity || 600, // 10 minutes
+      },
     };
   }
 
@@ -343,7 +347,9 @@ class SessionValidationUtils {
   }
 
   private sanitizeString(input: string): string {
-    if (!input) return input;
+    if (!input) {
+      return input;
+    }
 
     return input
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove scripts

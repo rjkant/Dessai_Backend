@@ -1,7 +1,7 @@
 /**
  * Analytics Engine Service
  * Epic 5: Analytics Engine Service - Task 5.1: Data Collection Pipeline
- * 
+ *
  * Comprehensive analytics service for collecting, processing, and analyzing
  * assessment, proctoring, and performance data across the Dessai platform.
  */
@@ -9,10 +9,7 @@
 import { PrismaClient } from '@prisma/client';
 import RedisService from './redis.service';
 import { Logger } from '../utils/logger.util';
-import {
-  EventType,
-  AnalyticsEvent
-} from '../types/analytics.types';
+import { EventType, AnalyticsEvent } from '../types/analytics.types';
 
 // Analytics Error Classes
 export class AnalyticsError extends Error {
@@ -30,7 +27,7 @@ export enum AnalyticsErrorCode {
   EVENT_PROCESSING_FAILED = 'EVENT_PROCESSING_FAILED',
   INVALID_EVENT_FORMAT = 'INVALID_EVENT_FORMAT',
   DATABASE_CONNECTION_FAILED = 'DATABASE_CONNECTION_FAILED',
-  QUERY_EXECUTION_FAILED = 'QUERY_EXECUTION_FAILED'
+  QUERY_EXECUTION_FAILED = 'QUERY_EXECUTION_FAILED',
 }
 
 // Core Analytics Types
@@ -124,7 +121,7 @@ export default class AnalyticsService {
       this.logger.debug('Event collected', {
         eventId: event.id,
         eventType: event.type,
-        bufferSize: this.eventBuffer.length
+        bufferSize: this.eventBuffer.length,
       });
     } catch (error) {
       this.logger.error('Failed to collect event', error as Error);
@@ -155,7 +152,7 @@ export default class AnalyticsService {
     return {
       success: errors.length === 0,
       processed,
-      errors
+      errors,
     };
   }
 
@@ -191,7 +188,9 @@ export default class AnalyticsService {
    * Flush buffered events to persistent storage
    */
   private async flushEvents(): Promise<void> {
-    if (this.eventBuffer.length === 0) return;
+    if (this.eventBuffer.length === 0) {
+      return;
+    }
 
     try {
       const events = [...this.eventBuffer];
@@ -203,7 +202,7 @@ export default class AnalyticsService {
       }
 
       this.logger.info('Events flushed to database', {
-        count: events.length
+        count: events.length,
       });
     } catch (error) {
       this.logger.error('Failed to flush events', error as Error);
@@ -229,52 +228,56 @@ export default class AnalyticsService {
   /**
    * Get performance metrics for a user
    */
-  async getPerformanceMetrics(userId: string, timeRange?: { start: string; stop: string }): Promise<PerformanceMetrics> {
+  async getPerformanceMetrics(
+    userId: string,
+    timeRange?: { start: string; stop: string }
+  ): Promise<PerformanceMetrics> {
     try {
       const defaultTimeRange = {
         start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days ago
-        stop: new Date().toISOString()
+        stop: new Date().toISOString(),
       };
       const range = timeRange || defaultTimeRange;
 
       // Query assessment completions
-      const assessmentEvents = await this.prisma.$queryRaw`
+      const assessmentEvents = (await this.prisma.$queryRaw`
         SELECT * FROM analytics_events 
         WHERE user_id = ${userId} 
         AND type = ${EventType.ASSESSMENT_COMPLETED}
         AND timestamp >= ${range.start}::timestamp 
         AND timestamp <= ${range.stop}::timestamp
-      ` as any[];
+      `) as any[];
 
       // Query code executions
-      const codeEvents = await this.prisma.$queryRaw`
+      const codeEvents = (await this.prisma.$queryRaw`
         SELECT * FROM analytics_events 
         WHERE user_id = ${userId} 
         AND type = ${EventType.CODE_EXECUTED}
         AND timestamp >= ${range.start}::timestamp 
         AND timestamp <= ${range.stop}::timestamp
-      ` as any[];
+      `) as any[];
 
       // Query violations
-      const violationEvents = await this.prisma.$queryRaw`
+      const violationEvents = (await this.prisma.$queryRaw`
         SELECT * FROM analytics_events 
         WHERE user_id = ${userId} 
         AND type = ${EventType.VIOLATION_DETECTED}
         AND timestamp >= ${range.start}::timestamp 
         AND timestamp <= ${range.stop}::timestamp
-      ` as any[];
+      `) as any[];
 
       // Calculate metrics
       const totalAssessments = assessmentEvents.length;
       const totalCodeExecutions = codeEvents.length;
       const totalViolations = violationEvents.length;
 
-      const averageScore = totalAssessments > 0 
-        ? assessmentEvents.reduce((sum: number, event: any) => {
-            const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-            return sum + (data?.score || 0);
-          }, 0) / totalAssessments 
-        : 0;
+      const averageScore =
+        totalAssessments > 0
+          ? assessmentEvents.reduce((sum: number, event: any) => {
+              const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+              return sum + (data?.score || 0);
+            }, 0) / totalAssessments
+          : 0;
 
       const performanceMetrics: PerformanceMetrics = {
         userId,
@@ -285,11 +288,11 @@ export default class AnalyticsService {
         averageScore,
         assessmentCompletionRate: totalAssessments > 0 ? 1.0 : 0,
         codeSuccessRate: totalCodeExecutions > 0 ? 0.85 : 0,
-        integrityScore: Math.max(0, 100 - (totalViolations * 10)),
+        integrityScore: Math.max(0, 100 - totalViolations * 10),
         engagementScore: Math.min(100, totalCodeExecutions * 2 + totalAssessments * 5),
         skillLevel: this.calculateSkillLevel(averageScore),
         improvementTrend: 'stable',
-        recommendations: this.generateRecommendations(averageScore, totalViolations)
+        recommendations: this.generateRecommendations(averageScore, totalViolations),
       };
 
       return performanceMetrics;
@@ -308,7 +311,7 @@ export default class AnalyticsService {
    */
   async queryTimeSeriesData(query: MetricsQuery): Promise<TimeSeriesData[]> {
     try {
-      const events = await this.prisma.$queryRaw`
+      const events = (await this.prisma.$queryRaw`
         SELECT timestamp, type as measurement, data, user_id, session_id, assessment_id, organization_id
         FROM analytics_events 
         WHERE type = ${query.measurement}
@@ -316,7 +319,7 @@ export default class AnalyticsService {
         AND timestamp <= ${query.timeRange.stop}::timestamp
         ${query.limit ? `LIMIT ${query.limit}` : ''}
         ORDER BY timestamp DESC
-      ` as any[];
+      `) as any[];
 
       return events.map((event: any) => ({
         timestamp: new Date(event.timestamp),
@@ -326,8 +329,8 @@ export default class AnalyticsService {
           user_id: event.user_id || 'unknown',
           session_id: event.session_id || 'unknown',
           assessment_id: event.assessment_id || 'unknown',
-          organization_id: event.organization_id || 'unknown'
-        }
+          organization_id: event.organization_id || 'unknown',
+        },
       }));
     } catch (error) {
       this.logger.error('Failed to query time series data', error as Error);
@@ -346,48 +349,46 @@ export default class AnalyticsService {
     try {
       const timeRange = {
         start: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // Last 24 hours
-        stop: new Date().toISOString()
+        stop: new Date().toISOString(),
       };
 
-      const baseFilter = organizationId 
-        ? `AND organization_id = '${organizationId}'`
-        : '';
+      const baseFilter = organizationId ? `AND organization_id = '${organizationId}'` : '';
 
       // Active sessions
-      const activeSessions = await this.prisma.$queryRaw`
+      const activeSessions = (await this.prisma.$queryRaw`
         SELECT COUNT(DISTINCT session_id) as count 
         FROM analytics_events 
         WHERE type = ${EventType.SESSION_STARTED}
         AND timestamp >= ${timeRange.start}::timestamp 
         ${baseFilter}
-      ` as any[];
+      `) as any[];
 
       // Assessments completed today
-      const assessmentsCompleted = await this.prisma.$queryRaw`
+      const assessmentsCompleted = (await this.prisma.$queryRaw`
         SELECT COUNT(*) as count 
         FROM analytics_events 
         WHERE type = ${EventType.ASSESSMENT_COMPLETED}
         AND timestamp >= ${timeRange.start}::timestamp 
         ${baseFilter}
-      ` as any[];
+      `) as any[];
 
       // Code executions today
-      const codeExecutions = await this.prisma.$queryRaw`
+      const codeExecutions = (await this.prisma.$queryRaw`
         SELECT COUNT(*) as count 
         FROM analytics_events 
         WHERE type = ${EventType.CODE_EXECUTED}
         AND timestamp >= ${timeRange.start}::timestamp 
         ${baseFilter}
-      ` as any[];
+      `) as any[];
 
       // Violations detected
-      const violations = await this.prisma.$queryRaw`
+      const violations = (await this.prisma.$queryRaw`
         SELECT COUNT(*) as count 
         FROM analytics_events 
         WHERE type = ${EventType.VIOLATION_DETECTED}
         AND timestamp >= ${timeRange.start}::timestamp 
         ${baseFilter}
-      ` as any[];
+      `) as any[];
 
       return {
         activeSessions: activeSessions[0]?.count || 0,
@@ -395,7 +396,7 @@ export default class AnalyticsService {
         codeExecutions: codeExecutions[0]?.count || 0,
         violations: violations[0]?.count || 0,
         timeRange,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       };
     } catch (error) {
       this.logger.error('Failed to get dashboard metrics', error as Error);
@@ -406,7 +407,7 @@ export default class AnalyticsService {
         violations: 0,
         timeRange: { start: '', stop: '' },
         lastUpdated: new Date().toISOString(),
-        errorMessage: (error as Error).message
+        errorMessage: (error as Error).message,
       };
     }
   }
@@ -417,11 +418,11 @@ export default class AnalyticsService {
   private async updateRealtimeMetrics(event: AnalyticsEvent): Promise<void> {
     try {
       const key = `realtime:${event.type}:${event.organizationId || 'global'}`;
-      
+
       // Increment event counter
-      const current = await this.redis.get<number>(key) || 0;
+      const current = (await this.redis.get<number>(key)) || 0;
       await this.redis.set(key, current + 1, 3600); // 1 hour TTL
-      
+
       // Update last event timestamp
       await this.redis.set(`${key}:last`, event.timestamp.toISOString(), 3600);
     } catch (error) {
@@ -437,7 +438,7 @@ export default class AnalyticsService {
       // Update user integrity score
       if (event.userId) {
         const key = `integrity:${event.userId}`;
-        const current = await this.redis.get<number>(key) || 100;
+        const current = (await this.redis.get<number>(key)) || 100;
         const newScore = Math.max(0, current - 10); // Decrease by 10 points
         await this.redis.set(key, newScore, 86400 * 30); // 30 days TTL
       }
@@ -455,11 +456,15 @@ export default class AnalyticsService {
       if (event.userId) {
         const key = `performance:${event.userId}`;
         const metadata = event.metadata || {};
-        await this.redis.set(key, JSON.stringify({
-          lastAssessment: event.timestamp,
-          lastScore: metadata.score || 0,
-          assessmentId: event.assessmentId
-        }), 86400 * 30); // 30 days TTL
+        await this.redis.set(
+          key,
+          JSON.stringify({
+            lastAssessment: event.timestamp,
+            lastScore: metadata.score || 0,
+            assessmentId: event.assessmentId,
+          }),
+          86400 * 30
+        ); // 30 days TTL
       }
     } catch (error) {
       this.logger.error('Failed to process assessment completion', error as Error);
@@ -475,11 +480,15 @@ export default class AnalyticsService {
       if (event.userId) {
         const key = `code:${event.userId}`;
         const metadata = event.metadata || {};
-        await this.redis.set(key, JSON.stringify({
-          lastExecution: event.timestamp,
-          language: metadata.language || 'unknown',
-          success: metadata.success || false
-        }), 86400 * 7); // 7 days TTL
+        await this.redis.set(
+          key,
+          JSON.stringify({
+            lastExecution: event.timestamp,
+            language: metadata.language || 'unknown',
+            success: metadata.success || false,
+          }),
+          86400 * 7
+        ); // 7 days TTL
       }
     } catch (error) {
       this.logger.error('Failed to process code execution', error as Error);
@@ -489,10 +498,18 @@ export default class AnalyticsService {
   /**
    * Calculate skill level based on average score
    */
-  private calculateSkillLevel(averageScore: number): 'beginner' | 'intermediate' | 'advanced' | 'expert' {
-    if (averageScore >= 90) return 'expert';
-    if (averageScore >= 75) return 'advanced';
-    if (averageScore >= 60) return 'intermediate';
+  private calculateSkillLevel(
+    averageScore: number
+  ): 'beginner' | 'intermediate' | 'advanced' | 'expert' {
+    if (averageScore >= 90) {
+      return 'expert';
+    }
+    if (averageScore >= 75) {
+      return 'advanced';
+    }
+    if (averageScore >= 60) {
+      return 'intermediate';
+    }
     return 'beginner';
   }
 
@@ -526,19 +543,15 @@ export default class AnalyticsService {
    */
   private validateEvent(event: AnalyticsEvent): void {
     if (!event.id) {
-      throw new AnalyticsError(
-        'Event ID is required',
-        AnalyticsErrorCode.INVALID_EVENT_FORMAT,
-        { event }
-      );
+      throw new AnalyticsError('Event ID is required', AnalyticsErrorCode.INVALID_EVENT_FORMAT, {
+        event,
+      });
     }
 
     if (!event.type || !Object.values(EventType).includes(event.type)) {
-      throw new AnalyticsError(
-        'Invalid event type',
-        AnalyticsErrorCode.INVALID_EVENT_FORMAT,
-        { eventType: event.type }
-      );
+      throw new AnalyticsError('Invalid event type', AnalyticsErrorCode.INVALID_EVENT_FORMAT, {
+        eventType: event.type,
+      });
     }
 
     if (!event.timestamp) {
@@ -582,4 +595,3 @@ export default class AnalyticsService {
     }
   }
 }
-
